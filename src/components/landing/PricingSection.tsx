@@ -149,7 +149,7 @@ export function PricingSection() {
                 type="button"
                 onClick={() => handleBuy(pack.id)}
                 className={cn(
-                  'mt-auto flex h-10 w-full items-center justify-center rounded-lg',
+                  'mt-auto flex h-10 w-full cursor-pointer items-center justify-center rounded-lg',
                   pack.highlighted
                     ? 'bg-primary text-primary-foreground'
                     : 'border-border bg-background text-foreground border',

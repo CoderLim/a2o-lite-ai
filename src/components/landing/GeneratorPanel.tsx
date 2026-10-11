@@ -257,7 +257,7 @@ function ModeToggle({
             aria-selected={selected}
             onClick={() => onChange(opt.id)}
             className={cn(
-              'inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-[10px] px-3 text-[12px] font-medium whitespace-nowrap transition-all duration-200 sm:flex-none sm:px-3.5',
+              'inline-flex h-8 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] px-3 text-[12px] font-medium whitespace-nowrap transition-all duration-200 sm:flex-none sm:px-3.5',
               selected
                 ? 'bg-[rgba(72,58,48,0.95)] text-[rgb(237,234,222)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/10'
                 : 'bg-transparent text-[rgb(168,157,151)] hover:text-[rgb(220,214,204)]'
@@ -1642,7 +1642,8 @@ export function GeneratorPanel({
   const handleGenerate = async (kind: 'preview' | 'full' = 'full') => {
     if (!video || images.length === 0 || status === 'generating') return;
 
-    const targetResolution: Resolution = kind === 'preview' ? '480p' : resolution;
+    const targetResolution: Resolution =
+      kind === 'preview' ? '480p' : resolution;
 
     if (!session?.user) {
       redirectToSignIn();
@@ -2030,7 +2031,7 @@ export function GeneratorPanel({
           <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
             <div className="flex items-center gap-2">
               <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
-                <span className="whitespace-nowrap text-[10px] text-white/45">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
                   {m['site.generator.preview_spec']()}
                 </span>
                 <span>
@@ -2048,8 +2049,8 @@ export function GeneratorPanel({
                 className={cn(
                   'inline-flex h-8 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
                   canGenerate
-                    ? 'border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
-                    : 'border-white/10 text-[rgb(237,234,222)]/38'
+                    ? 'cursor-pointer border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
+                    : 'cursor-not-allowed border-white/10 text-[rgb(237,234,222)]/38'
                 )}
                 title={m['site.generator.preview_help']()}
               >
@@ -2059,7 +2060,7 @@ export function GeneratorPanel({
             <div className="flex items-center gap-2">
               {estimatedCredits != null ? (
                 <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
-                  <span className="whitespace-nowrap text-[10px] text-white/45">
+                  <span className="text-[10px] whitespace-nowrap text-white/45">
                     {m['site.generator.full_video']()}
                   </span>
                   <span className="inline-flex items-center gap-1">
@@ -2096,8 +2097,8 @@ export function GeneratorPanel({
                 className={cn(
                   'relative inline-flex h-8 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
                   canGenerate
-                    ? 'text-[rgb(247,246,243)] hover:brightness-105'
-                    : 'bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
+                    ? 'cursor-pointer text-[rgb(247,246,243)] hover:brightness-105'
+                    : 'cursor-not-allowed bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
                 )}
               >
                 {status === 'generating'

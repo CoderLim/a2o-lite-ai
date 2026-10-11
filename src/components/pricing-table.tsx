@@ -177,7 +177,7 @@ export function PricingTable({
             {/* CTA — full-width pill */}
             <Button
               variant={plan.featured ? 'default' : 'outline'}
-              className="h-10 w-full rounded-full text-sm font-medium"
+              className="h-10 w-full cursor-pointer rounded-full text-sm font-medium"
               onClick={() => handleCheckout(plan)}
               disabled={loadingId === plan.id}
             >
