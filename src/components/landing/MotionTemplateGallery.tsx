@@ -71,28 +71,31 @@ function TemplateCard({
 }
 
 /**
- * Build horizontal gallery rows: one portrait on the left, and two
- * landscapes stacked on the right. Unpaired templates get their own
- * complete rows instead of leaving empty slots in the mixed layout.
+ * Each full mixed row occupies four portrait-width units:
+ * portrait (1) | two stacked landscape cards (2) | portrait (1).
+ * The tall and wide cards use 1:2 and 2:1 aspect ratios respectively.
  */
 function groupTemplateRows(templates: MotionTemplate[]) {
-  const portraits = templates.filter((template) => template.aspect === 'portrait');
+  const portraits = templates.filter(
+    (template) => template.aspect === 'portrait'
+  );
   const landscapes = templates.filter(
     (template) => template.aspect === 'landscape'
   );
   const mixedRowCount = Math.min(
-    portraits.length,
+    Math.floor(portraits.length / 2),
     Math.floor(landscapes.length / 2)
   );
 
   const mixedRows = Array.from({ length: mixedRowCount }, (_, index) => ({
-    portrait: portraits[index]!,
+    leftPortrait: portraits[index * 2]!,
+    rightPortrait: portraits[index * 2 + 1]!,
     landscapes: landscapes.slice(index * 2, index * 2 + 2),
   }));
 
   return {
     mixedRows,
-    remainingPortraits: portraits.slice(mixedRowCount),
+    remainingPortraits: portraits.slice(mixedRowCount * 2),
     remainingLandscapes: landscapes.slice(mixedRowCount * 2),
   };
 }
@@ -122,55 +125,68 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div className="mx-auto w-full max-w-[960px] space-y-3 sm:space-y-4 lg:space-y-5">
-        {mixedRows.map(({ portrait, landscapes }) => (
+      <div className="mx-auto w-full max-w-[960px] space-y-2 [--template-gap:8px] sm:space-y-3 sm:[--template-gap:12px] lg:space-y-4 lg:[--template-gap:16px]">
+        {mixedRows.map(({ leftPortrait, landscapes, rightPortrait }) => (
           <div
-            key={portrait.id}
-            className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.54fr)] gap-3 sm:gap-4 lg:gap-5"
+            key={leftPortrait.id}
+            className="grid gap-[var(--template-gap)]"
+            // Card dimensions match exactly, including gaps:
+            // portrait width = (W - gap) / 4 and height = 2 * width;
+            // landscape width = 2 * portrait width - gap and height = width / 2.
+            style={{
+              gridTemplateColumns:
+                'minmax(0, calc((100% - var(--template-gap)) / 4)) minmax(0, calc((100% - 3 * var(--template-gap)) / 2)) minmax(0, calc((100% - var(--template-gap)) / 4))',
+            }}
           >
             <TemplateCard
-              template={portrait}
-              applying={applyingTemplateId === portrait.id}
+              template={leftPortrait}
+              applying={applyingTemplateId === leftPortrait.id}
               onSelect={onSelect}
-              className="aspect-9/16"
+              className="aspect-[1/2]"
             />
-            <div className="grid min-w-0 grid-rows-2 gap-3 sm:gap-4 lg:gap-5">
+            <div className="flex min-w-0 flex-col gap-[var(--template-gap)]">
               {landscapes.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
                   applying={applyingTemplateId === template.id}
                   onSelect={onSelect}
-                  className="h-full min-h-0"
+                  className="aspect-[2/1]"
                 />
               ))}
             </div>
+            <TemplateCard
+              template={rightPortrait}
+              applying={applyingTemplateId === rightPortrait.id}
+              onSelect={onSelect}
+              className="aspect-[1/2]"
+            />
           </div>
         ))}
 
         {remainingPortraits.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:gap-5">
+          <div className="grid grid-cols-4 gap-[var(--template-gap)]">
             {remainingPortraits.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
                 applying={applyingTemplateId === template.id}
                 onSelect={onSelect}
-                className="aspect-9/16"
+                className="aspect-[1/2]"
               />
             ))}
           </div>
         )}
 
         {remainingLandscapes.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-5">
+          <div className="grid grid-cols-2 gap-[var(--template-gap)]">
             {remainingLandscapes.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
                 applying={applyingTemplateId === template.id}
                 onSelect={onSelect}
-                className="aspect-video"
+                className="aspect-[2/1]"
               />
             ))}
           </div>
