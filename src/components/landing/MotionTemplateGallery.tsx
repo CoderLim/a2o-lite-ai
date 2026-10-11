@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 import { tDynamic } from '@/core/i18n/dynamic';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
@@ -71,33 +73,58 @@ function TemplateCard({
 }
 
 /**
- * Each full mixed row occupies four portrait-width units:
- * portrait (1) | two stacked landscape cards (2) | portrait (1).
- * The tall and wide cards use 1:2 and 2:1 aspect ratios respectively.
+ * Six portrait-width units per desktop row. A landscape stack occupies
+ * two units, and each portrait occupies one. Keep complete landscape pairs
+ * together so the 1:2 and 2:1 cards have the same total height.
  */
-function groupTemplateRows(templates: MotionTemplate[]) {
-  const portraits = templates.filter(
-    (template) => template.aspect === 'portrait'
-  );
+function groupTemplateBlocks(templates: MotionTemplate[]) {
+  const portraits = templates.filter((template) => template.aspect === 'portrait');
   const landscapes = templates.filter(
     (template) => template.aspect === 'landscape'
   );
-  const mixedRowCount = Math.min(
-    Math.floor(portraits.length / 2),
-    Math.floor(landscapes.length / 2)
-  );
+  type Block =
+    | { kind: 'portrait'; template: MotionTemplate }
+    | { kind: 'landscape-stack'; templates: [MotionTemplate, MotionTemplate] }
+    | { kind: 'landscape-single'; template: MotionTemplate };
 
-  const mixedRows = Array.from({ length: mixedRowCount }, (_, index) => ({
-    leftPortrait: portraits[index * 2]!,
-    rightPortrait: portraits[index * 2 + 1]!,
-    landscapes: landscapes.slice(index * 2, index * 2 + 2),
-  }));
+  const blocks: Block[] = [];
+  let portraitIndex = 0;
+  let landscapeIndex = 0;
 
-  return {
-    mixedRows,
-    remainingPortraits: portraits.slice(mixedRowCount * 2),
-    remainingLandscapes: landscapes.slice(mixedRowCount * 2),
-  };
+  // Desktop: portrait(1) + stacked landscapes(2) +
+  // portrait(1) + stacked landscapes(2) = six width units.
+  while (
+    portraitIndex + 1 < portraits.length &&
+    landscapeIndex + 3 < landscapes.length
+  ) {
+    blocks.push({ kind: 'portrait', template: portraits[portraitIndex++]! });
+    blocks.push({
+      kind: 'landscape-stack',
+      templates: [landscapes[landscapeIndex++]!, landscapes[landscapeIndex++]!],
+    });
+    blocks.push({ kind: 'portrait', template: portraits[portraitIndex++]! });
+    blocks.push({
+      kind: 'landscape-stack',
+      templates: [landscapes[landscapeIndex++]!, landscapes[landscapeIndex++]!],
+    });
+  }
+
+  while (portraitIndex < portraits.length) {
+    blocks.push({ kind: 'portrait', template: portraits[portraitIndex++]! });
+  }
+  while (landscapeIndex + 1 < landscapes.length) {
+    blocks.push({
+      kind: 'landscape-stack',
+      templates: [landscapes[landscapeIndex++]!, landscapes[landscapeIndex++]!],
+    });
+  }
+  if (landscapeIndex < landscapes.length) {
+    blocks.push({
+      kind: 'landscape-single',
+      template: landscapes[landscapeIndex]!,
+    });
+  }
+  return blocks;
 }
 
 export function MotionTemplateGallery({
@@ -105,8 +132,7 @@ export function MotionTemplateGallery({
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
-  const { mixedRows, remainingPortraits, remainingLandscapes } =
-    groupTemplateRows(MOTION_TEMPLATES);
+  const blocks = groupTemplateBlocks(MOTION_TEMPLATES);
 
   return (
     <section
@@ -125,27 +151,59 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div className="mx-auto w-full max-w-[960px] space-y-2 [--template-gap:8px] sm:space-y-3 sm:[--template-gap:12px] lg:space-y-4 lg:[--template-gap:16px]">
-        {mixedRows.map(({ leftPortrait, landscapes, rightPortrait }) => (
-          <div
-            key={leftPortrait.id}
-            className="grid gap-[var(--template-gap)]"
-            // Card dimensions match exactly, including gaps:
-            // portrait width = (W - gap) / 4 and height = 2 * width;
-            // landscape width = 2 * portrait width - gap and height = width / 2.
-            style={{
-              gridTemplateColumns:
-                'minmax(0, calc((100% - var(--template-gap)) / 4)) minmax(0, calc((100% - 3 * var(--template-gap)) / 2)) minmax(0, calc((100% - var(--template-gap)) / 4))',
-            }}
-          >
-            <TemplateCard
-              template={leftPortrait}
-              applying={applyingTemplateId === leftPortrait.id}
-              onSelect={onSelect}
-              className="aspect-[1/2]"
-            />
-            <div className="flex min-w-0 flex-col gap-[var(--template-gap)]">
-              {landscapes.map((template) => (
+      <div
+        className="flex w-full flex-wrap gap-[var(--template-gap)] [--template-columns:4] [--template-gap:8px] sm:[--template-gap:12px] md:[--template-columns:6] lg:[--template-gap:16px]"
+        style={{
+          // p = (W - gap) / columns. A landscape stack is 2p - gap wide:
+          // two 2:1 cards + their gap have the height of one 1:2 portrait.
+          // Full desktop row: p + (2p-gap) + p + (2p-gap) + 3 gaps = W.
+          '--template-unit':
+            'calc((100% - var(--template-gap)) / var(--template-columns))',
+        } as CSSProperties}
+      >
+        {blocks.map((block) => {
+          if (block.kind === 'portrait') {
+            return (
+              <div
+                key={block.template.id}
+                className="min-w-0 shrink-0"
+                style={{ width: 'var(--template-unit)' }}
+              >
+                <TemplateCard
+                  template={block.template}
+                  applying={applyingTemplateId === block.template.id}
+                  onSelect={onSelect}
+                  className="aspect-[1/2]"
+                />
+              </div>
+            );
+          }
+
+          const wideWidth = 'calc(2 * var(--template-unit) - var(--template-gap))';
+          if (block.kind === 'landscape-single') {
+            return (
+              <div
+                key={block.template.id}
+                className="min-w-0 shrink-0"
+                style={{ width: wideWidth }}
+              >
+                <TemplateCard
+                  template={block.template}
+                  applying={applyingTemplateId === block.template.id}
+                  onSelect={onSelect}
+                  className="aspect-[2/1]"
+                />
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={block.templates[0].id}
+              className="flex min-w-0 shrink-0 flex-col gap-[var(--template-gap)]"
+              style={{ width: wideWidth }}
+            >
+              {block.templates.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
@@ -155,42 +213,8 @@ export function MotionTemplateGallery({
                 />
               ))}
             </div>
-            <TemplateCard
-              template={rightPortrait}
-              applying={applyingTemplateId === rightPortrait.id}
-              onSelect={onSelect}
-              className="aspect-[1/2]"
-            />
-          </div>
-        ))}
-
-        {remainingPortraits.length > 0 && (
-          <div className="grid grid-cols-4 gap-[var(--template-gap)]">
-            {remainingPortraits.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                applying={applyingTemplateId === template.id}
-                onSelect={onSelect}
-                className="aspect-[1/2]"
-              />
-            ))}
-          </div>
-        )}
-
-        {remainingLandscapes.length > 0 && (
-          <div className="grid grid-cols-2 gap-[var(--template-gap)]">
-            {remainingLandscapes.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                applying={applyingTemplateId === template.id}
-                onSelect={onSelect}
-                className="aspect-[2/1]"
-              />
-            ))}
-          </div>
-        )}
+          );
+        })}
       </div>
     </section>
   );
