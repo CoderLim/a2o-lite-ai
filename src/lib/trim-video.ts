@@ -91,33 +91,35 @@ export async function trimVideoToFile(params: {
     ]);
 
   let data: Uint8Array;
-  if (params.accurate) {
-    data = await reencode();
-  } else {
-    try {
-      // -ss after -i is more accurate; -c copy keeps MP4 for Fal.
-      data = await run([
-      '-i',
-      inputName,
-      '-ss',
-      start.toFixed(3),
-      '-t',
-      duration.toFixed(3),
-      '-c',
-      'copy',
-      '-avoid_negative_ts',
-      'make_zero',
-      '-movflags',
-      '+faststart',
-      outputName,
-    ]);
-    } catch {
+  try {
+    if (params.accurate) {
       data = await reencode();
+    } else {
+      try {
+        // Prefer fast stream-copy for existing callers that do not need exact timing.
+        data = await run([
+          '-i',
+          inputName,
+          '-ss',
+          start.toFixed(3),
+          '-t',
+          duration.toFixed(3),
+          '-c',
+          'copy',
+          '-avoid_negative_ts',
+          'make_zero',
+          '-movflags',
+          '+faststart',
+          outputName,
+        ]);
+      } catch {
+        data = await reencode();
+      }
     }
+  } finally {
+    await ffmpeg.deleteFile(inputName).catch(() => undefined);
+    await ffmpeg.deleteFile(outputName).catch(() => undefined);
   }
-
-  await ffmpeg.deleteFile(inputName).catch(() => undefined);
-  await ffmpeg.deleteFile(outputName).catch(() => undefined);
 
   // Copy into a fresh ArrayBuffer-backed Uint8Array for Blob Part compatibility.
   const copy = new Uint8Array(data.byteLength);
