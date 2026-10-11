@@ -1,19 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import { useSession } from '@/core/auth/client';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
-import {
-  getDemoWorkById,
-  isRecreatableDemoWork,
-  PENDING_RECREATE_WORK_ID_KEY,
-  type DemoWork,
-} from '@/components/landing/demo-works';
 import { DemoVideoGallery } from '@/components/landing/DemoVideoGallery';
 import {
   GeneratorPanel,
-  type GeneratorRecreateRequest,
+  type GeneratorTemplateRequest,
 } from '@/components/landing/GeneratorPanel';
+import type { MotionTemplate } from '@/components/landing/motion-templates';
+import { MotionTemplateGallery } from '@/components/landing/MotionTemplateGallery';
 
 const BADGES = [
   m['site.hero.motion'],
@@ -24,61 +19,37 @@ const BADGES = [
 const HERO_VIDEO_SRC = '/videos/hero-bg.mp4';
 const HERO_POSTER_SRC = '/videos/hero-bg-poster.jpg';
 
-function redirectToSignIn() {
-  const callbackUrl = encodeURIComponent(
-    `${window.location.pathname}${window.location.search}`
-  );
-  window.location.href = `/sign-in?callbackUrl=${callbackUrl}`;
-}
-
 export function Hero({ className }: { className?: string }) {
-  const { data: session } = useSession();
-  const [recreateRequest, setRecreateRequest] =
-    useState<GeneratorRecreateRequest | null>(null);
-  const [recreatingWorkId, setRecreatingWorkId] = useState<string | null>(null);
-  const requestIdRef = useRef(0);
-  const restoredPendingRef = useRef(false);
-
-  const startRecreate = useCallback(
-    (work: DemoWork) => {
-      if (!isRecreatableDemoWork(work)) return;
-
-      if (!session?.user) {
-        sessionStorage.setItem(PENDING_RECREATE_WORK_ID_KEY, work.id);
-        redirectToSignIn();
-        return;
-      }
-
-      sessionStorage.removeItem(PENDING_RECREATE_WORK_ID_KEY);
-      const requestId = ++requestIdRef.current;
-      setRecreatingWorkId(work.id);
-      setRecreateRequest({ requestId, recreate: work.recreate });
-      document
-        .getElementById('hero-generator')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    },
-    [session?.user]
+  const [templateRequest, setTemplateRequest] =
+    useState<GeneratorTemplateRequest | null>(null);
+  const [applyingTemplateId, setApplyingTemplateId] = useState<string | null>(
+    null
   );
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    if (!session?.user || restoredPendingRef.current) return;
-    restoredPendingRef.current = true;
-    const pendingId = sessionStorage.getItem(PENDING_RECREATE_WORK_ID_KEY);
-    if (!pendingId) return;
-    const work = getDemoWorkById(pendingId);
-    if (!work || !isRecreatableDemoWork(work)) {
-      sessionStorage.removeItem(PENDING_RECREATE_WORK_ID_KEY);
-      return;
-    }
-    startRecreate(work);
-  }, [session?.user, startRecreate]);
+  const handleSelectTemplate = useCallback((template: MotionTemplate) => {
+    const requestId = ++requestIdRef.current;
+    setApplyingTemplateId(template.id);
+    setTemplateRequest({
+      requestId,
+      template: {
+        mode: template.mode,
+        prompt: template.prompt,
+        resolution: template.resolution,
+        sourceVideo: template.sourceVideo,
+      },
+    });
+    document
+      .getElementById('hero-generator')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
-  const handleRecreateSettled = useCallback(
+  const handleTemplateSettled = useCallback(
     (result: { requestId: number; ok: boolean }) => {
       void result.ok;
       if (result.requestId !== requestIdRef.current) return;
-      setRecreatingWorkId(null);
-      setRecreateRequest(null);
+      setApplyingTemplateId(null);
+      setTemplateRequest(null);
     },
     []
   );
@@ -142,13 +113,14 @@ export function Hero({ className }: { className?: string }) {
 
         <div id="hero-generator" className="mt-5 scroll-mt-24 text-left">
           <GeneratorPanel
-            recreateRequest={recreateRequest}
-            onRecreateSettled={handleRecreateSettled}
+            templateRequest={templateRequest}
+            onTemplateSettled={handleTemplateSettled}
           />
-          <DemoVideoGallery
-            recreatingWorkId={recreatingWorkId}
-            onRecreate={startRecreate}
+          <MotionTemplateGallery
+            applyingTemplateId={applyingTemplateId}
+            onSelect={handleSelectTemplate}
           />
+          <DemoVideoGallery />
         </div>
       </div>
     </section>

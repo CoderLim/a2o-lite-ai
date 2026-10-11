@@ -58,14 +58,13 @@ import {
 
 export type GeneratorMode = 'motion-transfer' | 'objects-swap';
 
-export type GeneratorRecreateRequest = {
+export type GeneratorTemplateRequest = {
   requestId: number;
-  recreate: {
+  template: {
     mode: GeneratorMode;
     prompt: string;
     resolution: '480p' | '720p' | '1080p';
     sourceVideo: string;
-    referenceImages: string[];
   };
 };
 
@@ -76,9 +75,9 @@ type GeneratorPanelProps = {
   hidePromo?: boolean;
   /** Controlled mode — when set with onModeChange, parent owns the toggle */
   onModeChange?: (mode: GeneratorMode) => void;
-  /** One-shot recreate from homepage showcase; applied atomically after fetch+validate. */
-  recreateRequest?: GeneratorRecreateRequest | null;
-  onRecreateSettled?: (result: { requestId: number; ok: boolean }) => void;
+  /** One-shot motion template apply: fetch video + set prompt (images unchanged). */
+  templateRequest?: GeneratorTemplateRequest | null;
+  onTemplateSettled?: (result: { requestId: number; ok: boolean }) => void;
 };
 
 type MediaItem = {
@@ -185,16 +184,6 @@ async function buildValidatedVideoItem(file: File): Promise<MediaItem> {
     ...createMediaItem(file),
     durationSeconds,
   };
-}
-
-function buildValidatedImageItem(file: File): MediaItem {
-  if (!file.type.startsWith('image/')) {
-    throw new Error(m['site.generator.image_size_error']({ name: file.name }));
-  }
-  if (file.size <= 0 || file.size > MAX_REFERENCE_IMAGE_BYTES) {
-    throw new Error(m['site.generator.image_size_error']({ name: file.name }));
-  }
-  return createMediaItem(file);
 }
 
 const IMAGE_MAX = 8;
@@ -1239,8 +1228,8 @@ export function GeneratorPanel({
   className,
   hidePromo: _hidePromo = false,
   onModeChange,
-  recreateRequest = null,
-  onRecreateSettled,
+  templateRequest = null,
+  onTemplateSettled,
 }: GeneratorPanelProps) {
   const { data: session } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
@@ -1269,8 +1258,8 @@ export function GeneratorPanel({
   const generationRunRef = useRef(0);
   const videoRef = useRef<MediaItem | null>(null);
   const imagesRef = useRef<MediaItem[]>([]);
-  const recreateAbortRef = useRef<AbortController | null>(null);
-  const appliedRecreateIdRef = useRef<number | null>(null);
+  const templateAbortRef = useRef<AbortController | null>(null);
+  const appliedTemplateIdRef = useRef<number | null>(null);
 
   videoRef.current = video;
   imagesRef.current = images;
@@ -1305,95 +1294,74 @@ export function GeneratorPanel({
   useEffect(() => {
     return () => {
       generationRunRef.current += 1;
-      recreateAbortRef.current?.abort();
+      templateAbortRef.current?.abort();
       revokeItem(videoRef.current);
       revokeAll(imagesRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (!recreateRequest) return;
-    if (appliedRecreateIdRef.current === recreateRequest.requestId) return;
+    if (!templateRequest) return;
+    if (appliedTemplateIdRef.current === templateRequest.requestId) return;
 
     if (status === 'generating') {
-      appliedRecreateIdRef.current = recreateRequest.requestId;
-      toast.error(m['site.demo.recreate_busy']());
-      onRecreateSettled?.({ requestId: recreateRequest.requestId, ok: false });
+      appliedTemplateIdRef.current = templateRequest.requestId;
+      toast.error(m['site.templates.apply_busy']());
+      onTemplateSettled?.({
+        requestId: templateRequest.requestId,
+        ok: false,
+      });
       return;
     }
 
-    const { requestId, recreate } = recreateRequest;
-    appliedRecreateIdRef.current = requestId;
-    recreateAbortRef.current?.abort();
+    const { requestId, template } = templateRequest;
+    appliedTemplateIdRef.current = requestId;
+    templateAbortRef.current?.abort();
     const abort = new AbortController();
-    recreateAbortRef.current = abort;
+    templateAbortRef.current = abort;
 
     void (async () => {
       let nextVideo: MediaItem | null = null;
-      let nextImages: MediaItem[] = [];
       try {
-        if (
-          recreate.referenceImages.length < 1 ||
-          recreate.referenceImages.length > IMAGE_MAX
-        ) {
-          throw new Error(m['site.demo.recreate_failed']());
-        }
-
         const videoFile = await fetchPublicAssetAsFile(
-          recreate.sourceVideo,
+          template.sourceVideo,
           'video',
           abort.signal
         );
         nextVideo = await buildValidatedVideoItem(videoFile);
 
-        for (const imageUrl of recreate.referenceImages) {
-          const imageFile = await fetchPublicAssetAsFile(
-            imageUrl,
-            'image',
-            abort.signal
-          );
-          nextImages.push(buildValidatedImageItem(imageFile));
-        }
-
         if (abort.signal.aborted) {
           revokeItem(nextVideo);
-          revokeAll(nextImages);
           return;
         }
 
         const prevVideo = videoRef.current;
-        const prevImages = imagesRef.current;
-        setMode(recreate.mode);
-        setPrompt(recreate.prompt);
-        setResolution(recreate.resolution);
+        setMode(template.mode);
+        setPrompt(template.prompt);
+        setResolution(template.resolution);
         setVideo(nextVideo);
-        setImages(nextImages);
         setError('');
         setCreditGate(null);
         revokeItem(prevVideo);
-        revokeAll(prevImages);
         nextVideo = null;
-        nextImages = [];
-        onRecreateSettled?.({ requestId, ok: true });
+        onTemplateSettled?.({ requestId, ok: true });
       } catch (cause) {
         revokeItem(nextVideo);
-        revokeAll(nextImages);
         if (abort.signal.aborted) return;
         toast.error(
           cause instanceof Error
             ? cause.message
-            : m['site.demo.recreate_failed']()
+            : m['site.templates.apply_failed']()
         );
-        onRecreateSettled?.({ requestId, ok: false });
+        onTemplateSettled?.({ requestId, ok: false });
       }
     })();
 
     return () => {
       abort.abort();
     };
-    // setMode is stable enough for this one-shot request; status gate is intentional.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- apply each requestId once
-  }, [recreateRequest, onRecreateSettled, status]);
+  }, [templateRequest, onTemplateSettled, status]);
 
   useEffect(() => {
     if (!settingsOpen) return;
