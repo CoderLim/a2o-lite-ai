@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
   getMotionTemplatePreviewSrc,
-  getMotionTemplatesByAspect,
+  MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
 
@@ -33,7 +33,7 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative min-h-0 cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
+        'group relative block w-full cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
         applying && 'cursor-wait opacity-80',
         className
@@ -70,12 +70,40 @@ function TemplateCard({
   );
 }
 
+/**
+ * Pack templates into columns so portrait (tall) and landscape (wide)
+ * cards keep their real aspect instead of a uniform portrait grid.
+ */
+function distributeToColumns(
+  templates: MotionTemplate[],
+  columnCount: number
+): MotionTemplate[][] {
+  const columns: MotionTemplate[][] = Array.from(
+    { length: columnCount },
+    () => []
+  );
+  const heights = Array.from({ length: columnCount }, () => 0);
+
+  for (const template of templates) {
+    let shortest = 0;
+    for (let i = 1; i < columnCount; i += 1) {
+      if (heights[i]! < heights[shortest]!) shortest = i;
+    }
+    columns[shortest]!.push(template);
+    // Relative height units: 16 for portrait (9:16), 9 for landscape (16:9)
+    heights[shortest]! += template.aspect === 'portrait' ? 16 : 9;
+  }
+
+  return columns;
+}
+
 export function MotionTemplateGallery({
   className,
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
-  const { portraits, landscapes } = getMotionTemplatesByAspect();
+  // 3 columns keeps cards small (~1/3 width) and mixes tall/wide naturally.
+  const columns = distributeToColumns(MOTION_TEMPLATES, 3);
 
   return (
     <section
@@ -94,35 +122,27 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      {/*
-        Sketch layout:
-        [ portrait ] [ portrait ] [ landscape ]
-                                  [ landscape ]
-        Portraits side-by-side; landscapes stacked to the same height.
-      */}
-      <div className="flex max-w-[420px] items-stretch gap-1.5 sm:max-w-[480px] sm:gap-2">
-        <div className="flex min-w-0 flex-[1.15] gap-1.5 sm:gap-2">
-          {portraits.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              applying={applyingTemplateId === template.id}
-              onSelect={onSelect}
-              className="aspect-9/16 min-w-0 flex-1"
-            />
-          ))}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:gap-2">
-          {landscapes.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              applying={applyingTemplateId === template.id}
-              onSelect={onSelect}
-              className="min-h-0 w-full flex-1"
-            />
-          ))}
-        </div>
+      <div className="grid max-w-[420px] grid-cols-3 gap-1.5 sm:max-w-[480px] sm:gap-2">
+        {columns.map((column, columnIndex) => (
+          <div
+            key={columnIndex}
+            className="flex min-w-0 flex-col gap-1.5 sm:gap-2"
+          >
+            {column.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                applying={applyingTemplateId === template.id}
+                onSelect={onSelect}
+                className={
+                  template.aspect === 'portrait'
+                    ? 'aspect-9/16'
+                    : 'aspect-video'
+                }
+              />
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );
