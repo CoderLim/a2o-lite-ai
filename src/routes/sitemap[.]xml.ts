@@ -14,6 +14,7 @@ const STATIC_PATHS = [
   '/genjutsu-prompts',
   '/hotel-lobby-ai',
   '/ai-zombie-hug',
+  '/bulin-47-ai',
   '/text-to-image',
   '/blog',
   '/privacy-policy',

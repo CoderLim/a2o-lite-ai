@@ -9,7 +9,6 @@ import {
 import { Link } from '@/core/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
-import { getLocalizedGenjutsuPromptIdeas } from '@/components/landing/genjutsu-prompts-i18n';
 import {
   GENJUTSU_CHANGE_EXAMPLES,
   GENJUTSU_CHANGE_ITEMS,
@@ -17,6 +16,7 @@ import {
   GENJUTSU_HOWTO_STEPS,
   GENJUTSU_VS_ROWS,
 } from '@/components/landing/content';
+import { getLocalizedGenjutsuPromptIdeas } from '@/components/landing/genjutsu-prompts-i18n';
 
 const CHANGE_ICONS: LucideIcon[] = [Package, Palette, MapPin, Clapperboard];
 const HOW_COPY = [
@@ -40,16 +40,44 @@ const HOWTO_COPY = [
   { title: m['site.seo.howto5_title'], description: m['site.seo.howto5_desc'] },
 ];
 const VS_COPY = [
-  { label: m['site.seo.vs1_label'], ours: m['site.seo.vs1_ours'], official: m['site.seo.vs1_official'] },
-  { label: m['site.seo.vs2_label'], ours: m['site.seo.vs2_ours'], official: m['site.seo.vs2_official'] },
-  { label: m['site.seo.vs3_label'], ours: m['site.seo.vs3_ours'], official: m['site.seo.vs3_official'] },
-  { label: m['site.seo.vs4_label'], ours: m['site.seo.vs4_ours'], official: m['site.seo.vs4_official'] },
+  {
+    label: m['site.seo.vs1_label'],
+    ours: m['site.seo.vs1_ours'],
+    official: m['site.seo.vs1_official'],
+  },
+  {
+    label: m['site.seo.vs2_label'],
+    ours: m['site.seo.vs2_ours'],
+    official: m['site.seo.vs2_official'],
+  },
+  {
+    label: m['site.seo.vs3_label'],
+    ours: m['site.seo.vs3_ours'],
+    official: m['site.seo.vs3_official'],
+  },
+  {
+    label: m['site.seo.vs4_label'],
+    ours: m['site.seo.vs4_ours'],
+    official: m['site.seo.vs4_official'],
+  },
 ];
 const CHANGE_COPY = [
-  { title: m['site.seo.change_products'], description: m['site.seo.change_products_desc'] },
-  { title: m['site.seo.change_styles'], description: m['site.seo.change_styles_desc'] },
-  { title: m['site.seo.change_scenes'], description: m['site.seo.change_scenes_desc'] },
-  { title: m['site.seo.change_props'], description: m['site.seo.change_props_desc'] },
+  {
+    title: m['site.seo.change_products'],
+    description: m['site.seo.change_products_desc'],
+  },
+  {
+    title: m['site.seo.change_styles'],
+    description: m['site.seo.change_styles_desc'],
+  },
+  {
+    title: m['site.seo.change_scenes'],
+    description: m['site.seo.change_scenes_desc'],
+  },
+  {
+    title: m['site.seo.change_props'],
+    description: m['site.seo.change_props_desc'],
+  },
 ];
 
 function SectionHeading({
@@ -195,6 +223,14 @@ export function HowToUseGenerator({ className }: { className?: string }) {
             </li>
           ))}
         </ol>
+        <p className="text-foreground/70 mx-auto mt-10 max-w-3xl text-center text-sm leading-relaxed">
+          <Link
+            href="/bulin-47-ai"
+            className="text-primary font-medium underline-offset-4 hover:underline"
+          >
+            {m['site.seo.bulin_link']()}
+          </Link>
+        </p>
       </div>
     </section>
   );
@@ -215,19 +251,21 @@ export function PromptIdeas({
           description={m['site.seo.ideas_desc']()}
         />
         <div className="mx-auto mt-12 grid max-w-[1180px] gap-8 sm:grid-cols-2">
-          {getLocalizedGenjutsuPromptIdeas().slice(0, 8).map((item) => (
-            <article
-              key={item.title}
-              className="rounded-2xl border border-white/8 bg-white/[0.03] p-6"
-            >
-              <h3 className="text-foreground text-lg font-semibold">
-                {item.title}
-              </h3>
-              <p className="text-foreground/65 mt-3 text-sm leading-relaxed">
-                {item.prompt}
-              </p>
-            </article>
-          ))}
+          {getLocalizedGenjutsuPromptIdeas()
+            .slice(0, 8)
+            .map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-white/8 bg-white/[0.03] p-6"
+              >
+                <h3 className="text-foreground text-lg font-semibold">
+                  {item.title}
+                </h3>
+                <p className="text-foreground/65 mt-3 text-sm leading-relaxed">
+                  {item.prompt}
+                </p>
+              </article>
+            ))}
         </div>
         {showAllLink ? (
           <p className="mt-8 text-center">

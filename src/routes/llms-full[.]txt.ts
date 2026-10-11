@@ -13,6 +13,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description:
       'Preset two-photo Hotel Lobby AI video generator powered by MiniMax H3',
   },
+  {
+    path: '/bulin-47-ai',
+    title: 'Bulin 47 AI Video',
+    description:
+      'What the Bulin 47 freestyle AI video trend is and how to make your own from one photo',
+  },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
 ];
 
