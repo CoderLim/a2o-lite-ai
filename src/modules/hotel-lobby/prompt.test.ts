@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildHotelLobbyPrompt } from './service';
+import { buildHotelLobbyPrompt } from './prompt';
 
 test('two-image prompt names both Elements and insists on right-side swap', () => {
   const prompt = buildHotelLobbyPrompt(2);

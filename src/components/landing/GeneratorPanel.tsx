@@ -58,6 +58,16 @@ import {
 
 export type GeneratorMode = 'motion-transfer' | 'objects-swap';
 
+export type GeneratorTemplateRequest = {
+  requestId: number;
+  template: {
+    mode: GeneratorMode;
+    prompt: string;
+    resolution: '480p' | '720p' | '1080p';
+    sourceVideo: string;
+  };
+};
+
 type GeneratorPanelProps = {
   mode?: GeneratorMode;
   className?: string;
@@ -65,6 +75,9 @@ type GeneratorPanelProps = {
   hidePromo?: boolean;
   /** Controlled mode — when set with onModeChange, parent owns the toggle */
   onModeChange?: (mode: GeneratorMode) => void;
+  /** One-shot motion template apply: fetch video + set prompt (images unchanged). */
+  templateRequest?: GeneratorTemplateRequest | null;
+  onTemplateSettled?: (result: { requestId: number; ok: boolean }) => void;
 };
 
 type MediaItem = {
@@ -109,6 +122,67 @@ function createMediaItem(file: File): MediaItem {
     id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
     file,
     url: URL.createObjectURL(file),
+  };
+}
+
+function guessMimeFromUrl(url: string, kind: 'video' | 'image'): string {
+  const path = url.split('?')[0]?.toLowerCase() ?? '';
+  if (kind === 'video') {
+    if (path.endsWith('.webm')) return 'video/webm';
+    if (path.endsWith('.mov')) return 'video/quicktime';
+    return 'video/mp4';
+  }
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.webp')) return 'image/webp';
+  if (path.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
+}
+
+async function fetchPublicAssetAsFile(
+  url: string,
+  kind: 'video' | 'image',
+  signal?: AbortSignal
+): Promise<File> {
+  const response = await fetch(url, { signal });
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url} (${response.status})`);
+  }
+  const blob = await response.blob();
+  const name =
+    url.split('/').pop()?.split('?')[0] ||
+    (kind === 'video' ? 'source.mp4' : 'reference.jpg');
+  const type =
+    blob.type && blob.type !== 'application/octet-stream'
+      ? blob.type
+      : guessMimeFromUrl(url, kind);
+  return new File([blob], name, { type });
+}
+
+async function buildValidatedVideoItem(file: File): Promise<MediaItem> {
+  if (file.size <= 0 || file.size > MAX_SOURCE_VIDEO_BYTES) {
+    throw new Error(m['site.generator.video_size_error']());
+  }
+  let durationSeconds: number;
+  try {
+    durationSeconds = await readLocalVideoDurationSeconds(file);
+  } catch {
+    throw new Error(m['site.generator.video_read_error']());
+  }
+  if (
+    durationSeconds < MIN_SOURCE_VIDEO_SECONDS ||
+    durationSeconds > MAX_SOURCE_VIDEO_SECONDS
+  ) {
+    throw new Error(
+      m['site.generator.video_duration_error']({
+        min: String(MIN_SOURCE_VIDEO_SECONDS),
+        max: String(MAX_SOURCE_VIDEO_SECONDS),
+        actual: durationSeconds.toFixed(1),
+      })
+    );
+  }
+  return {
+    ...createMediaItem(file),
+    durationSeconds,
   };
 }
 
@@ -241,7 +315,11 @@ function MediaLightbox({
       className="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-8"
       role="dialog"
       aria-modal="true"
-      aria-label={kind === 'video' ? m['site.generator.video_lightbox']() : m['site.generator.image_lightbox']()}
+      aria-label={
+        kind === 'video'
+          ? m['site.generator.video_lightbox']()
+          : m['site.generator.image_lightbox']()
+      }
     >
       <button
         type="button"
@@ -351,7 +429,11 @@ function VideoUploadSlot({
             durationSeconds > MAX_SOURCE_VIDEO_SECONDS
           ) {
             toast.error(
-              m['site.generator.video_duration_error']({ min: String(MIN_SOURCE_VIDEO_SECONDS), max: String(MAX_SOURCE_VIDEO_SECONDS), actual: durationSeconds.toFixed(1) })
+              m['site.generator.video_duration_error']({
+                min: String(MIN_SOURCE_VIDEO_SECONDS),
+                max: String(MAX_SOURCE_VIDEO_SECONDS),
+                actual: durationSeconds.toFixed(1),
+              })
             );
             return;
           }
@@ -361,9 +443,7 @@ function VideoUploadSlot({
             durationSeconds,
           });
         } catch {
-          toast.error(
-            m['site.generator.video_read_error']()
-          );
+          toast.error(m['site.generator.video_read_error']());
         }
       })();
     },
@@ -670,7 +750,9 @@ function ImageUploadSlot({
         .slice(0, room)
         .filter((file) => {
           if (file.size <= 0 || file.size > MAX_REFERENCE_IMAGE_BYTES) {
-            toast.error(m['site.generator.image_size_error']({ name: file.name }));
+            toast.error(
+              m['site.generator.image_size_error']({ name: file.name })
+            );
             return false;
           }
           return true;
@@ -723,7 +805,10 @@ function ImageUploadSlot({
             key={item.id}
             type="button"
             onClick={() => setPreviewId(item.id)}
-            aria-label={m['site.generator.image_preview']({ index: String(index + 1), name: item.file.name })}
+            aria-label={m['site.generator.image_preview']({
+              index: String(index + 1),
+              name: item.file.name,
+            })}
             className="group relative block h-[96px] w-[68px] overflow-hidden rounded-[4px] border border-[rgba(204,144,92,0.35)] shadow-[0_10px_28px_-12px_rgba(0,0,0,0.75)] focus:outline-none"
           >
             <img
@@ -1054,7 +1139,9 @@ function ResultPanel({
   if (status === 'idle') return null;
 
   const modeLabel =
-    result?.mode === 'objects-swap' ? m['site.generator.objects']() : m['site.generator.motion']();
+    result?.mode === 'objects-swap'
+      ? m['site.generator.objects']()
+      : m['site.generator.motion']();
 
   return (
     <div
@@ -1064,11 +1151,16 @@ function ResultPanel({
       <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-[rgb(237,234,222)]">
-            {status === 'generating' ? m['site.generator.generating']() : m['site.generator.result']()}
+            {status === 'generating'
+              ? m['site.generator.generating']()
+              : m['site.generator.result']()}
           </p>
           {result ? (
             <p className="mt-0.5 truncate text-[11px] text-white/45">
-              {modeLabel} · {result.resolution} · {m['site.generator.references']({ count: String(result.imageCount) })}
+              {modeLabel} · {result.resolution} ·{' '}
+              {m['site.generator.references']({
+                count: String(result.imageCount),
+              })}
               {result.reservedCredits
                 ? ` · ${m['site.generator.credits']({ count: String(result.reservedCredits) })}`
                 : ''}
@@ -1097,7 +1189,9 @@ function ResultPanel({
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="border-primary size-9 animate-spin rounded-full border-2 border-t-transparent" />
             <p className="text-sm text-white/55">
-              {m['site.generator.progress']({ resolution: result?.resolution ?? '…' })}
+              {m['site.generator.progress']({
+                resolution: result?.resolution ?? '…',
+              })}
             </p>
           </div>
         ) : result ? (
@@ -1134,6 +1228,8 @@ export function GeneratorPanel({
   className,
   hidePromo: _hidePromo = false,
   onModeChange,
+  templateRequest = null,
+  onTemplateSettled,
 }: GeneratorPanelProps) {
   const { data: session } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
@@ -1160,6 +1256,13 @@ export function GeneratorPanel({
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const generationRunRef = useRef(0);
+  const videoRef = useRef<MediaItem | null>(null);
+  const imagesRef = useRef<MediaItem[]>([]);
+  const templateAbortRef = useRef<AbortController | null>(null);
+  const appliedTemplateIdRef = useRef<number | null>(null);
+
+  videoRef.current = video;
+  imagesRef.current = images;
 
   useEffect(() => {
     setSettingsOpen(false);
@@ -1191,11 +1294,74 @@ export function GeneratorPanel({
   useEffect(() => {
     return () => {
       generationRunRef.current += 1;
-      revokeItem(video);
-      revokeAll(images);
+      templateAbortRef.current?.abort();
+      revokeItem(videoRef.current);
+      revokeAll(imagesRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- revoke only on unmount
   }, []);
+
+  useEffect(() => {
+    if (!templateRequest) return;
+    if (appliedTemplateIdRef.current === templateRequest.requestId) return;
+
+    if (status === 'generating') {
+      appliedTemplateIdRef.current = templateRequest.requestId;
+      toast.error(m['site.templates.apply_busy']());
+      onTemplateSettled?.({
+        requestId: templateRequest.requestId,
+        ok: false,
+      });
+      return;
+    }
+
+    const { requestId, template } = templateRequest;
+    appliedTemplateIdRef.current = requestId;
+    templateAbortRef.current?.abort();
+    const abort = new AbortController();
+    templateAbortRef.current = abort;
+
+    void (async () => {
+      let nextVideo: MediaItem | null = null;
+      try {
+        const videoFile = await fetchPublicAssetAsFile(
+          template.sourceVideo,
+          'video',
+          abort.signal
+        );
+        nextVideo = await buildValidatedVideoItem(videoFile);
+
+        if (abort.signal.aborted) {
+          revokeItem(nextVideo);
+          return;
+        }
+
+        const prevVideo = videoRef.current;
+        setMode(template.mode);
+        setPrompt(template.prompt);
+        setResolution(template.resolution);
+        setVideo(nextVideo);
+        setError('');
+        setCreditGate(null);
+        revokeItem(prevVideo);
+        nextVideo = null;
+        onTemplateSettled?.({ requestId, ok: true });
+      } catch (cause) {
+        revokeItem(nextVideo);
+        if (abort.signal.aborted) return;
+        toast.error(
+          cause instanceof Error
+            ? cause.message
+            : m['site.templates.apply_failed']()
+        );
+        onTemplateSettled?.({ requestId, ok: false });
+      }
+    })();
+
+    return () => {
+      abort.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- apply each requestId once
+  }, [templateRequest, onTemplateSettled, status]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -1307,10 +1473,7 @@ export function GeneratorPanel({
         }
 
         if (polled.providerStatus === 'submission_unknown') {
-          setError(
-            polled.error ||
-              m['site.generator.pending']()
-          );
+          setError(polled.error || m['site.generator.pending']());
           return;
         }
 
@@ -1352,7 +1515,9 @@ export function GeneratorPanel({
           setCreditGate(null);
           const uiError =
             generationFailureUiMessage(polled.error, polled.errorCode) ||
-            m['site.generator.failed_status']({ status: polled.providerStatus });
+            m['site.generator.failed_status']({
+              status: polled.providerStatus,
+            });
           setError(uiError);
           return;
         }
@@ -1362,9 +1527,7 @@ export function GeneratorPanel({
 
       // Do not return to idle here: the provider job can still be running and
       // enabling Generate would make a second paid generation too easy.
-      setError(
-        m['site.generator.still_processing']()
-      );
+      setError(m['site.generator.still_processing']());
     },
     []
   );
@@ -1831,7 +1994,9 @@ export function GeneratorPanel({
                   : 'bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
               )}
             >
-              {status === 'generating' ? m['site.generator.generating']() : m['site.generator.generate']()}
+              {status === 'generating'
+                ? m['site.generator.generating']()
+                : m['site.generator.generate']()}
             </button>
           </div>
         </div>

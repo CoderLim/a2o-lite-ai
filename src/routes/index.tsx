@@ -2,10 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
 import { localeLinks, socialMeta } from '@/lib/seo';
-import { getLocale } from '@/paraglide/runtime.js';
-import { getLocalizedGenjutsuFaqs } from '@/components/landing/genjutsu-faqs-i18n';
 import { m } from '@/paraglide/messages.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { FaqSection } from '@/components/landing/FaqSection';
+import { getLocalizedGenjutsuFaqs } from '@/components/landing/genjutsu-faqs-i18n';
 import {
   BackToToolCta,
   HowGenjutsuWorks,
@@ -19,10 +19,7 @@ import { Hero } from '@/components/landing/Hero';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
-import { StickyComposer } from '@/components/landing/StickyComposer';
 import { Testimonials } from '@/components/landing/Testimonials';
-
-
 
 function HomePage() {
   return (
@@ -61,7 +58,6 @@ function HomePage() {
         <BackToToolCta />
       </main>
       <SiteFooter />
-      <StickyComposer />
     </div>
   );
 }

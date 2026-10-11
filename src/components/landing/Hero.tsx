@@ -1,14 +1,59 @@
+import { useCallback, useRef, useState } from 'react';
+
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import { DemoVideoGallery } from '@/components/landing/DemoVideoGallery';
-import { GeneratorPanel } from '@/components/landing/GeneratorPanel';
+import {
+  GeneratorPanel,
+  type GeneratorTemplateRequest,
+} from '@/components/landing/GeneratorPanel';
+import type { MotionTemplate } from '@/components/landing/motion-templates';
+import { MotionTemplateGallery } from '@/components/landing/MotionTemplateGallery';
 
-const BADGES = [m['site.hero.motion'], m['site.hero.objects'], m['site.hero.quality']] as const;
+const BADGES = [
+  m['site.hero.motion'],
+  m['site.hero.objects'],
+  m['site.hero.quality'],
+] as const;
 
 const HERO_VIDEO_SRC = '/videos/hero-bg.mp4';
 const HERO_POSTER_SRC = '/videos/hero-bg-poster.jpg';
 
 export function Hero({ className }: { className?: string }) {
+  const [templateRequest, setTemplateRequest] =
+    useState<GeneratorTemplateRequest | null>(null);
+  const [applyingTemplateId, setApplyingTemplateId] = useState<string | null>(
+    null
+  );
+  const requestIdRef = useRef(0);
+
+  const handleSelectTemplate = useCallback((template: MotionTemplate) => {
+    const requestId = ++requestIdRef.current;
+    setApplyingTemplateId(template.id);
+    setTemplateRequest({
+      requestId,
+      template: {
+        mode: template.mode,
+        prompt: template.prompt,
+        resolution: template.resolution,
+        sourceVideo: template.sourceVideo,
+      },
+    });
+    document
+      .getElementById('hero-generator')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const handleTemplateSettled = useCallback(
+    (result: { requestId: number; ok: boolean }) => {
+      void result.ok;
+      if (result.requestId !== requestIdRef.current) return;
+      setApplyingTemplateId(null);
+      setTemplateRequest(null);
+    },
+    []
+  );
+
   return (
     <section
       className={cn(
@@ -67,7 +112,14 @@ export function Hero({ className }: { className?: string }) {
         </div>
 
         <div id="hero-generator" className="mt-5 scroll-mt-24 text-left">
-          <GeneratorPanel />
+          <GeneratorPanel
+            templateRequest={templateRequest}
+            onTemplateSettled={handleTemplateSettled}
+          />
+          <MotionTemplateGallery
+            applyingTemplateId={applyingTemplateId}
+            onSelect={handleSelectTemplate}
+          />
           <DemoVideoGallery />
         </div>
       </div>
