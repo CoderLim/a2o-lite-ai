@@ -195,6 +195,7 @@ const MAX_REFERENCE_IMAGE_BYTES = 12 * 1024 * 1024;
 // Keep the upload gate on that editing floor and match the UI "4–30s" hint.
 const MIN_SOURCE_VIDEO_SECONDS = 4;
 const MAX_SOURCE_VIDEO_SECONDS = 30;
+const PREVIEW_DURATION_SECONDS = MIN_SOURCE_VIDEO_SECONDS;
 
 function revokeItem(item: MediaItem | null) {
   if (item) URL.revokeObjectURL(item.url);
@@ -970,6 +971,8 @@ type GenerationResult = {
   previewUrl: string;
   imageCount: number;
   createdAt: number;
+  /** A preview uses a trimmed source clip, not the full reference video. */
+  kind?: 'preview' | 'full';
   reservedCredits?: number;
 };
 
@@ -1131,10 +1134,12 @@ function ResultPanel({
   status,
   result,
   onDismiss,
+  onGenerateFull,
 }: {
   status: GenerationStatus;
   result: GenerationResult | null;
   onDismiss: () => void;
+  onGenerateFull: () => void;
 }) {
   if (status === 'idle') return null;
 
@@ -1153,7 +1158,9 @@ function ResultPanel({
           <p className="text-sm font-medium text-[rgb(237,234,222)]">
             {status === 'generating'
               ? m['site.generator.generating']()
-              : m['site.generator.result']()}
+              : result?.kind === 'preview'
+                ? m['site.generator.preview_result']()
+                : m['site.generator.result']()}
           </p>
           {result ? (
             <p className="mt-0.5 truncate text-[11px] text-white/45">
@@ -1209,11 +1216,20 @@ function ResultPanel({
         <div className="flex flex-wrap items-center gap-2 border-t border-white/8 px-4 py-3">
           <a
             href={result.previewUrl}
-            download={`genjutsu-${result.mode}-${result.resolution}.mp4`}
+            download={`genjutsu-${result.kind === 'preview' ? 'preview-' : ''}${result.mode}-${result.resolution}.mp4`}
             className="inline-flex h-8 items-center rounded-lg bg-[rgb(204,144,92)] px-3 text-sm font-semibold text-[rgb(247,246,243)] hover:brightness-105"
           >
             {m['site.generator.download']()}
           </a>
+          {result.kind === 'preview' ? (
+            <button
+              type="button"
+              onClick={onGenerateFull}
+              className="inline-flex h-8 items-center rounded-lg border border-[rgba(204,144,92,0.6)] px-3 text-sm font-semibold text-[rgb(237,234,222)] transition-colors hover:bg-white/10"
+            >
+              {m['site.generator.generate_full']()}
+            </button>
+          ) : null}
           <span className="text-[11px] text-white/40">
             {m['site.generator.generated_by']()}
           </span>
@@ -1602,8 +1618,31 @@ export function GeneratorPanel({
     }
   }, [pricingProvider, resolution, video?.durationSeconds]);
 
-  const handleGenerate = async () => {
+  const previewEstimatedCredits = useMemo(() => {
+    const durationSeconds = video?.durationSeconds;
+    if (
+      !pricingProvider ||
+      typeof durationSeconds !== 'number' ||
+      !Number.isFinite(durationSeconds) ||
+      durationSeconds < MIN_SOURCE_VIDEO_SECONDS
+    ) {
+      return null;
+    }
+    try {
+      return estimateGenjutsuCreditsForProvider({
+        provider: pricingProvider,
+        durationSeconds: Math.min(durationSeconds, PREVIEW_DURATION_SECONDS),
+        resolution: '480p',
+      });
+    } catch {
+      return null;
+    }
+  }, [pricingProvider, video?.durationSeconds]);
+
+  const handleGenerate = async (kind: 'preview' | 'full' = 'full') => {
     if (!video || images.length === 0 || status === 'generating') return;
+
+    const targetResolution: Resolution = kind === 'preview' ? '480p' : resolution;
 
     if (!session?.user) {
       redirectToSignIn();
@@ -1622,8 +1661,9 @@ export function GeneratorPanel({
     const draft: GenerationResult = {
       id: generationId,
       mode,
-      resolution,
+      resolution: targetResolution,
       prompt: prompt.trim(),
+      kind,
       previewUrl: '',
       imageCount: images.length,
       createdAt: Date.now(),
@@ -1640,15 +1680,40 @@ export function GeneratorPanel({
         ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
+    let previewClip: MediaItem | null = null;
     try {
+      if (
+        kind === 'preview' &&
+        typeof video.durationSeconds === 'number' &&
+        video.durationSeconds > PREVIEW_DURATION_SECONDS + 0.05
+      ) {
+        // Higgsfield bills the submitted video's duration. A 480p request
+        // with the original full-length input would not be a short preview.
+        const { trimVideoToFile } = await import('@/lib/trim-video');
+        const clipFile = await trimVideoToFile({
+          sourceUrl: video.url,
+          startSeconds: 0,
+          endSeconds: PREVIEW_DURATION_SECONDS,
+          fileName: 'genjutsu-preview.mp4',
+          accurate: true,
+        });
+        const durationSeconds = await readLocalVideoDurationSeconds(clipFile);
+        if (
+          durationSeconds < PREVIEW_DURATION_SECONDS - 0.01 ||
+          durationSeconds > PREVIEW_DURATION_SECONDS + 0.2
+        ) {
+          throw new Error(m['site.generator.preview_trim_failed']());
+        }
+        previewClip = { ...createMediaItem(clipFile), durationSeconds };
+      }
+
+      const media = [previewClip ?? video, ...images];
       await apiPost('/api/genjutsu/attempt', {
         generationId,
         mode,
-        resolution,
+        resolution: targetResolution,
         prompt: prompt.trim(),
       });
-
-      const media = [video, ...images];
       const contentTypes = media.map(
         (item, index) =>
           item.file.type || (index === 0 ? 'video/mp4' : 'image/jpeg')
@@ -1659,7 +1724,7 @@ export function GeneratorPanel({
         {
           generationId,
           mode,
-          resolution,
+          resolution: targetResolution,
           prompt: prompt.trim(),
           contentTypes,
           contentLengths,
@@ -1810,6 +1875,8 @@ export function GeneratorPanel({
           ? cause.message
           : m['site.generator.failed_unexpected']()
       );
+    } finally {
+      revokeItem(previewClip);
     }
   };
 
@@ -1953,51 +2020,85 @@ export function GeneratorPanel({
             ) : null}
           </div>
 
-          <div className="ml-auto flex w-full items-center justify-end gap-2 sm:w-auto">
-            {estimatedCredits != null ? (
-              <div className="flex shrink-0 items-center gap-1 text-[12px] text-white/50 tabular-nums">
-                <span>
-                  {m['genjutsu.estimate.credits']({
-                    count: estimatedCredits.toLocaleString(),
-                  })}
+          <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
+                <span className="whitespace-nowrap text-[10px] text-white/45">
+                  {m['site.generator.preview_spec']()}
                 </span>
-                <TooltipProvider delay={200}>
-                  <Tooltip>
-                    <TooltipTrigger
-                      type="button"
-                      className="inline-flex size-4 items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
-                      aria-label={m['genjutsu.estimate.help_aria']()}
-                    >
-                      <CircleHelp className="size-3.5" aria-hidden />
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      align="end"
-                      className="max-w-[240px] text-left leading-snug"
-                    >
-                      {pricingProvider === 'higgsfield'
-                        ? m['genjutsu.estimate.tooltip']()
-                        : m['genjutsu.estimate.seedance_tooltip']()}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <span>
+                  {previewEstimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: previewEstimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                </span>
               </div>
-            ) : null}
-            <button
-              type="button"
-              disabled={!canGenerate}
-              onClick={handleGenerate}
-              className={cn(
-                'relative inline-flex h-8 flex-1 items-center justify-center rounded-lg px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95 sm:w-auto sm:flex-none',
-                canGenerate
-                  ? 'bg-[rgb(204,144,92)] text-[rgb(247,246,243)] hover:brightness-105'
-                  : 'bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
-              )}
-            >
-              {status === 'generating'
-                ? m['site.generator.generating']()
-                : m['site.generator.generate']()}
-            </button>
+              <button
+                type="button"
+                disabled={!canGenerate}
+                onClick={() => void handleGenerate('preview')}
+                className={cn(
+                  'inline-flex h-8 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
+                  canGenerate
+                    ? 'border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
+                    : 'border-white/10 text-[rgb(237,234,222)]/38'
+                )}
+                title={m['site.generator.preview_help']()}
+              >
+                {m['site.generator.preview']()}
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {estimatedCredits != null ? (
+                <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
+                  <span className="whitespace-nowrap text-[10px] text-white/45">
+                    {m['site.generator.full_video']()}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    {m['genjutsu.estimate.credits']({
+                      count: estimatedCredits.toLocaleString(),
+                    })}
+                    <TooltipProvider delay={200}>
+                      <Tooltip>
+                        <TooltipTrigger
+                          type="button"
+                          className="inline-flex size-4 items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
+                          aria-label={m['genjutsu.estimate.help_aria']()}
+                        >
+                          <CircleHelp className="size-3.5" aria-hidden />
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          align="end"
+                          className="max-w-[240px] text-left leading-snug"
+                        >
+                          {pricingProvider === 'higgsfield'
+                            ? m['genjutsu.estimate.tooltip']()
+                            : m['genjutsu.estimate.seedance_tooltip']()}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </span>
+                </div>
+              ) : null}
+              <button
+                type="button"
+                disabled={!canGenerate}
+                onClick={() => void handleGenerate('full')}
+                className={cn(
+                  'relative inline-flex h-8 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
+                  canGenerate
+                    ? 'text-[rgb(247,246,243)] hover:brightness-105'
+                    : 'bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
+                )}
+              >
+                {status === 'generating'
+                  ? m['site.generator.generating']()
+                  : m['site.generator.generate']()}
+              </button>
+            </div>
+          </div>
           </div>
         </div>
       </div>
@@ -2009,6 +2110,7 @@ export function GeneratorPanel({
           setStatus('idle');
           setResult(null);
         }}
+        onGenerateFull={() => void handleGenerate('full')}
       />
 
       {error ? (
