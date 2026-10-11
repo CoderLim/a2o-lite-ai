@@ -32,8 +32,10 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative mb-1.5 w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition sm:mb-2',
-        landscape ? 'aspect-video' : 'aspect-9/16',
+        'group relative shrink-0 cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
+        landscape
+          ? 'aspect-video w-[160px] sm:w-[180px]'
+          : 'aspect-9/16 w-[100px] sm:w-[110px]',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
         applying && 'cursor-wait opacity-80'
       )}
@@ -91,8 +93,7 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      {/* ~1/3 of hero content width (~1180px → ~390px) */}
-      <div className="max-w-[390px] columns-2 gap-1.5 sm:gap-2">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:gap-2.5">
         {MOTION_TEMPLATES.map((template) => (
           <TemplateCard
             key={template.id}
