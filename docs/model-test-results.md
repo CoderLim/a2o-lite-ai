@@ -25,6 +25,36 @@ Related:
 
 ## Log
 
+### 2026-10-11 — Wan 2.2 Animate / Wan VACE / Kling O3 — character identity bake-off
+
+Comparative qualitative test focused on **人物保持** (identity / face consistency) for Genjutsu-style character swap / reference-driven edit. Exact Fal request ids not recorded.
+
+|                  |                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Models**       | Wan 2.2 Animate; Wan VACE; Kling O3 standard; Kling O3 pro (not run)                                                      |
+| **Surface**      | Ad-hoc / lab comparison (not tied to a single product page)                                                               |
+| **Scenario**     | Character identity preservation under reference-image Elements                                                            |
+| **Inputs**       | Per-model reference Element images; Kling path stressed single vs multi-angle Element framing                             |
+| **Prompt style** | Not recorded                                                                                                              |
+| **Verdict**      | Wan 2.2 Animate / Wan VACE: **fail**; Kling O3 standard: **mixed** (usable under constraints); Kling O3 pro: **untested** |
+
+**Findings**
+
+1. **Wan 2.2 Animate — fail:** character identity preservation poorest among models tried; not usable for Genjutsu-style person keep.
+2. **Wan VACE — fail:** same class of failure — **人物保持最差** tier with Wan 2.2 Animate; reject for identity-critical workflows.
+3. **Kling O3 standard — mixed / usable with constraints:** overall identity quality acceptable **if each Element has only one image**, preferably a **single frontal portrait**. Do **not** put multiple angles of the same person into one Element image (collage / multi-view sheet) — that hurts consistency.
+4. **Kling O3 pro — untested:** expected to beat O3 standard on identity, but no run in this bake-off.
+
+**Implication**
+
+- Drop Wan 2.2 Animate and Wan VACE as candidates for Genjutsu / Hotel Lobby–style person swap until a stronger identity result appears.
+- Prefer Kling O3 standard with **one frontal ref per Element**; keep multi-angle refs as separate Elements (or skip) rather than one collage.
+- Next: run Kling O3 pro on the same inputs to confirm the expected gain.
+
+**Evidence**
+
+- Qualitative only — no Fal/Ark request ids attached for this session.
+
 ### 2026-10-07 — MiniMax H3 reference-to-video — fail (request `01a11461…`)
 
 |                  |                                                                                                                                                            |
