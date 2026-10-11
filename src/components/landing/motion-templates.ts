@@ -150,6 +150,17 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: DEFAULT_OBJECTS_RESOLUTION,
     aspect: 'portrait',
   },
+  {
+    id: 'dog-two-girl-dance',
+    titleKey: 'site.templates.dog_two_girl_dance',
+    poster: '/videos/dog-two-girl-dance-tpl-poster.jpg',
+    sourceVideo: '/videos/dog-two-girl-dance-tpl.mp4',
+    prompt:
+      'Replace the puppy in @Video1 with the animal in @Image1. Keep the two girls dancing, camera path, and timing. Use only this authorized likeness.',
+    mode: 'objects-swap',
+    resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'portrait',
+  },
 ];
 
 /** Optional preview URL when it differs from the downloadable source. */
