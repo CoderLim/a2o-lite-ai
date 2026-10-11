@@ -2,8 +2,8 @@ import { tDynamic } from '@/core/i18n/dynamic';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
-  getFeaturedMotionTemplateLayout,
   getMotionTemplatePreviewSrc,
+  MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
 
@@ -17,14 +17,13 @@ function TemplateCard({
   template,
   applying,
   onSelect,
-  className,
 }: {
   template: MotionTemplate;
   applying: boolean;
   onSelect?: (template: MotionTemplate) => void;
-  className?: string;
 }) {
   const title = tDynamic(template.titleKey);
+  const landscape = template.aspect === 'landscape';
 
   return (
     <button
@@ -33,10 +32,12 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative min-h-0 w-full cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition',
+        'group relative w-full cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition',
+        landscape
+          ? 'aspect-video'
+          : 'aspect-9/16 max-w-[280px] sm:max-w-[320px]',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
-        applying && 'cursor-wait opacity-80',
-        className
+        applying && 'cursor-wait opacity-80'
       )}
     >
       <video
@@ -56,11 +57,11 @@ function TemplateCard({
         alt=""
         className="absolute inset-0 hidden size-full object-cover motion-reduce:block"
       />
-      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-2.5 pt-8 pb-2.5">
-        <p className="truncate text-[12px] font-semibold text-[rgb(237,234,222)]">
+      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-3 pt-10 pb-2.5">
+        <p className="truncate text-[13px] font-semibold text-[rgb(237,234,222)]">
           {title}
         </p>
-        <p className="mt-0.5 text-[10px] font-medium text-[rgb(204,144,92)]">
+        <p className="mt-0.5 text-[11px] font-medium text-[rgb(204,144,92)]">
           {applying
             ? m['site.templates.applying']()
             : m['site.templates.use']()}
@@ -75,11 +76,6 @@ export function MotionTemplateGallery({
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
-  const layout = getFeaturedMotionTemplateLayout();
-  if (!layout) return null;
-
-  const { portrait, landscapes } = layout;
-
   return (
     <section
       className={cn('mt-6 text-left', className)}
@@ -97,30 +93,15 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      {/* Left: 1 portrait · Right: 2 landscapes stacked */}
-      <div className="mx-auto flex max-w-xl items-stretch gap-2.5 sm:max-w-2xl sm:gap-3">
-        <div className="w-[46%] shrink-0">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {MOTION_TEMPLATES.map((template) => (
           <TemplateCard
-            template={portrait}
-            applying={applyingTemplateId === portrait.id}
+            key={template.id}
+            template={template}
+            applying={applyingTemplateId === template.id}
             onSelect={onSelect}
-            className="aspect-9/16 w-full"
           />
-        </div>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 sm:gap-3">
-          <TemplateCard
-            template={landscapes[0]}
-            applying={applyingTemplateId === landscapes[0].id}
-            onSelect={onSelect}
-            className="h-full min-h-0 flex-1"
-          />
-          <TemplateCard
-            template={landscapes[1]}
-            applying={applyingTemplateId === landscapes[1].id}
-            onSelect={onSelect}
-            className="h-full min-h-0 flex-1"
-          />
-        </div>
+        ))}
       </div>
     </section>
   );
