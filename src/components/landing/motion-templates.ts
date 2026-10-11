@@ -29,6 +29,8 @@ export type MotionTemplate = {
   prompt: string;
   mode: 'motion-transfer' | 'objects-swap';
   resolution: '480p' | '720p' | '1080p';
+  /** Card preview aspect; Hotel Lobby source is 16:9 landscape. */
+  aspect: 'portrait' | 'landscape';
 };
 
 /** Served from R2 via hotel-lobby API (not a static public/ file). */
@@ -45,6 +47,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: ZOMBIE_HUG_PROMPT,
     mode: ZOMBIE_HUG_MODE,
     resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
+    aspect: 'portrait',
   },
   {
     id: 'hotel-lobby',
@@ -55,6 +58,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: buildHotelLobbyPrompt(2),
     mode: 'objects-swap',
     resolution: '720p',
+    aspect: 'landscape',
   },
   {
     id: 'bulin-47',
@@ -64,6 +68,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: BULIN_47_DEFAULT_PROMPT,
     mode: BULIN_47_MODE,
     resolution: BULIN_47_DEFAULT_RESOLUTION,
+    aspect: 'portrait',
   },
   {
     id: 'rumpelstiltskin',
@@ -73,6 +78,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: RUMPEL_DEFAULT_PROMPT,
     mode: RUMPEL_MODE,
     resolution: RUMPEL_DEFAULT_RESOLUTION,
+    aspect: 'portrait',
   },
 ];
 
