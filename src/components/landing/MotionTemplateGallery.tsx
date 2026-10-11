@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
   getMotionTemplatePreviewSrc,
-  getMotionTemplatesByAspect,
+  MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
 
@@ -17,14 +17,13 @@ function TemplateCard({
   template,
   applying,
   onSelect,
-  className,
 }: {
   template: MotionTemplate;
   applying: boolean;
   onSelect?: (template: MotionTemplate) => void;
-  className?: string;
 }) {
   const title = tDynamic(template.titleKey);
+  const landscape = template.aspect === 'landscape';
 
   return (
     <button
@@ -33,10 +32,10 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative min-h-0 w-full cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition',
+        'group relative mb-2.5 w-full cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition sm:mb-3',
+        landscape ? 'aspect-video' : 'aspect-9/16',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
-        applying && 'cursor-wait opacity-80',
-        className
+        applying && 'cursor-wait opacity-80'
       )}
     >
       <video
@@ -70,51 +69,11 @@ function TemplateCard({
   );
 }
 
-function TemplateColumn({
-  templates,
-  applyingTemplateId,
-  onSelect,
-  className,
-}: {
-  templates: MotionTemplate[];
-  applyingTemplateId?: string | null;
-  onSelect?: (template: MotionTemplate) => void;
-  className?: string;
-}) {
-  if (templates.length === 0) return null;
-
-  return (
-    <div
-      className={cn(
-        'flex min-h-0 min-w-0 flex-col gap-2.5 sm:gap-3',
-        className
-      )}
-    >
-      {templates.map((template) => (
-        <TemplateCard
-          key={template.id}
-          template={template}
-          applying={applyingTemplateId === template.id}
-          onSelect={onSelect}
-          className="h-full min-h-0 flex-1"
-        />
-      ))}
-    </div>
-  );
-}
-
 export function MotionTemplateGallery({
   className,
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
-  const { portraits, landscapes } = getMotionTemplatesByAspect();
-  if (portraits.length === 0 && landscapes.length === 0) return null;
-
-  // Prefer portrait column width when both exist (matches the 左竖右横 sketch).
-  const onlyLandscapes = portraits.length === 0;
-  const onlyPortraits = landscapes.length === 0;
-
   return (
     <section
       className={cn('mt-6 text-left', className)}
@@ -132,43 +91,16 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div
-        className={cn(
-          'mx-auto flex max-w-xl items-stretch gap-2.5 sm:max-w-2xl sm:gap-3',
-          // Give the block a stable height so flex-1 cards share space evenly.
-          'min-h-[320px] sm:min-h-[400px]'
-        )}
-      >
-        {onlyLandscapes ? (
-          <TemplateColumn
-            templates={landscapes}
-            applyingTemplateId={applyingTemplateId}
+      {/* Masonry: portrait / landscape cards keep native aspect ratios */}
+      <div className="columns-2 gap-2.5 sm:columns-3 sm:gap-3">
+        {MOTION_TEMPLATES.map((template) => (
+          <TemplateCard
+            key={template.id}
+            template={template}
+            applying={applyingTemplateId === template.id}
             onSelect={onSelect}
-            className="w-full"
           />
-        ) : onlyPortraits ? (
-          <TemplateColumn
-            templates={portraits}
-            applyingTemplateId={applyingTemplateId}
-            onSelect={onSelect}
-            className="w-full"
-          />
-        ) : (
-          <>
-            <TemplateColumn
-              templates={portraits}
-              applyingTemplateId={applyingTemplateId}
-              onSelect={onSelect}
-              className="w-[46%] shrink-0"
-            />
-            <TemplateColumn
-              templates={landscapes}
-              applyingTemplateId={applyingTemplateId}
-              onSelect={onSelect}
-              className="flex-1"
-            />
-          </>
-        )}
+        ))}
       </div>
     </section>
   );

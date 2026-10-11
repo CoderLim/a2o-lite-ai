@@ -17,7 +17,7 @@ import {
   ZOMBIE_HUG_DEFAULT_RESOLUTION,
   ZOMBIE_HUG_MODE,
   ZOMBIE_HUG_PROMPT,
-  ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
+  ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH_9X16,
 } from '@/modules/zombie-hug/prompt';
 
 export type MotionTemplate = {
@@ -38,10 +38,20 @@ const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
 const HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH = '/api/hotel-lobby/template';
 
 /**
- * Homepage templates. Gallery: portraits in the left column, landscapes
- * stacked in the right column (shows every template).
+ * Homepage templates for masonry gallery.
+ * Original three starters are portrait; Hotel Lobby is landscape 16:9.
  */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
+  {
+    id: 'zombie-hug',
+    titleKey: 'site.templates.zombie_hug',
+    poster: '/readme/zombie-hug.jpg',
+    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH_9X16,
+    prompt: ZOMBIE_HUG_PROMPT,
+    mode: ZOMBIE_HUG_MODE,
+    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
+    aspect: 'portrait',
+  },
   {
     id: 'bulin-47',
     titleKey: 'site.templates.bulin_47',
@@ -72,27 +82,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: '720p',
     aspect: 'landscape',
   },
-  {
-    id: 'zombie-hug',
-    titleKey: 'site.templates.zombie_hug',
-    poster: '/readme/zombie-hug.jpg',
-    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
-    prompt: ZOMBIE_HUG_PROMPT,
-    mode: ZOMBIE_HUG_MODE,
-    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
-    aspect: 'landscape',
-  },
 ];
-
-export function getMotionTemplatesByAspect(): {
-  portraits: MotionTemplate[];
-  landscapes: MotionTemplate[];
-} {
-  return {
-    portraits: MOTION_TEMPLATES.filter((t) => t.aspect === 'portrait'),
-    landscapes: MOTION_TEMPLATES.filter((t) => t.aspect === 'landscape'),
-  };
-}
 
 /** Optional preview URL when it differs from the downloadable source. */
 export function getMotionTemplatePreviewSrc(template: MotionTemplate): string {
