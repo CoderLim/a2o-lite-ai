@@ -31,7 +31,7 @@ const NAV_LINKS = [
 ] as const;
 
 const TRENDING_LINKS = [
-  { label: 'Bulin 47 AI video', href: '/bulin-47-ai' },
+  { label: 'Bulin 47 AI', href: '/bulin-47-ai' },
   { label: 'Hotel Lobby', href: '/hotel-lobby-ai' },
   { label: 'Zombie Hug', href: '/ai-zombie-hug' },
 ] as const;
