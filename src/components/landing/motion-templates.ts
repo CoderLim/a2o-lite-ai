@@ -29,7 +29,7 @@ export type MotionTemplate = {
   prompt: string;
   mode: 'motion-transfer' | 'objects-swap';
   resolution: '480p' | '720p' | '1080p';
-  /** Card preview aspect; Hotel Lobby source is 16:9 landscape. */
+  /** Card preview aspect. */
   aspect: 'portrait' | 'landscape';
 };
 
@@ -37,29 +37,11 @@ export type MotionTemplate = {
 const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
 const HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH = '/api/hotel-lobby/template';
 
-/** Homepage-supported motion templates (real source clips, not edited demos). */
+/**
+ * Homepage templates. Featured layout uses 1 portrait + 2 landscapes
+ * (left tall card, two stacked landscape cards on the right).
+ */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
-  {
-    id: 'zombie-hug',
-    titleKey: 'site.templates.zombie_hug',
-    poster: '/readme/zombie-hug.jpg',
-    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
-    prompt: ZOMBIE_HUG_PROMPT,
-    mode: ZOMBIE_HUG_MODE,
-    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
-    aspect: 'portrait',
-  },
-  {
-    id: 'hotel-lobby',
-    titleKey: 'site.templates.hotel_lobby',
-    poster: '/readme/hotel-lobby.jpg',
-    // Preview uses the redirecting template URL; apply downloads the file proxy.
-    sourceVideo: HOTEL_LOBBY_TEMPLATE_FILE_PATH,
-    prompt: buildHotelLobbyPrompt(2),
-    mode: 'objects-swap',
-    resolution: '720p',
-    aspect: 'landscape',
-  },
   {
     id: 'bulin-47',
     titleKey: 'site.templates.bulin_47',
@@ -69,6 +51,27 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     mode: BULIN_47_MODE,
     resolution: BULIN_47_DEFAULT_RESOLUTION,
     aspect: 'portrait',
+  },
+  {
+    id: 'hotel-lobby',
+    titleKey: 'site.templates.hotel_lobby',
+    poster: '/readme/hotel-lobby.jpg',
+    sourceVideo: HOTEL_LOBBY_TEMPLATE_FILE_PATH,
+    prompt: buildHotelLobbyPrompt(2),
+    mode: 'objects-swap',
+    resolution: '720p',
+    aspect: 'landscape',
+  },
+  {
+    id: 'zombie-hug',
+    titleKey: 'site.templates.zombie_hug',
+    poster: '/readme/zombie-hug.jpg',
+    // Default public template is 16:9 landscape.
+    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
+    prompt: ZOMBIE_HUG_PROMPT,
+    mode: ZOMBIE_HUG_MODE,
+    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
+    aspect: 'landscape',
   },
   {
     id: 'rumpelstiltskin',
@@ -81,6 +84,20 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     aspect: 'portrait',
   },
 ];
+
+/** 1 portrait (left) + 2 landscapes (right stack) for the homepage grid. */
+export function getFeaturedMotionTemplateLayout(): {
+  portrait: MotionTemplate;
+  landscapes: [MotionTemplate, MotionTemplate];
+} | null {
+  const portrait = MOTION_TEMPLATES.find((t) => t.aspect === 'portrait');
+  const landscapes = MOTION_TEMPLATES.filter((t) => t.aspect === 'landscape');
+  if (!portrait || landscapes.length < 2) return null;
+  return {
+    portrait,
+    landscapes: [landscapes[0], landscapes[1]],
+  };
+}
 
 /** Optional preview URL when it differs from the downloadable source. */
 export function getMotionTemplatePreviewSrc(template: MotionTemplate): string {

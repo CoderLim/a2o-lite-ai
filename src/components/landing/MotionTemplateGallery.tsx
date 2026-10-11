@@ -2,8 +2,8 @@ import { tDynamic } from '@/core/i18n/dynamic';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
+  getFeaturedMotionTemplateLayout,
   getMotionTemplatePreviewSrc,
-  MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
 
@@ -17,13 +17,14 @@ function TemplateCard({
   template,
   applying,
   onSelect,
+  className,
 }: {
   template: MotionTemplate;
   applying: boolean;
   onSelect?: (template: MotionTemplate) => void;
+  className?: string;
 }) {
   const title = tDynamic(template.titleKey);
-  const landscape = template.aspect === 'landscape';
 
   return (
     <button
@@ -32,39 +33,29 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition',
-        landscape ? 'w-[220px] sm:w-[260px]' : 'w-[140px] sm:w-[160px]',
+        'group relative min-h-0 w-full cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
-        applying && 'cursor-wait opacity-80'
+        applying && 'cursor-wait opacity-80',
+        className
       )}
     >
-      <div
-        className={cn(
-          'overflow-hidden',
-          landscape ? 'aspect-video' : 'aspect-9/16'
-        )}
+      <video
+        className="absolute inset-0 size-full object-cover motion-reduce:hidden"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={template.poster}
+        aria-hidden
       >
-        <video
-          className="size-full object-cover motion-reduce:hidden"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster={template.poster}
-          aria-hidden
-        >
-          <source
-            src={getMotionTemplatePreviewSrc(template)}
-            type="video/mp4"
-          />
-        </video>
-        <img
-          src={template.poster}
-          alt=""
-          className="hidden size-full object-cover motion-reduce:block"
-        />
-      </div>
+        <source src={getMotionTemplatePreviewSrc(template)} type="video/mp4" />
+      </video>
+      <img
+        src={template.poster}
+        alt=""
+        className="absolute inset-0 hidden size-full object-cover motion-reduce:block"
+      />
       <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-2.5 pt-8 pb-2.5">
         <p className="truncate text-[12px] font-semibold text-[rgb(237,234,222)]">
           {title}
@@ -84,6 +75,11 @@ export function MotionTemplateGallery({
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
+  const layout = getFeaturedMotionTemplateLayout();
+  if (!layout) return null;
+
+  const { portrait, landscapes } = layout;
+
   return (
     <section
       className={cn('mt-6 text-left', className)}
@@ -100,15 +96,31 @@ export function MotionTemplateGallery({
           {m['site.templates.description']()}
         </p>
       </div>
-      <div className="-mx-1 flex gap-2.5 overflow-x-auto px-1 pb-1 sm:gap-3">
-        {MOTION_TEMPLATES.map((template) => (
+
+      {/* Left: 1 portrait · Right: 2 landscapes stacked */}
+      <div className="mx-auto flex max-w-xl items-stretch gap-2.5 sm:max-w-2xl sm:gap-3">
+        <div className="w-[46%] shrink-0">
           <TemplateCard
-            key={template.id}
-            template={template}
-            applying={applyingTemplateId === template.id}
+            template={portrait}
+            applying={applyingTemplateId === portrait.id}
             onSelect={onSelect}
+            className="aspect-9/16 w-full"
           />
-        ))}
+        </div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 sm:gap-3">
+          <TemplateCard
+            template={landscapes[0]}
+            applying={applyingTemplateId === landscapes[0].id}
+            onSelect={onSelect}
+            className="h-full min-h-0 flex-1"
+          />
+          <TemplateCard
+            template={landscapes[1]}
+            applying={applyingTemplateId === landscapes[1].id}
+            onSelect={onSelect}
+            className="h-full min-h-0 flex-1"
+          />
+        </div>
       </div>
     </section>
   );
