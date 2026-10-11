@@ -23,6 +23,9 @@ const STATIC_PATHS = [
   '/refund-policy',
 ];
 
+/** English-only SEO bodies — do not emit ja/ko sitemap or hreflang rows. */
+const ENGLISH_ONLY_STATIC_PATHS = new Set(['/ai-rumpelstiltskin']);
+
 type Entry = {
   path: string;
   locale: string;
@@ -79,15 +82,18 @@ export const Route = createFileRoute('/sitemap.xml')({
     handlers: {
       GET: async ({ request }) => {
         const origin = siteOrigin(request);
-        const entries: Entry[] = STATIC_PATHS.flatMap((path) =>
-          locales.map((locale) => ({
+        const entries: Entry[] = STATIC_PATHS.flatMap((path) => {
+          const pathLocales = ENGLISH_ONLY_STATIC_PATHS.has(path)
+            ? [baseLocale]
+            : [...locales];
+          return pathLocales.map((locale) => ({
             path,
             locale,
-            alternateLocales: [...locales],
+            alternateLocales: pathLocales.length > 1 ? pathLocales : undefined,
             changeFrequency: path === '/blog' ? 'daily' : 'weekly',
             priority: path === '' ? 1 : 0.8,
-          }))
-        );
+          }));
+        });
 
         try {
           const { listPublishedArticles } =
