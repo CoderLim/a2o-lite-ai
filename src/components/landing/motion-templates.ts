@@ -37,28 +37,11 @@ export type MotionTemplate = {
 const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
 const HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH = '/api/hotel-lobby/template';
 
-/** Homepage templates — shown one per row in MotionTemplateGallery. */
+/**
+ * Homepage templates. Gallery: portraits in the left column, landscapes
+ * stacked in the right column (shows every template).
+ */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
-  {
-    id: 'zombie-hug',
-    titleKey: 'site.templates.zombie_hug',
-    poster: '/readme/zombie-hug.jpg',
-    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
-    prompt: ZOMBIE_HUG_PROMPT,
-    mode: ZOMBIE_HUG_MODE,
-    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
-    aspect: 'landscape',
-  },
-  {
-    id: 'hotel-lobby',
-    titleKey: 'site.templates.hotel_lobby',
-    poster: '/readme/hotel-lobby.jpg',
-    sourceVideo: HOTEL_LOBBY_TEMPLATE_FILE_PATH,
-    prompt: buildHotelLobbyPrompt(2),
-    mode: 'objects-swap',
-    resolution: '720p',
-    aspect: 'landscape',
-  },
   {
     id: 'bulin-47',
     titleKey: 'site.templates.bulin_47',
@@ -79,7 +62,37 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: RUMPEL_DEFAULT_RESOLUTION,
     aspect: 'portrait',
   },
+  {
+    id: 'hotel-lobby',
+    titleKey: 'site.templates.hotel_lobby',
+    poster: '/readme/hotel-lobby.jpg',
+    sourceVideo: HOTEL_LOBBY_TEMPLATE_FILE_PATH,
+    prompt: buildHotelLobbyPrompt(2),
+    mode: 'objects-swap',
+    resolution: '720p',
+    aspect: 'landscape',
+  },
+  {
+    id: 'zombie-hug',
+    titleKey: 'site.templates.zombie_hug',
+    poster: '/readme/zombie-hug.jpg',
+    sourceVideo: ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH,
+    prompt: ZOMBIE_HUG_PROMPT,
+    mode: ZOMBIE_HUG_MODE,
+    resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
+    aspect: 'landscape',
+  },
 ];
+
+export function getMotionTemplatesByAspect(): {
+  portraits: MotionTemplate[];
+  landscapes: MotionTemplate[];
+} {
+  return {
+    portraits: MOTION_TEMPLATES.filter((t) => t.aspect === 'portrait'),
+    landscapes: MOTION_TEMPLATES.filter((t) => t.aspect === 'landscape'),
+  };
+}
 
 /** Optional preview URL when it differs from the downloadable source. */
 export function getMotionTemplatePreviewSrc(template: MotionTemplate): string {
