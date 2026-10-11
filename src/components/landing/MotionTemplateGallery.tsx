@@ -152,7 +152,7 @@ export function MotionTemplateGallery({
       </div>
 
       <div
-        className="mx-auto flex w-full max-w-[960px] flex-wrap gap-[var(--template-gap)] [--template-columns:4] [--template-gap:8px] sm:[--template-gap:12px] md:[--template-columns:6] lg:[--template-gap:16px]"
+        className="flex w-full flex-wrap gap-[var(--template-gap)] [--template-columns:4] [--template-gap:8px] sm:[--template-gap:12px] md:[--template-columns:6] lg:[--template-gap:16px]"
         style={{
           // p = (W - gap) / columns. A landscape stack is 2p - gap wide:
           // two 2:1 cards + their gap have the height of one 1:2 portrait.
