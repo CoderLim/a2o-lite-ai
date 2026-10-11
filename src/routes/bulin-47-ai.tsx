@@ -188,6 +188,15 @@ function Bulin47AiPage() {
                 ai, genematic ai and ai video generator.
               </p>
             </div>
+            <figure className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+              <img
+                src="/imgs/blog/how-to-make-bulin-47-ai-video-cover.jpg"
+                alt="Bulin 47 AI video trend: street freestyle look restaged as an AI-generated clip"
+                className="h-auto w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
           </div>
         </section>
 
