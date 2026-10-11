@@ -63,7 +63,7 @@ export function PricingSection() {
     void startCheckout(productId);
   }
 
-  // Resume checkout after sign-in: /?buy=mini#pricing
+  // Resume checkout after sign-in: /?buy=starter#pricing
   useEffect(() => {
     if (sessionPending || autoBuyStarted.current) return;
     if (typeof window === 'undefined') return;
@@ -120,10 +120,14 @@ export function PricingSection() {
               <p className="text-foreground mt-3 text-3xl font-bold">
                 ${(pack.priceCents / 100).toFixed(2)}
               </p>
-              <p className="text-muted-foreground text-sm">{m['site.pricing.once']()}</p>
+              <p className="text-muted-foreground text-sm">
+                {m['site.pricing.once']()}
+              </p>
 
               <p className="text-primary mt-5 text-2xl font-semibold tabular-nums">
-                {m['site.pricing.credits']({ count: pack.credits.toLocaleString() })}
+                {m['site.pricing.credits']({
+                  count: pack.credits.toLocaleString(),
+                })}
               </p>
 
               <ul className="text-muted-foreground mt-5 space-y-2 text-sm">

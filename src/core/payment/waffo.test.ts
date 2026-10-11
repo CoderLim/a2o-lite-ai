@@ -17,10 +17,7 @@ import {
   WebhookIgnoredError,
   type PaymentSession,
 } from './types';
-import {
-  createWaffoProvider,
-  getWaffoOneTimePriceSnapshot,
-} from './waffo';
+import { createWaffoProvider, getWaffoOneTimePriceSnapshot } from './waffo';
 
 const WAFFO_SUBSCRIPTION_RENEWED = 'subscription.renewed';
 const WAFFO_SUBSCRIPTION_RECOVERED = 'subscription.recovered';
@@ -75,23 +72,27 @@ function baseEvent(
   };
 }
 
-test('V2 Waffo checkout uses the local one-time order price snapshot', () => {
+test('Waffo checkout uses the local one-time order price snapshot', () => {
   const forPrice = (amount: number, currency = 'usd') =>
     getWaffoOneTimePriceSnapshot({
       type: PaymentType.ONE_TIME,
       price: { amount, currency },
     });
 
-  assert.deepEqual(forPrice(1499), {
-    amount: '14.99',
+  assert.deepEqual(forPrice(499), {
+    amount: '4.99',
     taxCategory: 'saas',
   });
-  assert.deepEqual(forPrice(4999), {
-    amount: '49.99',
+  assert.deepEqual(forPrice(999), {
+    amount: '9.99',
     taxCategory: 'saas',
   });
-  assert.deepEqual(forPrice(9999), {
-    amount: '99.99',
+  assert.deepEqual(forPrice(1999), {
+    amount: '19.99',
+    taxCategory: 'saas',
+  });
+  assert.deepEqual(forPrice(3999), {
+    amount: '39.99',
     taxCategory: 'saas',
   });
   assert.equal(forPrice(0), undefined);
@@ -99,7 +100,7 @@ test('V2 Waffo checkout uses the local one-time order price snapshot', () => {
   assert.equal(
     getWaffoOneTimePriceSnapshot({
       type: PaymentType.SUBSCRIPTION,
-      price: { amount: 1499, currency: 'usd' },
+      price: { amount: 499, currency: 'usd' },
     }),
     undefined
   );
@@ -413,7 +414,7 @@ test('createPayment uses authenticated checkout and preserves merchant order ref
       orderNo: 'ORD_local_1',
       productId: 'PROD_1',
       type: PaymentType.ONE_TIME,
-      price: { amount: 1499, currency: 'USD' },
+      price: { amount: 499, currency: 'USD' },
       customer: {
         id: 'user-123',
         email: 'buyer@example.com',
@@ -423,7 +424,7 @@ test('createPayment uses authenticated checkout and preserves merchant order ref
 
   // Assert the **actual authenticated SDK call**, not just the pure helper.
   assert.deepEqual(received?.priceSnapshot, {
-    amount: '14.99',
+    amount: '4.99',
     taxCategory: 'saas',
   });
   assert.equal(received?.currency, 'USD');

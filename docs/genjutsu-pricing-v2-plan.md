@@ -1,7 +1,7 @@
 # Genjutsu AI Pricing V2 — Implementation Plan
 
 **Decision date:** 2026-10-08  
-**Status:** Phase A implemented on `feat/genjutsu-pricing-v2`; **not merged, not deployed, Waffo live products not migrated**  
+**Status:** Rolled back from live checkout (2026-10-11). Code catalog on `main` is V1 again; keep this plan for a future cutover. Do not treat V2/Mini as the active public catalog.  
 **Scope:** Genjutsu AI public credit packs, insufficient-balance checkout, provider quote consistency, payment catalog migration.  
 **Source of truth today:** `src/modules/genjutsu/pricing.ts` and `src/config/pricing.ts`.
 
@@ -20,12 +20,12 @@
 
 ## 2. Approved public catalog (target)
 
-| Internal ID (proposed) | UI name | Price USD | Credits granted | Model-cost budget at 170 credits/$ | Max theoretical model-cost gross margin* | UI |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| `starter` | Starter | $14.99 | **1,100** | $6.47 | **56.8%** | Public |
-| `creator` | Creator | $49.99 | **3,900** | $22.94 | **54.1%** | Public, **Popular** |
-| `studio` | Studio | $99.99 | **8,400** | $49.41 | **50.6%** | Public |
-| `pro` | Pro | — | — | — | — | **Retire from new public checkout only** |
+| Internal ID (proposed) | UI name | Price USD | Credits granted | Model-cost budget at 170 credits/$ | Max theoretical model-cost gross margin\* | UI                                       |
+| ---------------------- | ------- | --------: | --------------: | ---------------------------------: | ----------------------------------------: | ---------------------------------------- |
+| `starter`              | Starter |    $14.99 |       **1,100** |                              $6.47 |                                 **56.8%** | Public                                   |
+| `creator`              | Creator |    $49.99 |       **3,900** |                             $22.94 |                                 **54.1%** | Public, **Popular**                      |
+| `studio`               | Studio  |    $99.99 |       **8,400** |                             $49.41 |                                 **50.6%** | Public                                   |
+| `pro`                  | Pro     |         — |               — |                                  — |                                         — | **Retire from new public checkout only** |
 
 \* Formula: `1 - (pack_credits / (100 * 1.7)) / (price_cents / 100)`, assuming each credit is eventually spent, credit consumption is based on the **actual provider-cost basis**, and a dollar of provider cost consistently consumes 170 credits. Ignores rounding, payment fees, refunds/chargebacks, taxes, storage, infrastructure, abuse, support, and acquisition costs. Actual contribution margin may be materially lower.
 
@@ -56,18 +56,18 @@ credits_to_reserve = ceil(provider_cost_basis_usd * 100 * 1.7)
 
 ## 4. Observed implementation dependencies (main branch at plan creation)
 
-| Area | Current path / fact | V2 work |
-| --- | --- | --- |
-| Pack catalog | `src/modules/genjutsu/pricing.ts` defines Starter $4.99/500, Creator $9.99/1,100, Pro $19.99/2,400, Studio $39.99/5,000 | Update to three public packs, update `GenjutsuPublicCreditPackId`; preserve internal smoke pack |
-| Checkout catalog | `src/config/pricing.ts` maps packs into `pricingCatalog`, server re-resolves `product_id` | Ensure new prices/credits are resolved server-side; do not trust client amounts |
-| Pricing page | `src/blocks/pricing.tsx` uses `listVisibleCreditPacks` | Show exactly three public tiers |
-| Landing | `src/components/landing/PricingSection.tsx` iterates `GENJUTSU_CREDIT_PACKS` with `lg:grid-cols-4` | Switch to appropriate three-column responsive layout |
-| Generation UI | `src/components/landing/GeneratorPanel.tsx` uses `estimateSeedanceCredits` for early gate even if Higgsfield is selected; modal chooses `getSmallestSufficientCreditPack` | Correct per-provider UX estimate/early gate; never hard-reject an affordable discounted Higgsfield generation |
-| Server generation | `src/routes/api/genjutsu/generate.ts` rejects low Higgsfield balances using 4-second **list-rate** minimum before live estimate, then reserves the live quote | Remove / relax incorrect undiscounted pre-block; preserve idempotent reserve and submit behavior |
-| Credit pack selector | `getSmallestSufficientCreditPack` sorts pack credits and finds the first covering deficit | Re-test when some deficits exceed 8,400; guide to explicit multiple purchases rather than offering an insufficient pack |
-| Waffo charge | `src/core/payment/waffo.ts` relies on **remote product price**; `src/modules/payment/service.ts` verifies paid amount/currency against the stored local order | Verify price, product mapping, settlement, refund and historical order paths |
-| Waffo bootstrap | `scripts/setup-waffo-store.ts` considers an existing mapped product valid when checkout creation succeeds, **without asserting the remote price** | Add price verification or create **new remote V2 products**; never blindly reuse existing product IDs with stale prices |
-| Tests | `src/modules/genjutsu/pricing.test.ts` asserts the old four-pack catalog and smallest-sufficient behavior | Revise and expand coverage |
+| Area                 | Current path / fact                                                                                                                                                       | V2 work                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Pack catalog         | `src/modules/genjutsu/pricing.ts` defines Starter $4.99/500, Creator $9.99/1,100, Pro $19.99/2,400, Studio $39.99/5,000                                                   | Update to three public packs, update `GenjutsuPublicCreditPackId`; preserve internal smoke pack                         |
+| Checkout catalog     | `src/config/pricing.ts` maps packs into `pricingCatalog`, server re-resolves `product_id`                                                                                 | Ensure new prices/credits are resolved server-side; do not trust client amounts                                         |
+| Pricing page         | `src/blocks/pricing.tsx` uses `listVisibleCreditPacks`                                                                                                                    | Show exactly three public tiers                                                                                         |
+| Landing              | `src/components/landing/PricingSection.tsx` iterates `GENJUTSU_CREDIT_PACKS` with `lg:grid-cols-4`                                                                        | Switch to appropriate three-column responsive layout                                                                    |
+| Generation UI        | `src/components/landing/GeneratorPanel.tsx` uses `estimateSeedanceCredits` for early gate even if Higgsfield is selected; modal chooses `getSmallestSufficientCreditPack` | Correct per-provider UX estimate/early gate; never hard-reject an affordable discounted Higgsfield generation           |
+| Server generation    | `src/routes/api/genjutsu/generate.ts` rejects low Higgsfield balances using 4-second **list-rate** minimum before live estimate, then reserves the live quote             | Remove / relax incorrect undiscounted pre-block; preserve idempotent reserve and submit behavior                        |
+| Credit pack selector | `getSmallestSufficientCreditPack` sorts pack credits and finds the first covering deficit                                                                                 | Re-test when some deficits exceed 8,400; guide to explicit multiple purchases rather than offering an insufficient pack |
+| Waffo charge         | `src/core/payment/waffo.ts` relies on **remote product price**; `src/modules/payment/service.ts` verifies paid amount/currency against the stored local order             | Verify price, product mapping, settlement, refund and historical order paths                                            |
+| Waffo bootstrap      | `scripts/setup-waffo-store.ts` considers an existing mapped product valid when checkout creation succeeds, **without asserting the remote price**                         | Add price verification or create **new remote V2 products**; never blindly reuse existing product IDs with stale prices |
+| Tests                | `src/modules/genjutsu/pricing.test.ts` asserts the old four-pack catalog and smallest-sufficient behavior                                                                 | Revise and expand coverage                                                                                              |
 
 **Critical payment detail:** The local `waffo_product_ids_mapping` maps internal IDs to remote IDs; its runtime **DB Admin value can override env**. Both Test and Production Waffo environments have separate products/IDs. `waffo_test_amount` overrides must not accidentally be active on real checkout. A UI-only price change can cause a payment/settlement mismatch or wrong charge.
 
@@ -80,7 +80,7 @@ credits_to_reserve = ceil(provider_cost_basis_usd * 100 * 1.7)
    - `starter`: `priceCents: 1499, credits: 1100`
    - `creator`: `priceCents: 4999, credits: 3900, highlighted: true`
    - `studio`: `priceCents: 9999, credits: 8400`
-   Remove `pro` from **active public checkout**, but retain legacy order records and needed reconciliation logic.
+     Remove `pro` from **active public checkout**, but retain legacy order records and needed reconciliation logic.
 3. **Customer surfaces**: public /pricing, landing pricing section, pack selection modal, feature lists, localized strings, pricing metadata/structured data, FAQ, and any old "Starts at $4.99" copy must reflect the three public tiers. Make landing `lg:grid-cols-3` with sensible card widths.
 4. **Server quote/gate correctness**:
    - For Higgsfield, stop using undiscounted list rate as a **hard** pre-block when a lower live quote may be affordable. If no accurate pre-upload quote is available, let the already-existing **server** quote/reservation be the first authoritative insufficient-balance decision.
@@ -100,12 +100,14 @@ credits_to_reserve = ceil(provider_cost_basis_usd * 100 * 1.7)
 ## 6. Testing and acceptance criteria
 
 **Catalog / margins**
+
 - [ ] Public pack IDs are exactly `starter`, `creator`, `studio`; prices are **1499/4999/9999 USD cents**, credits **1100/3900/8400**; creator featured.
 - [ ] `pro` is no longer purchasable for a new order. Prior `pro` orders/credits remain valid.
 - [ ] Calculation stays `ceil(providerCostUsd × 170)`; no silent provider markup change.
 - [ ] Theoretical margins match approximately **56.8% / 54.1% / 50.6%** under the above stated assumptions.
 
 **Purchase / settlement**
+
 - [ ] Test-mode checkout displays and charges the exact Waffo amount for **each** new SKU; **production** mapping is separately verified.
 - [ ] Mismatched currency/amount rejects settlement without granting credits; test-mode transaction never grants live credits.
 - [ ] A successful **real** new purchase grants exactly the correct credits **once**, including webhook + callback retries.
@@ -114,6 +116,7 @@ credits_to_reserve = ceil(provider_cost_basis_usd * 100 * 1.7)
 - [ ] Internal `smoke` SKU is still restricted; no accidental storefront visibility.
 
 **Generate / insufficient-balance UX**
+
 - [ ] Higgsfield discounted quotes do not get falsely rejected by undiscounted **client/server** pre-gates.
 - [ ] Show quote vs estimate clearly. If balance is too small, recommend the **smallest sufficient** active pack.
 - [ ] If no single pack covers deficit, show clear options; never say a pack will suffice when it does not.
@@ -121,6 +124,7 @@ credits_to_reserve = ceil(provider_cost_basis_usd * 100 * 1.7)
 - [ ] Responsive landing/pricing pages show exactly three public cards, with correct SEO/localized copy.
 
 **Rollout / rollback**
+
 - [ ] Run pricing, payment, genjutsu tests and smoke user flow; verify real API cost vs reserved credits at least once with controlled spend.
 - [ ] Confirm Waffo live product price, config precedence and settlement before sending traffic to V2.
 - [ ] Observe payment success, credit grants, completion/refund and effective margin for initial paid transactions.

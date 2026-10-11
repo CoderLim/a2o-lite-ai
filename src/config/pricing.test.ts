@@ -7,7 +7,7 @@ import {
   listPricingProducts,
 } from './pricing';
 
-test('V2 server checkout resolves exactly four public USD packs', () => {
+test('V1 server checkout resolves exactly four public USD packs', () => {
   const publicProducts = listPricingProducts('buyer@example.com');
   assert.deepEqual(
     publicProducts.map(({ productId, priceInCents, credits }) => [
@@ -16,18 +16,18 @@ test('V2 server checkout resolves exactly four public USD packs', () => {
       credits,
     ]),
     [
-      ['mini', 999, 600],
-      ['starter', 1499, 1100],
-      ['creator', 4999, 3900],
-      ['studio', 9999, 8400],
+      ['starter', 499, 500],
+      ['creator', 999, 1100],
+      ['pro', 1999, 2400],
+      ['studio', 3999, 5000],
     ]
   );
   assert.ok(publicProducts.every((p) => p.currency === 'usd'));
-  assert.equal(getPricingProduct('pro'), null);
+  assert.equal(getPricingProduct('mini'), null);
 });
 
-test('legacy Pro purchases are unavailable for NEW checkout', () => {
-  assert.equal(getPricingProduct('pro'), null);
+test('retired Mini purchases are unavailable for NEW checkout', () => {
+  assert.equal(getPricingProduct('mini'), null);
   assert.equal(getPricingProduct('not-a-product'), null);
 });
 

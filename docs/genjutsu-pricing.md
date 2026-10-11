@@ -1,6 +1,6 @@
 # Genjutsu AI pricing
 
-> **V2 (2026-10-08):** See [Genjutsu AI Pricing V2 — Implementation Plan](./genjutsu-pricing-v2-plan.md) for the approved **proposed** three-tier pricing ($14.99 / $49.99 / $99.99; 1,100 / 3,900 / 8,400 credits), checkout migration and rollout steps. **V2 code is implemented on `feat/genjutsu-pricing-v2`, but not merged or deployed; live Waffo products and mapping are unchanged.** This document is the historical first-launch baseline until cutover.
+> **Active catalog (2026-10-11):** Public packs are back on this **V1** baseline ($4.99 / $9.99 / $19.99 / $39.99). V2 / Mini remain documented in [genjutsu-pricing-v2-plan.md](./genjutsu-pricing-v2-plan.md) and [mini-credit-pack-release.md](./mini-credit-pack-release.md) but are not the live checkout catalog. Coordinate Waffo Admin mapping to V1-priced remote products before/with deploy.
 
 Status: approved for first launch  
 Decision date: 2026-09-30
@@ -15,12 +15,12 @@ Public positioning:
 
 Credit packs:
 
-| Pack | Price | Credits | Notes |
-| --- | ---: | ---: | --- |
-| Starter | $4.99 | 500 | Lowest entry price |
-| Creator | $9.99 | 1,100 | Default / popular |
-| Pro | $19.99 | 2,400 | Larger wallet |
-| Studio | $39.99 | 5,000 | Largest launch pack |
+| Pack    |  Price | Credits | Notes               |
+| ------- | -----: | ------: | ------------------- |
+| Starter |  $4.99 |     500 | Lowest entry price  |
+| Creator |  $9.99 |   1,100 | Default / popular   |
+| Pro     | $19.99 |   2,400 | Larger wallet       |
+| Studio  | $39.99 |   5,000 | Largest launch pack |
 
 The catalog lives in `src/modules/genjutsu/pricing.ts`. Payment-provider
 product IDs must not become the source of truth for credit amounts; checkout
@@ -75,12 +75,12 @@ in larger packs reduce the effective revenue multiple.
 
 For a hypothetical $1.00 provider cost (170 credits charged):
 
-| Pack | Effective revenue | Effective revenue / provider cost | Gross margin before payment fees |
-| --- | ---: | ---: | ---: |
-| Starter | $1.70 | 1.70x | ~41% |
-| Creator | $1.54 | 1.54x | ~35% |
-| Pro | $1.42 | 1.42x | ~29% |
-| Studio | $1.36 | 1.36x | ~26% |
+| Pack    | Effective revenue | Effective revenue / provider cost | Gross margin before payment fees |
+| ------- | ----------------: | --------------------------------: | -------------------------------: |
+| Starter |             $1.70 |                             1.70x |                             ~41% |
+| Creator |             $1.54 |                             1.54x |                             ~35% |
+| Pro     |             $1.42 |                             1.42x |                             ~29% |
+| Studio  |             $1.36 |                             1.36x |                             ~26% |
 
 So **1.7x + the current bonus-credit ladder should be treated as launch
 pricing, not a guaranteed 40%+ margin model**.

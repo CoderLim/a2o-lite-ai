@@ -5,17 +5,17 @@ import { resolveGenjutsuCheckoutAmount } from './checkout-amount';
 
 const starter = {
   productId: 'starter',
-  catalogAmountCents: 1499,
+  catalogAmountCents: 499,
   provider: 'waffo',
   providerEnvironment: 'prod',
 };
 
-test('Mini and existing V2 packs always charge their catalog prices', () => {
+test('V1 public packs always charge their catalog prices', () => {
   for (const [productId, catalogAmountCents] of [
-    ['mini', 999],
-    ['starter', 1499],
-    ['creator', 4999],
-    ['studio', 9999],
+    ['starter', 499],
+    ['creator', 999],
+    ['pro', 1999],
+    ['studio', 3999],
   ] as const) {
     assert.equal(
       resolveGenjutsuCheckoutAmount({
@@ -37,15 +37,23 @@ test('Mini and existing V2 packs always charge their catalog prices', () => {
   }
 });
 
-test('public V2 checkouts fail closed on stale or malformed test overrides', () => {
-  for (const productId of ['mini', 'starter']) {
-    for (const testAmountRaw of ['1', '1499', '100', '-1', '1.9', 'foo', '000']) {
+test('public V1 checkouts fail closed on stale or malformed test overrides', () => {
+  for (const productId of ['starter', 'pro']) {
+    for (const testAmountRaw of [
+      '1',
+      '499',
+      '100',
+      '-1',
+      '1.9',
+      'foo',
+      '000',
+    ]) {
       assert.throws(
         () =>
           resolveGenjutsuCheckoutAmount({
             ...starter,
             productId,
-            catalogAmountCents: productId === 'mini' ? 999 : 1499,
+            catalogAmountCents: productId === 'pro' ? 1999 : 499,
             providerEnvironment: 'test',
             testAmountRaw,
           }),
@@ -68,7 +76,12 @@ test('internal smoke pack alone can use an explicit Waffo TEST override', () => 
     1
   );
   assert.throws(
-    () => resolveGenjutsuCheckoutAmount({ ...smoke, providerEnvironment: 'prod', testAmountRaw: '1' }),
+    () =>
+      resolveGenjutsuCheckoutAmount({
+        ...smoke,
+        providerEnvironment: 'prod',
+        testAmountRaw: '1',
+      }),
     /not allowed/
   );
   assert.throws(
@@ -76,7 +89,12 @@ test('internal smoke pack alone can use an explicit Waffo TEST override', () => 
     /Invalid test payment amount/
   );
   assert.throws(
-    () => resolveGenjutsuCheckoutAmount({ ...smoke, provider: 'stripe', testAmountRaw: '1' }),
+    () =>
+      resolveGenjutsuCheckoutAmount({
+        ...smoke,
+        provider: 'stripe',
+        testAmountRaw: '1',
+      }),
     /not allowed/
   );
 });

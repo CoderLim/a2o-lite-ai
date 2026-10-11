@@ -62,7 +62,7 @@ async function POST({ request }: { request: Request }) {
       return respErr(error.message || 'Product not available');
     }
 
-    // A stale *_test_amount value must never lower a V2 public pack's
+    // A stale *_test_amount value must never lower a public pack's
     // order amount (and thus Waffo's authoritative priceSnapshot).
     const configs = await getAllConfigs();
     const providerKey = payment_provider || configs.default_payment_provider;

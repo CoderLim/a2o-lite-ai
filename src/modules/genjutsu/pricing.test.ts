@@ -14,7 +14,7 @@ import {
   listVisibleCreditPacks,
 } from './pricing';
 
-test('V2 public credit packs match the approved catalog', () => {
+test('V1 public credit packs match the launch catalog', () => {
   assert.deepEqual(
     GENJUTSU_CREDIT_PACKS.map((pack) => [
       pack.id,
@@ -22,24 +22,12 @@ test('V2 public credit packs match the approved catalog', () => {
       pack.credits,
     ]),
     [
-      ['mini', 999, 600],
-      ['starter', 1499, 1100],
-      ['creator', 4999, 3900],
-      ['studio', 9999, 8400],
+      ['starter', 499, 500],
+      ['creator', 999, 1100],
+      ['pro', 1999, 2400],
+      ['studio', 3999, 5000],
     ]
   );
-});
-
-test('V2 gross margin targets and monotonically decreasing unit prices', () => {
-  const [mini, starter, creator, studio] = GENJUTSU_CREDIT_PACKS;
-  const modelCostUsd = (credits: number) => credits / 170;
-  for (const pack of GENJUTSU_CREDIT_PACKS) {
-    const margin = 1 - modelCostUsd(pack.credits) / (pack.priceCents / 100);
-    assert.ok(margin >= 0.5 && margin < 0.7, `unexpected ${pack.id} model-cost margin`);
-  }
-  assert.ok(mini.priceCents / mini.credits > starter.priceCents / starter.credits);
-  assert.ok(starter.priceCents / starter.credits > creator.priceCents / creator.credits);
-  assert.ok(creator.priceCents / creator.credits > studio.priceCents / studio.credits);
 });
 
 test('smoke pack is only visible to gengliming emails', () => {
@@ -51,11 +39,11 @@ test('smoke pack is only visible to gengliming emails', () => {
   assert.equal(canSeeSmokeCreditPack('dev+GENGLIMING@x.com'), true);
   assert.deepEqual(
     listVisibleCreditPacks('alice@example.com').map((p) => p.id),
-    ['mini', 'starter', 'creator', 'studio']
+    ['starter', 'creator', 'pro', 'studio']
   );
   assert.deepEqual(
     listVisibleCreditPacks('gengliming110@gmail.com').map((p) => p.id),
-    ['mini', 'starter', 'creator', 'studio', 'smoke']
+    ['starter', 'creator', 'pro', 'studio', 'smoke']
   );
 });
 
@@ -103,12 +91,11 @@ test('list-rate fallback for 720p max clip reserves known credits', () => {
   );
 });
 
-
 test('credit gate chooses the smallest pack that covers the deficit', () => {
   assert.equal(
     getSmallestSufficientCreditPack({
       balance: 310,
-      requiredCredits: 1900,
+      requiredCredits: 820,
       email: 'alice@example.com',
     })?.id,
     'creator'
@@ -119,28 +106,32 @@ test('credit gate chooses the smallest pack that covers the deficit', () => {
       requiredCredits: 820,
       email: 'alice@example.com',
     })?.id,
-    'mini'
+    'starter'
   );
 });
 
-test('Mini deficit boundaries select the smallest sufficient public pack', () => {
+test('V1 deficit boundaries select the smallest sufficient public pack', () => {
   const cases: Array<[number, string | null]> = [
-    [599, 'mini'],
-    [600, 'mini'],
-    [601, 'starter'],
-    [1100, 'starter'],
-    [1101, 'creator'],
-    [3900, 'creator'],
-    [3901, 'studio'],
-    [8400, 'studio'],
-    [8401, null],
+    [499, 'starter'],
+    [500, 'starter'],
+    [501, 'creator'],
+    [1100, 'creator'],
+    [1101, 'pro'],
+    [2400, 'pro'],
+    [2401, 'studio'],
+    [5000, 'studio'],
+    [5001, null],
   ];
   for (const [deficit, expected] of cases) {
-    assert.equal(getSmallestSufficientCreditPack({
-      balance: 250,
-      requiredCredits: 250 + deficit,
-      email: 'alice@example.com',
-    })?.id ?? null, expected, `deficit ${deficit}`);
+    assert.equal(
+      getSmallestSufficientCreditPack({
+        balance: 250,
+        requiredCredits: 250 + deficit,
+        email: 'alice@example.com',
+      })?.id ?? null,
+      expected,
+      `deficit ${deficit}`
+    );
   }
 });
 
@@ -180,7 +171,10 @@ test('display estimator tracks selected server provider', () => {
     }),
     estimateSeedanceCredits(input)
   );
-  assert.notEqual(estimateGenjutsuCredits(input), estimateSeedanceCredits(input));
+  assert.notEqual(
+    estimateGenjutsuCredits(input),
+    estimateSeedanceCredits(input)
+  );
 });
 
 test('Seedance early-gate estimate matches the server customer quote without whole-second rounding', () => {
