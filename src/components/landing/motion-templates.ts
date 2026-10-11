@@ -161,6 +161,17 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: DEFAULT_OBJECTS_RESOLUTION,
     aspect: 'portrait',
   },
+  {
+    id: 'long-trival',
+    titleKey: 'site.templates.long_trival',
+    poster: '/videos/long-trival-tpl-poster.jpg',
+    sourceVideo: '/videos/long-trival-tpl.mp4',
+    prompt:
+      'Replace the man in @Video1 with the subject in @Image1. Keep the long-travel vibe, camera path, lighting, and timing. Use only this authorized likeness.',
+    mode: 'objects-swap',
+    resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'portrait',
+  },
 ];
 
 /** Optional preview URL when it differs from the downloadable source. */
