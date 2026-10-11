@@ -71,30 +71,30 @@ function TemplateCard({
 }
 
 /**
- * Pack templates into columns so portrait (tall) and landscape (wide)
- * cards keep their real aspect instead of a uniform portrait grid.
+ * Build horizontal gallery rows: one portrait on the left, and two
+ * landscapes stacked on the right. Unpaired templates get their own
+ * complete rows instead of leaving empty slots in the mixed layout.
  */
-function distributeToColumns(
-  templates: MotionTemplate[],
-  columnCount: number
-): MotionTemplate[][] {
-  const columns: MotionTemplate[][] = Array.from(
-    { length: columnCount },
-    () => []
+function groupTemplateRows(templates: MotionTemplate[]) {
+  const portraits = templates.filter((template) => template.aspect === 'portrait');
+  const landscapes = templates.filter(
+    (template) => template.aspect === 'landscape'
   );
-  const heights = Array.from({ length: columnCount }, () => 0);
+  const mixedRowCount = Math.min(
+    portraits.length,
+    Math.floor(landscapes.length / 2)
+  );
 
-  for (const template of templates) {
-    let shortest = 0;
-    for (let i = 1; i < columnCount; i += 1) {
-      if (heights[i]! < heights[shortest]!) shortest = i;
-    }
-    columns[shortest]!.push(template);
-    // Relative height units: 16 for portrait (9:16), 9 for landscape (16:9)
-    heights[shortest]! += template.aspect === 'portrait' ? 16 : 9;
-  }
+  const mixedRows = Array.from({ length: mixedRowCount }, (_, index) => ({
+    portrait: portraits[index]!,
+    landscapes: landscapes.slice(index * 2, index * 2 + 2),
+  }));
 
-  return columns;
+  return {
+    mixedRows,
+    remainingPortraits: portraits.slice(mixedRowCount),
+    remainingLandscapes: landscapes.slice(mixedRowCount * 2),
+  };
 }
 
 export function MotionTemplateGallery({
@@ -102,8 +102,8 @@ export function MotionTemplateGallery({
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
-  // 3 columns keeps cards small (~1/3 width) and mixes tall/wide naturally.
-  const columns = distributeToColumns(MOTION_TEMPLATES, 3);
+  const { mixedRows, remainingPortraits, remainingLandscapes } =
+    groupTemplateRows(MOTION_TEMPLATES);
 
   return (
     <section
@@ -122,27 +122,59 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div className="grid max-w-[420px] grid-cols-3 gap-1.5 sm:max-w-[480px] sm:gap-2">
-        {columns.map((column, columnIndex) => (
+      <div className="mx-auto w-full max-w-[960px] space-y-3 sm:space-y-4 lg:space-y-5">
+        {mixedRows.map(({ portrait, landscapes }) => (
           <div
-            key={columnIndex}
-            className="flex min-w-0 flex-col gap-1.5 sm:gap-2"
+            key={portrait.id}
+            className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.54fr)] gap-3 sm:gap-4 lg:gap-5"
           >
-            {column.map((template) => (
+            <TemplateCard
+              template={portrait}
+              applying={applyingTemplateId === portrait.id}
+              onSelect={onSelect}
+              className="aspect-9/16"
+            />
+            <div className="grid min-w-0 grid-rows-2 gap-3 sm:gap-4 lg:gap-5">
+              {landscapes.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  applying={applyingTemplateId === template.id}
+                  onSelect={onSelect}
+                  className="h-full min-h-0"
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {remainingPortraits.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:gap-5">
+            {remainingPortraits.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
                 applying={applyingTemplateId === template.id}
                 onSelect={onSelect}
-                className={
-                  template.aspect === 'portrait'
-                    ? 'aspect-9/16'
-                    : 'aspect-video'
-                }
+                className="aspect-9/16"
               />
             ))}
           </div>
-        ))}
+        )}
+
+        {remainingLandscapes.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-5">
+            {remainingLandscapes.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                applying={applyingTemplateId === template.id}
+                onSelect={onSelect}
+                className="aspect-video"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
