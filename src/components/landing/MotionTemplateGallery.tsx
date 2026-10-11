@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { tDynamic } from '@/core/i18n/dynamic';
@@ -159,9 +159,9 @@ function TemplateCard({
 }
 
 /**
- * Six portrait-width units per desktop row. A landscape stack occupies
- * two units, and each portrait occupies one. Keep complete landscape pairs
- * together so the 1:2 and 2:1 cards have the same total height.
+ * Six CSS grid columns per desktop row. A landscape stack spans two
+ * columns, and each portrait spans one. Grid accounts for every gap so
+ * six portrait cards fit on one row without premature wrapping.
  */
 function groupTemplateBlocks(templates: MotionTemplate[]) {
   const portraits = templates.filter(
@@ -250,26 +250,11 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div
-        className="flex w-full flex-wrap gap-[var(--template-gap)] [--template-columns:4] [--template-gap:8px] sm:[--template-gap:12px] md:[--template-columns:6] lg:[--template-gap:16px]"
-        style={
-          {
-            // p = (W - gap) / columns. A landscape stack is 2p - gap wide:
-            // two 2:1 cards + their gap have the height of one 1:2 portrait.
-            // Full desktop row: p + (2p-gap) + p + (2p-gap) + 3 gaps = W.
-            '--template-unit':
-              'calc((100% - var(--template-gap)) / var(--template-columns))',
-          } as CSSProperties
-        }
-      >
+      <div className="grid w-full grid-cols-4 gap-2 sm:gap-3 md:grid-cols-6 lg:gap-4">
         {blocks.map((block) => {
           if (block.kind === 'portrait') {
             return (
-              <div
-                key={block.template.id}
-                className="min-w-0 shrink-0"
-                style={{ width: 'var(--template-unit)' }}
-              >
+              <div key={block.template.id} className="col-span-1 min-w-0">
                 <TemplateCard
                   template={block.template}
                   applying={applyingTemplateId === block.template.id}
@@ -281,15 +266,9 @@ export function MotionTemplateGallery({
             );
           }
 
-          const wideWidth =
-            'calc(2 * var(--template-unit) - var(--template-gap))';
           if (block.kind === 'landscape-single') {
             return (
-              <div
-                key={block.template.id}
-                className="min-w-0 shrink-0"
-                style={{ width: wideWidth }}
-              >
+              <div key={block.template.id} className="col-span-2 min-w-0">
                 <TemplateCard
                   template={block.template}
                   applying={applyingTemplateId === block.template.id}
@@ -304,8 +283,7 @@ export function MotionTemplateGallery({
           return (
             <div
               key={block.templates[0].id}
-              className="flex min-w-0 shrink-0 flex-col gap-[var(--template-gap)]"
-              style={{ width: wideWidth }}
+              className="col-span-2 flex min-w-0 flex-col gap-2 sm:gap-3 lg:gap-4"
             >
               {block.templates.map((template) => (
                 <TemplateCard
