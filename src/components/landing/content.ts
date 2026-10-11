@@ -643,6 +643,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     title: 'Tools',
     links: [
       {
+        label: 'Rumpelstiltskin AI',
+        href: '/ai-rumpelstiltskin',
+      },
+      {
         label: 'Bulin 47 AI',
         href: '/bulin-47-ai',
       },

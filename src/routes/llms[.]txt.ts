@@ -19,6 +19,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description:
       'What the Bulin 47 freestyle AI video trend is and how to make your own from one photo',
   },
+  {
+    path: '/ai-rumpelstiltskin',
+    title: 'Rumpelstiltskin AI Video',
+    description:
+      'One-photo Rumpelstiltskin tiptoe AI video generator powered by Higgsfield Genjutsu',
+  },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
 ];
 

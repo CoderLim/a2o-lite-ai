@@ -1409,5 +1409,21 @@
   "site.bulin.cta_tip1": "One front-facing photo — yourself only, with permission",
   "site.bulin.cta_tip2": "Vertical 9:16 export, about 8–15 seconds",
   "site.bulin.cta_tip3": "Use licensed or your own audio — never rip the original track",
-  "site.seo.bulin_link": "see how the Bulin 47 trend is made"
+  "site.seo.bulin_link": "see how the Bulin 47 trend is made",
+  "site.rumpel.page_title": "Rumpelstiltskin AI Video — Make It from One Photo",
+  "site.rumpel.page_description": "Upload one authorized photo and turn the viral Rumpelstiltskin tiptoe template into your own AI video. Higgsfield Genjutsu Objects Swap on Genjutsu AI.",
+  "site.rumpel.hero_badge": "Rumpelstiltskin AI · Tip Toein’ trend",
+  "site.rumpel.hero_title": "Rumpelstiltskin AI Video",
+  "site.rumpel.hero_desc": "Upload one clear, authorized photo. We keep the barn set, shush gesture, and tiptoe timing — and put you in the viral clip.",
+  "site.rumpel.photo_title": "Your photo (@Image1)",
+  "site.rumpel.photo_note": "Required · front-facing, face + upper body, authorized likeness only.",
+  "site.rumpel.upload_photo": "Upload photo",
+  "site.rumpel.photo_hint": "JPG / PNG / WebP",
+  "site.rumpel.upload_required": "Upload one photo to generate",
+  "site.rumpel.image_type": "Please upload a JPG, PNG, WebP, or GIF image",
+  "site.rumpel.image_size": "Images must be 12 MB or smaller",
+  "site.rumpel.provider_label": "Higgsfield Genjutsu · Objects Swap",
+  "site.rumpel.hero_cta": "Make your video",
+  "site.rumpel.cta_title": "Make your Rumpelstiltskin AI video",
+  "site.rumpel.cta_desc": "One authorized photo is enough. Generate the clip above, then add audio you have the rights to before you post."
 }
