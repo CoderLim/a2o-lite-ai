@@ -1,8 +1,10 @@
-import type { CSSProperties } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 
 import { tDynamic } from '@/core/i18n/dynamic';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
+import { CloseIcon } from '@/components/icons';
 import {
   getMotionTemplatePreviewSrc,
   MOTION_TEMPLATES,
@@ -15,29 +17,85 @@ type MotionTemplateGalleryProps = {
   onSelect?: (template: MotionTemplate) => void;
 };
 
+function TemplatePreviewLightbox({
+  title,
+  src,
+  onClose,
+}: {
+  title: string;
+  src: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-8"
+      role="dialog"
+      aria-modal="true"
+      aria-label={m['site.templates.preview_aria']({ title })}
+    >
+      <button
+        type="button"
+        aria-label={m['site.generator.preview_close']()}
+        className="absolute inset-0 cursor-pointer bg-black/75 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative z-10 max-h-[88vh] max-w-[min(92vw,760px)]">
+        <button
+          type="button"
+          aria-label={m['site.generator.close']()}
+          onClick={onClose}
+          className="absolute -top-3 -right-3 z-20 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-[rgba(41,30,23,0.95)] text-[rgb(237,234,222)] shadow-lg hover:bg-[rgba(60,44,34,0.98)]"
+        >
+          <CloseIcon className="size-4" />
+        </button>
+        <video
+          src={src}
+          controls
+          autoPlay
+          className="max-h-[88vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+        />
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function TemplateCard({
   template,
   applying,
   onSelect,
+  onPreview,
   className,
 }: {
   template: MotionTemplate;
   applying: boolean;
   onSelect?: (template: MotionTemplate) => void;
+  onPreview: (template: MotionTemplate) => void;
   className?: string;
 }) {
   const title = tDynamic(template.titleKey);
 
   return (
-    <button
-      type="button"
-      disabled={applying || !onSelect}
-      onClick={() => onSelect?.(template)}
-      aria-label={m['site.templates.use_aria']({ title })}
+    <div
       className={cn(
-        'group relative block w-full cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
-        'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
-        applying && 'cursor-wait opacity-80',
+        'group relative block w-full overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
+        'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105',
+        applying && 'opacity-80',
         className
       )}
     >
@@ -62,13 +120,41 @@ function TemplateCard({
         <p className="truncate text-[10px] font-semibold text-[rgb(237,234,222)]">
           {title}
         </p>
-        <p className="mt-0.5 text-[9px] font-medium text-[rgb(204,144,92)]">
+      </div>
+
+      <div
+        className={cn(
+          'absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-2 transition-opacity duration-200',
+          'pointer-events-none opacity-0',
+          'group-hover:pointer-events-auto group-hover:opacity-100',
+          'group-focus-within:pointer-events-auto group-focus-within:opacity-100',
+          '[@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100'
+        )}
+      >
+        <button
+          type="button"
+          disabled={applying || !onSelect}
+          onClick={() => onSelect?.(template)}
+          aria-label={m['site.templates.use_aria']({ title })}
+          className={cn(
+            'inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105',
+            (applying || !onSelect) && 'cursor-not-allowed opacity-60'
+          )}
+        >
           {applying
             ? m['site.templates.applying']()
             : m['site.templates.use']()}
-        </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => onPreview(template)}
+          aria-label={m['site.templates.preview_aria']({ title })}
+          className="inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg border border-white/25 bg-black/45 px-3 text-[11px] font-semibold text-[rgb(237,234,222)] shadow-md backdrop-blur-sm transition hover:bg-white/10"
+        >
+          {m['site.templates.preview']()}
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -78,7 +164,9 @@ function TemplateCard({
  * together so the 1:2 and 2:1 cards have the same total height.
  */
 function groupTemplateBlocks(templates: MotionTemplate[]) {
-  const portraits = templates.filter((template) => template.aspect === 'portrait');
+  const portraits = templates.filter(
+    (template) => template.aspect === 'portrait'
+  );
   const landscapes = templates.filter(
     (template) => template.aspect === 'landscape'
   );
@@ -133,6 +221,17 @@ export function MotionTemplateGallery({
   onSelect,
 }: MotionTemplateGalleryProps) {
   const blocks = groupTemplateBlocks(MOTION_TEMPLATES);
+  const [previewTemplate, setPreviewTemplate] = useState<MotionTemplate | null>(
+    null
+  );
+
+  const handlePreview = useCallback((template: MotionTemplate) => {
+    setPreviewTemplate(template);
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setPreviewTemplate(null);
+  }, []);
 
   return (
     <section
@@ -153,13 +252,15 @@ export function MotionTemplateGallery({
 
       <div
         className="flex w-full flex-wrap gap-[var(--template-gap)] [--template-columns:4] [--template-gap:8px] sm:[--template-gap:12px] md:[--template-columns:6] lg:[--template-gap:16px]"
-        style={{
-          // p = (W - gap) / columns. A landscape stack is 2p - gap wide:
-          // two 2:1 cards + their gap have the height of one 1:2 portrait.
-          // Full desktop row: p + (2p-gap) + p + (2p-gap) + 3 gaps = W.
-          '--template-unit':
-            'calc((100% - var(--template-gap)) / var(--template-columns))',
-        } as CSSProperties}
+        style={
+          {
+            // p = (W - gap) / columns. A landscape stack is 2p - gap wide:
+            // two 2:1 cards + their gap have the height of one 1:2 portrait.
+            // Full desktop row: p + (2p-gap) + p + (2p-gap) + 3 gaps = W.
+            '--template-unit':
+              'calc((100% - var(--template-gap)) / var(--template-columns))',
+          } as CSSProperties
+        }
       >
         {blocks.map((block) => {
           if (block.kind === 'portrait') {
@@ -173,13 +274,15 @@ export function MotionTemplateGallery({
                   template={block.template}
                   applying={applyingTemplateId === block.template.id}
                   onSelect={onSelect}
+                  onPreview={handlePreview}
                   className="aspect-[1/2]"
                 />
               </div>
             );
           }
 
-          const wideWidth = 'calc(2 * var(--template-unit) - var(--template-gap))';
+          const wideWidth =
+            'calc(2 * var(--template-unit) - var(--template-gap))';
           if (block.kind === 'landscape-single') {
             return (
               <div
@@ -191,6 +294,7 @@ export function MotionTemplateGallery({
                   template={block.template}
                   applying={applyingTemplateId === block.template.id}
                   onSelect={onSelect}
+                  onPreview={handlePreview}
                   className="aspect-[2/1]"
                 />
               </div>
@@ -209,6 +313,7 @@ export function MotionTemplateGallery({
                   template={template}
                   applying={applyingTemplateId === template.id}
                   onSelect={onSelect}
+                  onPreview={handlePreview}
                   className="aspect-[2/1]"
                 />
               ))}
@@ -216,6 +321,14 @@ export function MotionTemplateGallery({
           );
         })}
       </div>
+
+      {previewTemplate ? (
+        <TemplatePreviewLightbox
+          title={tDynamic(previewTemplate.titleKey)}
+          src={previewTemplate.sourceVideo}
+          onClose={closePreview}
+        />
+      ) : null}
     </section>
   );
 }
