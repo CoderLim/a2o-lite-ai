@@ -273,26 +273,21 @@ async function reportUploadRetrySucceeded(params: {
 }
 
 function PhotoSlot({
-  title,
-  note,
   item,
   inputRef,
   disabled,
   onPick,
   onRemove,
 }: {
-  title: string;
-  note: string;
   item: MediaItem | null;
   inputRef: RefObject<HTMLInputElement | null>;
   disabled: boolean;
   onPick: (file: File) => void;
   onRemove: () => void;
 }) {
+  const photoLabel = m['site.bulin.upload_photo']();
   return (
     <div>
-      <p className="text-sm font-semibold text-white/90">{title}</p>
-      <p className="mt-0.5 text-xs leading-5 text-white/40">{note}</p>
       <input
         ref={inputRef}
         type="file"
@@ -305,13 +300,17 @@ function PhotoSlot({
         }}
       />
       {item ? (
-        <div className="relative mt-3 aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={item.url} alt={title} className="size-full object-cover" />
+        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <img
+            src={item.url}
+            alt={photoLabel}
+            className="size-full object-cover"
+          />
           <button
             type="button"
             onClick={onRemove}
             disabled={disabled}
-            aria-label={m['site.common.remove_item']({ name: title })}
+            aria-label={m['site.common.remove_item']({ name: photoLabel })}
             className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur transition hover:bg-black/90 disabled:opacity-40"
           >
             <CloseIcon className="size-4" />
@@ -322,14 +321,14 @@ function PhotoSlot({
           type="button"
           disabled={disabled}
           onClick={() => inputRef.current?.click()}
-          className="mt-3 flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex size-11 items-center justify-center rounded-full bg-white/8 text-white/70">
             <ImageModeIcon className="size-5" />
           </span>
           <span>
             <span className="block text-sm font-medium text-white/78">
-              {m['site.bulin.upload_photo']()}
+              {photoLabel}
             </span>
             <span className="mt-1 block text-xs text-white/38">
               {m['site.bulin.photo_hint']()}
@@ -985,11 +984,9 @@ export function Bulin47GeneratorPanel() {
             </div>
           </div>
 
-          <div className="p-4 sm:p-5">
-            <div className="mx-auto max-w-xs">
+          <div className="flex items-center justify-center p-4 sm:p-5">
+            <div className="mx-auto w-full max-w-xs">
               <PhotoSlot
-                title={m['site.bulin.photo_title']()}
-                note={m['site.bulin.photo_note']()}
                 item={photo}
                 inputRef={photoInputRef}
                 disabled={busy}
@@ -1023,10 +1020,6 @@ export function Bulin47GeneratorPanel() {
               >
                 <span className="text-foreground/90 font-medium">
                   {resolution}
-                </span>
-                <span className="text-white/35">·</span>
-                <span className="text-foreground/90 font-medium">
-                  {m['site.generator.objects']()}
                 </span>
                 <ChevronDownIcon
                   className={cn(
