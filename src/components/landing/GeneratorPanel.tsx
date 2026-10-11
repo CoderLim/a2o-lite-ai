@@ -1690,14 +1690,21 @@ export function GeneratorPanel({
         // Higgsfield bills the submitted video's duration. A 480p request
         // with the original full-length input would not be a short preview.
         const { trimVideoToFile } = await import('@/lib/trim-video');
-        const clipFile = await trimVideoToFile({
-          sourceUrl: video.url,
-          startSeconds: 0,
-          endSeconds: PREVIEW_DURATION_SECONDS,
-          fileName: 'genjutsu-preview.mp4',
-          accurate: true,
-        });
-        const durationSeconds = await readLocalVideoDurationSeconds(clipFile);
+        let clipFile: File;
+        let durationSeconds: number;
+        try {
+          clipFile = await trimVideoToFile({
+            sourceUrl: video.url,
+            startSeconds: 0,
+            endSeconds: PREVIEW_DURATION_SECONDS,
+            fileName: 'genjutsu-preview.mp4',
+            accurate: true,
+          });
+          durationSeconds = await readLocalVideoDurationSeconds(clipFile);
+        } catch (cause) {
+          console.error('Genjutsu preview preparation failed:', cause);
+          throw new Error(m['site.generator.preview_trim_failed']());
+        }
         if (
           durationSeconds < PREVIEW_DURATION_SECONDS - 0.01 ||
           durationSeconds > PREVIEW_DURATION_SECONDS + 0.2
