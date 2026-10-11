@@ -2099,7 +2099,6 @@ export function GeneratorPanel({
               </button>
             </div>
           </div>
-          </div>
         </div>
       </div>
 
