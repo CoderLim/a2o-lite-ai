@@ -1685,7 +1685,7 @@ export function GeneratorPanel({
       if (
         kind === 'preview' &&
         typeof video.durationSeconds === 'number' &&
-        video.durationSeconds > PREVIEW_DURATION_SECONDS + 0.05
+        video.durationSeconds > PREVIEW_DURATION_SECONDS
       ) {
         // Higgsfield bills the submitted video's duration. A 480p request
         // with the original full-length input would not be a short preview.
