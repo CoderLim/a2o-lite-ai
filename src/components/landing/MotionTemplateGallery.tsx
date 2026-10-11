@@ -30,7 +30,7 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative w-[140px] shrink-0 overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition sm:w-[160px]',
+        'group relative w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition sm:w-[160px]',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
         applying && 'cursor-wait opacity-80'
       )}
