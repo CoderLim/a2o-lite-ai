@@ -32,7 +32,7 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative mb-2.5 w-full cursor-pointer break-inside-avoid overflow-hidden rounded-xl border border-white/12 bg-black/45 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition sm:mb-3',
+        'group relative mb-1.5 w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition sm:mb-2',
         landscape ? 'aspect-video' : 'aspect-9/16',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
         applying && 'cursor-wait opacity-80'
@@ -55,11 +55,11 @@ function TemplateCard({
         alt=""
         className="absolute inset-0 hidden size-full object-cover motion-reduce:block"
       />
-      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-2.5 pt-8 pb-2.5">
-        <p className="truncate text-[12px] font-semibold text-[rgb(237,234,222)]">
+      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-1.5 pt-5 pb-1.5">
+        <p className="truncate text-[10px] font-semibold text-[rgb(237,234,222)]">
           {title}
         </p>
-        <p className="mt-0.5 text-[10px] font-medium text-[rgb(204,144,92)]">
+        <p className="mt-0.5 text-[9px] font-medium text-[rgb(204,144,92)]">
           {applying
             ? m['site.templates.applying']()
             : m['site.templates.use']()}
@@ -91,8 +91,8 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      {/* Masonry: portrait / landscape cards keep native aspect ratios */}
-      <div className="columns-2 gap-2.5 sm:columns-3 sm:gap-3">
+      {/* ~1/3 of hero content width (~1180px → ~390px) */}
+      <div className="max-w-[390px] columns-2 gap-1.5 sm:gap-2">
         {MOTION_TEMPLATES.map((template) => (
           <TemplateCard
             key={template.id}
