@@ -40,6 +40,8 @@ export async function trimVideoToFile(params: {
   startSeconds: number;
   endSeconds: number;
   fileName?: string;
+  /** Re-encode instead of stream-copy for frame-accurate short previews. */
+  accurate?: boolean;
 }): Promise<File> {
   const start = Math.max(0, params.startSeconds);
   const end = Math.max(start + 0.2, params.endSeconds);
@@ -67,26 +69,8 @@ export async function trimVideoToFile(params: {
     return data;
   };
 
-  let data: Uint8Array;
-  try {
-    // -ss after -i is more accurate; -c copy keeps MP4 for Fal.
-    data = await run([
-      '-i',
-      inputName,
-      '-ss',
-      start.toFixed(3),
-      '-t',
-      duration.toFixed(3),
-      '-c',
-      'copy',
-      '-avoid_negative_ts',
-      'make_zero',
-      '-movflags',
-      '+faststart',
-      outputName,
-    ]);
-  } catch {
-    data = await run([
+  const reencode = () =>
+    run([
       '-i',
       inputName,
       '-ss',
@@ -105,10 +89,37 @@ export async function trimVideoToFile(params: {
       '+faststart',
       outputName,
     ]);
-  }
 
-  await ffmpeg.deleteFile(inputName).catch(() => undefined);
-  await ffmpeg.deleteFile(outputName).catch(() => undefined);
+  let data: Uint8Array;
+  try {
+    if (params.accurate) {
+      data = await reencode();
+    } else {
+      try {
+        // Prefer fast stream-copy for existing callers that do not need exact timing.
+        data = await run([
+          '-i',
+          inputName,
+          '-ss',
+          start.toFixed(3),
+          '-t',
+          duration.toFixed(3),
+          '-c',
+          'copy',
+          '-avoid_negative_ts',
+          'make_zero',
+          '-movflags',
+          '+faststart',
+          outputName,
+        ]);
+      } catch {
+        data = await reencode();
+      }
+    }
+  } finally {
+    await ffmpeg.deleteFile(inputName).catch(() => undefined);
+    await ffmpeg.deleteFile(outputName).catch(() => undefined);
+  }
 
   // Copy into a fresh ArrayBuffer-backed Uint8Array for Blob Part compatibility.
   const copy = new Uint8Array(data.byteLength);
