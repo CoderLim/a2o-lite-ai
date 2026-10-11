@@ -2057,39 +2057,43 @@ export function GeneratorPanel({
                 {m['site.generator.preview']()}
               </button>
             </div>
+            <div
+              className="hidden h-8 w-px shrink-0 self-end bg-white/15 sm:block"
+              aria-hidden
+            />
             <div className="flex items-center gap-2">
-              {estimatedCredits != null ? (
-                <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
-                  <span className="text-[10px] whitespace-nowrap text-white/45">
-                    {m['site.generator.full_video']()}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    {m['genjutsu.estimate.credits']({
-                      count: estimatedCredits.toLocaleString(),
-                    })}
-                    <TooltipProvider delay={200}>
-                      <Tooltip>
-                        <TooltipTrigger
-                          type="button"
-                          className="inline-flex size-4 items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
-                          aria-label={m['genjutsu.estimate.help_aria']()}
-                        >
-                          <CircleHelp className="size-3.5" aria-hidden />
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          align="end"
-                          className="max-w-[240px] text-left leading-snug"
-                        >
-                          {pricingProvider === 'higgsfield'
-                            ? m['genjutsu.estimate.tooltip']()
-                            : m['genjutsu.estimate.seedance_tooltip']()}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </span>
-                </div>
-              ) : null}
+              <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
+                  {m['site.generator.full_video']()}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  {estimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: estimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                  <TooltipProvider delay={200}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="inline-flex size-4 cursor-pointer items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
+                        aria-label={m['genjutsu.estimate.help_aria']()}
+                      >
+                        <CircleHelp className="size-3.5" aria-hidden />
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="end"
+                        className="max-w-[240px] text-left leading-snug"
+                      >
+                        {pricingProvider === 'higgsfield'
+                          ? m['genjutsu.estimate.tooltip']()
+                          : m['genjutsu.estimate.seedance_tooltip']()}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
+              </div>
               <button
                 type="button"
                 disabled={!canGenerate}
