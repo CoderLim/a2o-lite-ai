@@ -1,9 +1,9 @@
 # Genjutsu AI pricing
 
-> **Active catalog (2026-10-11):** Public packs are back on this **V1** baseline ($4.99 / $9.99 / $19.99 / $39.99). V2 / Mini remain documented in [genjutsu-pricing-v2-plan.md](./genjutsu-pricing-v2-plan.md) and [mini-credit-pack-release.md](./mini-credit-pack-release.md) but are not the live checkout catalog. Coordinate Waffo Admin mapping to V1-priced remote products before/with deploy.
+> **Active catalog (2026-10-11):** V1 **USD prices** ($4.99 / $9.99 / $19.99 / $39.99) with **reduced credits** aligned to V2 unit economics (~47–53% theoretical model-cost margin). Waffo remote product prices can stay on the existing V1 SKUs; credit grants always come from this catalog. Prior purchases keep their order snapshots.
 
-Status: approved for first launch  
-Decision date: 2026-09-30
+Status: active (credit amounts revised 2026-10-11)  
+Decision date: 2026-09-30 (prices); 2026-10-11 (credit cut)
 
 ## Decision
 
@@ -15,12 +15,12 @@ Public positioning:
 
 Credit packs:
 
-| Pack    |  Price | Credits | Notes               |
-| ------- | -----: | ------: | ------------------- |
-| Starter |  $4.99 |     500 | Lowest entry price  |
-| Creator |  $9.99 |   1,100 | Default / popular   |
-| Pro     | $19.99 |   2,400 | Larger wallet       |
-| Studio  | $39.99 |   5,000 | Largest launch pack |
+| Pack    |  Price | Credits | Notes                                   |
+| ------- | -----: | ------: | --------------------------------------- |
+| Starter |  $4.99 |     400 | Lowest entry price (was 500)            |
+| Creator |  $9.99 |     850 | Default / popular (was 1,100)           |
+| Pro     | $19.99 |   1,750 | Larger wallet (was 2,400)               |
+| Studio  | $39.99 |   3,600 | Largest pack (was 5,000); best $/credit |
 
 The catalog lives in `src/modules/genjutsu/pricing.ts`. Payment-provider
 product IDs must not become the source of truth for credit amounts; checkout
@@ -73,22 +73,22 @@ The provider estimate is authoritative for reserve pricing.
 The 1.7x formula is the markup at the credit-accounting layer. Bonus credits
 in larger packs reduce the effective revenue multiple.
 
-For a hypothetical $1.00 provider cost (170 credits charged):
+For a hypothetical $1.00 provider cost (170 credits charged), using the
+revised credit grants:
 
 | Pack    | Effective revenue | Effective revenue / provider cost | Gross margin before payment fees |
 | ------- | ----------------: | --------------------------------: | -------------------------------: |
-| Starter |             $1.70 |                             1.70x |                             ~41% |
-| Creator |             $1.54 |                             1.54x |                             ~35% |
-| Pro     |             $1.42 |                             1.42x |                             ~29% |
-| Studio  |             $1.36 |                             1.36x |                             ~26% |
+| Starter |             $2.12 |                             2.12x |                             ~53% |
+| Creator |             $2.00 |                             2.00x |                             ~50% |
+| Pro     |             $1.94 |                             1.94x |                             ~48% |
+| Studio  |             $1.89 |                             1.89x |                             ~47% |
 
-So **1.7x + the current bonus-credit ladder should be treated as launch
-pricing, not a guaranteed 40%+ margin model**.
+These are **theoretical model-cost margins** at the 170-credits-per-USD
+conversion (same assumptions as the V2 plan). They ignore payment fees,
+refunds, quote variance, and infra.
 
 After the first real paid generations, review actual provider cost, payment
-fees, refund/failure rate, and pack mix. If we want to preserve the current
-pack bonuses while targeting roughly 40% gross margin before payment fees on
-the Studio pack, the multiplier would need to be around 2.1x.
+fees, refund/failure rate, and pack mix before further catalog changes.
 
 ## Checkout / Waffo integration
 

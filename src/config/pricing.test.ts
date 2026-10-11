@@ -16,10 +16,10 @@ test('V1 server checkout resolves exactly four public USD packs', () => {
       credits,
     ]),
     [
-      ['starter', 499, 500],
-      ['creator', 999, 1100],
-      ['pro', 1999, 2400],
-      ['studio', 3999, 5000],
+      ['starter', 499, 400],
+      ['creator', 999, 850],
+      ['pro', 1999, 1750],
+      ['studio', 3999, 3600],
     ]
   );
   assert.ok(publicProducts.every((p) => p.currency === 'usd'));

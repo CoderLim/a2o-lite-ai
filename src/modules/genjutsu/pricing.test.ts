@@ -14,7 +14,7 @@ import {
   listVisibleCreditPacks,
 } from './pricing';
 
-test('V1 public credit packs match the launch catalog', () => {
+test('V1 public credit packs keep launch USD prices with reduced credits', () => {
   assert.deepEqual(
     GENJUTSU_CREDIT_PACKS.map((pack) => [
       pack.id,
@@ -22,12 +22,31 @@ test('V1 public credit packs match the launch catalog', () => {
       pack.credits,
     ]),
     [
-      ['starter', 499, 500],
-      ['creator', 999, 1100],
-      ['pro', 1999, 2400],
-      ['studio', 3999, 5000],
+      ['starter', 499, 400],
+      ['creator', 999, 850],
+      ['pro', 1999, 1750],
+      ['studio', 3999, 3600],
     ]
   );
+});
+
+test('reduced V1 packs keep a decreasing $/credit ladder near the V2 margin band', () => {
+  const [starter, creator, pro, studio] = GENJUTSU_CREDIT_PACKS;
+  const modelCostUsd = (credits: number) => credits / 170;
+  for (const pack of GENJUTSU_CREDIT_PACKS) {
+    const margin = 1 - modelCostUsd(pack.credits) / (pack.priceCents / 100);
+    assert.ok(
+      margin >= 0.47 && margin < 0.57,
+      `unexpected ${pack.id} model-cost margin ${margin}`
+    );
+  }
+  assert.ok(
+    starter.priceCents / starter.credits > creator.priceCents / creator.credits
+  );
+  assert.ok(
+    creator.priceCents / creator.credits > pro.priceCents / pro.credits
+  );
+  assert.ok(pro.priceCents / pro.credits > studio.priceCents / studio.credits);
 });
 
 test('smoke pack is only visible to gengliming emails', () => {
@@ -103,7 +122,7 @@ test('credit gate chooses the smallest pack that covers the deficit', () => {
   assert.equal(
     getSmallestSufficientCreditPack({
       balance: 320,
-      requiredCredits: 820,
+      requiredCredits: 700,
       email: 'alice@example.com',
     })?.id,
     'starter'
@@ -112,15 +131,15 @@ test('credit gate chooses the smallest pack that covers the deficit', () => {
 
 test('V1 deficit boundaries select the smallest sufficient public pack', () => {
   const cases: Array<[number, string | null]> = [
-    [499, 'starter'],
-    [500, 'starter'],
-    [501, 'creator'],
-    [1100, 'creator'],
-    [1101, 'pro'],
-    [2400, 'pro'],
-    [2401, 'studio'],
-    [5000, 'studio'],
-    [5001, null],
+    [399, 'starter'],
+    [400, 'starter'],
+    [401, 'creator'],
+    [850, 'creator'],
+    [851, 'pro'],
+    [1750, 'pro'],
+    [1751, 'studio'],
+    [3600, 'studio'],
+    [3601, null],
   ];
   for (const [deficit, expected] of cases) {
     assert.equal(

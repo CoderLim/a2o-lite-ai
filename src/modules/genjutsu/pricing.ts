@@ -99,32 +99,35 @@ export const SEEDANCE_VIDEO_REFERENCE_RATE_USD_PER_BILLED_SECOND: Record<
   '1080p': 0.8377668,
 };
 
-/** V1 public one-time credit packs. Keep previous paid orders as immutable snapshots. */
+/**
+ * V1 USD prices with V2-aligned unit economics (higher $/credit).
+ * Keep previous paid orders as immutable snapshots.
+ */
 export const GENJUTSU_CREDIT_PACKS: readonly GenjutsuCreditPack[] = [
   {
     id: 'starter',
     name: 'Starter',
     priceCents: 499,
-    credits: 500,
+    credits: 400,
   },
   {
     id: 'creator',
     name: 'Creator',
     priceCents: 999,
-    credits: 1100,
+    credits: 850,
     highlighted: true,
   },
   {
     id: 'pro',
     name: 'Pro',
     priceCents: 1999,
-    credits: 2400,
+    credits: 1750,
   },
   {
     id: 'studio',
     name: 'Studio',
     priceCents: 3999,
-    credits: 5000,
+    credits: 3600,
   },
 ] as const;
 
