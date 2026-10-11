@@ -9,21 +9,17 @@ import {
 } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
-import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
+import { localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { Bulin47GeneratorPanel } from '@/components/landing/Bulin47GeneratorPanel';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 
-/** Page-head demo for VideoObject — replace with a self-shot before/after when ready. */
-const DEMO_VIDEO_PATH = '/videos/bulin47-ai-demo.mp4';
-const DEMO_POSTER_PATH = '/videos/bulin47-ai-demo-poster.jpg';
 const DATE_PUBLISHED = '2026-10-11';
 const DATE_MODIFIED = '2026-10-11';
 
-const GENERATOR_UTM =
-  '/bulin-47-ai?utm_source=bulin_seo&utm_medium=content&utm_campaign=tools_compare#generator';
+const GENERATOR_HREF = '#generator';
 
 /** Visible FAQ + FAQPage JSON-LD must stay character-identical. */
 const FAQ_ITEMS = [
@@ -129,23 +125,10 @@ function articleJsonLd() {
   };
 }
 
-function videoJsonLd() {
-  return {
-    '@type': 'VideoObject',
-    name: 'Bulin 47 style AI video — made from one photo',
-    uploadDate: DATE_PUBLISHED,
-    description:
-      'A 15-second vertical demo of the image-to-video workflow on this page.',
-    contentUrl: absoluteUrl(DEMO_VIDEO_PATH),
-    thumbnailUrl: absoluteUrl(DEMO_POSTER_PATH),
-    duration: 'PT15S',
-  };
-}
-
 function graphJsonLd() {
   return {
     '@context': 'https://schema.org',
-    '@graph': [articleJsonLd(), howToJsonLd(), faqJsonLd(), videoJsonLd()],
+    '@graph': [articleJsonLd(), howToJsonLd(), faqJsonLd()],
   };
 }
 
@@ -180,30 +163,6 @@ function Bulin47AiPage() {
           <p className="text-muted-foreground mx-auto mt-5 max-w-3xl text-base leading-7 sm:text-lg">
             {m['site.bulin.hero_desc']()}
           </p>
-
-          <a
-            href={GENERATOR_UTM}
-            className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[rgb(204,144,92)] px-6 text-sm font-semibold text-[rgb(247,246,243)] transition hover:brightness-105"
-          >
-            {m['site.bulin.hero_cta']()}
-          </a>
-
-          <div className="mx-auto mt-8 max-w-sm text-left sm:mt-10">
-            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(30,23,19,0.92)] p-3 shadow-2xl">
-              <video
-                src={DEMO_VIDEO_PATH}
-                poster={DEMO_POSTER_PATH}
-                controls
-                muted
-                playsInline
-                preload="metadata"
-                className="aspect-[9/16] max-h-[520px] w-full rounded-2xl bg-black object-contain"
-              />
-              <p className="text-muted-foreground px-1 pt-3 text-center text-xs">
-                {m['site.bulin.demo_caption']()}
-              </p>
-            </div>
-          </div>
 
           <div id="generator" className="mt-8 scroll-mt-24 text-left sm:mt-10">
             <Bulin47GeneratorPanel />
@@ -267,7 +226,7 @@ function Bulin47AiPage() {
 
           <div className="mt-8 text-center">
             <Link
-              href={GENERATOR_UTM}
+              href={GENERATOR_HREF}
               className="text-primary text-sm font-medium underline-offset-2 hover:underline"
             >
               {m['site.bulin.try_generator']()}
@@ -305,7 +264,7 @@ function Bulin47AiPage() {
                 steps above work the same way anywhere. On this site, start from
                 the{' '}
                 <Link
-                  href={GENERATOR_UTM}
+                  href={GENERATOR_HREF}
                   className="text-primary underline-offset-2 hover:underline"
                 >
                   Bulin 47 generator
@@ -463,7 +422,7 @@ function Bulin47AiPage() {
               {m['site.bulin.cta_desc']()}
             </p>
             <a
-              href={GENERATOR_UTM}
+              href={GENERATOR_HREF}
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[rgb(204,144,92)] px-6 text-sm font-semibold text-[rgb(247,246,243)] transition hover:brightness-105"
             >
               {m['site.bulin.hero_cta']()}
