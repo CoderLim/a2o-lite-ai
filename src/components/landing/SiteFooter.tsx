@@ -9,15 +9,24 @@ import { FOOTER_COLUMNS } from '@/components/landing/content';
 
 function translatedFooterText(value: string) {
   switch (value) {
-    case 'About': return m['site.footer.about']();
-    case 'Tools': return m['site.footer.tools']();
-    case 'Features': return m['site.footer.features']();
-    case 'Pricing': return m['site.header.pricing']();
-    case 'Blog': return m['site.header.blog']();
-    case 'Partners': return m['site.footer.partners']();
-    case 'Person Remover': return m['site.footer.personremover']();
-    case 'Video Text Remover': return m['site.footer.videotextremover']();
-    default: return value; // Brand/product labels are intentionally retained.
+    case 'About':
+      return m['site.footer.about']();
+    case 'Tools':
+      return m['site.footer.tools']();
+    case 'Features':
+      return m['site.footer.features']();
+    case 'Pricing':
+      return m['site.header.pricing']();
+    case 'Blog':
+      return m['site.header.blog']();
+    case 'Partners':
+      return m['site.footer.partners']();
+    case 'Person Remover':
+      return m['site.footer.personremover']();
+    case 'Video Text Remover':
+      return m['site.footer.videotextremover']();
+    default:
+      return value; // Brand/product labels are intentionally retained.
   }
 }
 
@@ -127,7 +136,9 @@ export function SiteFooter() {
               'lg:flex-row lg:items-center lg:text-left'
             )}
           >
-            <p>© 2026 • {envConfigs.app_name} {m['site.footer.copyright']()}</p>
+            <p>
+              © 2026 • {envConfigs.app_name} {m['site.footer.copyright']()}
+            </p>
             <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-end">
               <a
                 href={`mailto:${envConfigs.app_support_email}`}
@@ -211,6 +222,19 @@ export function SiteFooter() {
                 alt="OpenHunts Club Member"
                 width={486}
                 height={105}
+                loading="lazy"
+                decoding="async"
+                className="h-[27px] w-auto"
+              />
+            </a>
+            <a
+              href="https://toolrain.com/item/genjutsu-ai"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://toolrain.com/badges/badge-listed-light.svg"
+                alt="Listed on ToolRain"
                 loading="lazy"
                 decoding="async"
                 className="h-[27px] w-auto"
