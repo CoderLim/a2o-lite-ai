@@ -38,8 +38,9 @@ const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
 const HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH = '/api/hotel-lobby/template';
 
 /**
- * Homepage templates for masonry gallery.
- * Original three starters are portrait; Hotel Lobby is landscape 16:9.
+ * Homepage templates — layout sketch:
+ * [ portrait ] [ portrait ] [ landscape ]
+ *                           [ landscape ]
  */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
   {
@@ -70,7 +71,7 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: RUMPEL_DEFAULT_PROMPT,
     mode: RUMPEL_MODE,
     resolution: RUMPEL_DEFAULT_RESOLUTION,
-    aspect: 'portrait',
+    aspect: 'landscape',
   },
   {
     id: 'hotel-lobby',
@@ -83,6 +84,16 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     aspect: 'landscape',
   },
 ];
+
+export function getMotionTemplatesByAspect(): {
+  portraits: MotionTemplate[];
+  landscapes: MotionTemplate[];
+} {
+  return {
+    portraits: MOTION_TEMPLATES.filter((t) => t.aspect === 'portrait'),
+    landscapes: MOTION_TEMPLATES.filter((t) => t.aspect === 'landscape'),
+  };
+}
 
 /** Optional preview URL when it differs from the downloadable source. */
 export function getMotionTemplatePreviewSrc(template: MotionTemplate): string {

@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
   getMotionTemplatePreviewSrc,
-  MOTION_TEMPLATES,
+  getMotionTemplatesByAspect,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
 
@@ -17,13 +17,14 @@ function TemplateCard({
   template,
   applying,
   onSelect,
+  className,
 }: {
   template: MotionTemplate;
   applying: boolean;
   onSelect?: (template: MotionTemplate) => void;
+  className?: string;
 }) {
   const title = tDynamic(template.titleKey);
-  const landscape = template.aspect === 'landscape';
 
   return (
     <button
@@ -32,12 +33,10 @@ function TemplateCard({
       onClick={() => onSelect?.(template)}
       aria-label={m['site.templates.use_aria']({ title })}
       className={cn(
-        'group relative shrink-0 cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
-        landscape
-          ? 'aspect-video w-[160px] sm:w-[180px]'
-          : 'aspect-9/16 w-[100px] sm:w-[110px]',
+        'group relative min-h-0 cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[rgb(204,144,92)]/70 focus-visible:outline-none',
-        applying && 'cursor-wait opacity-80'
+        applying && 'cursor-wait opacity-80',
+        className
       )}
     >
       <video
@@ -76,6 +75,8 @@ export function MotionTemplateGallery({
   applyingTemplateId = null,
   onSelect,
 }: MotionTemplateGalleryProps) {
+  const { portraits, landscapes } = getMotionTemplatesByAspect();
+
   return (
     <section
       className={cn('mt-6 text-left', className)}
@@ -93,15 +94,35 @@ export function MotionTemplateGallery({
         </p>
       </div>
 
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:gap-2.5">
-        {MOTION_TEMPLATES.map((template) => (
-          <TemplateCard
-            key={template.id}
-            template={template}
-            applying={applyingTemplateId === template.id}
-            onSelect={onSelect}
-          />
-        ))}
+      {/*
+        Sketch layout:
+        [ portrait ] [ portrait ] [ landscape ]
+                                  [ landscape ]
+        Portraits side-by-side; landscapes stacked to the same height.
+      */}
+      <div className="flex max-w-[420px] items-stretch gap-1.5 sm:max-w-[480px] sm:gap-2">
+        <div className="flex min-w-0 flex-[1.15] gap-1.5 sm:gap-2">
+          {portraits.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              applying={applyingTemplateId === template.id}
+              onSelect={onSelect}
+              className="aspect-9/16 min-w-0 flex-1"
+            />
+          ))}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:gap-2">
+          {landscapes.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              applying={applyingTemplateId === template.id}
+              onSelect={onSelect}
+              className="min-h-0 w-full flex-1"
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
