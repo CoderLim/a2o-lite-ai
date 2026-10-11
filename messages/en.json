@@ -1006,6 +1006,7 @@
   "site.templates.apply_failed": "Could not load this template. Try again.",
   "site.templates.apply_busy": "Wait for the current generation to finish before switching templates.",
   "site.templates.zombie_hug": "Zombie Hug",
+  "site.templates.hotel_lobby": "Hotel Lobby",
   "site.templates.bulin_47": "Bulin 47",
   "site.templates.rumpelstiltskin": "Rumpelstiltskin",
   "site.pricing.title": "Genjutsu AI Pricing",

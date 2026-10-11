@@ -5,6 +5,7 @@ import {
   BULIN_47_TEMPLATE_PATH,
   BULIN_47_TEMPLATE_POSTER_PATH,
 } from '@/modules/bulin-47/constants';
+import { buildHotelLobbyPrompt } from '@/modules/hotel-lobby/prompt';
 import {
   RUMPEL_DEFAULT_PROMPT,
   RUMPEL_DEFAULT_RESOLUTION,
@@ -30,6 +31,10 @@ export type MotionTemplate = {
   resolution: '480p' | '720p' | '1080p';
 };
 
+/** Served from R2 via hotel-lobby API (not a static public/ file). */
+const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
+const HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH = '/api/hotel-lobby/template';
+
 /** Homepage-supported motion templates (real source clips, not edited demos). */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
   {
@@ -40,6 +45,16 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     prompt: ZOMBIE_HUG_PROMPT,
     mode: ZOMBIE_HUG_MODE,
     resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
+  },
+  {
+    id: 'hotel-lobby',
+    titleKey: 'site.templates.hotel_lobby',
+    poster: '/readme/hotel-lobby.jpg',
+    // Preview uses the redirecting template URL; apply downloads the file proxy.
+    sourceVideo: HOTEL_LOBBY_TEMPLATE_FILE_PATH,
+    prompt: buildHotelLobbyPrompt(2),
+    mode: 'objects-swap',
+    resolution: '720p',
   },
   {
     id: 'bulin-47',
@@ -60,3 +75,9 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: RUMPEL_DEFAULT_RESOLUTION,
   },
 ];
+
+/** Optional preview URL when it differs from the downloadable source. */
+export function getMotionTemplatePreviewSrc(template: MotionTemplate): string {
+  if (template.id === 'hotel-lobby') return HOTEL_LOBBY_TEMPLATE_PREVIEW_PATH;
+  return template.sourceVideo;
+}

@@ -2,6 +2,7 @@ import { tDynamic } from '@/core/i18n/dynamic';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
+  getMotionTemplatePreviewSrc,
   MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
@@ -46,7 +47,10 @@ function TemplateCard({
           poster={template.poster}
           aria-hidden
         >
-          <source src={template.sourceVideo} type="video/mp4" />
+          <source
+            src={getMotionTemplatePreviewSrc(template)}
+            type="video/mp4"
+          />
         </video>
         <img
           src={template.poster}

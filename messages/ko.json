@@ -1006,6 +1006,7 @@
   "site.templates.apply_failed": "템플릿을 불러오지 못했습니다. 다시 시도해 주세요.",
   "site.templates.apply_busy": "템플릿을 바꾸기 전에 현재 생성이 끝날 때까지 기다려 주세요.",
   "site.templates.zombie_hug": "Zombie Hug",
+  "site.templates.hotel_lobby": "Hotel Lobby",
   "site.templates.bulin_47": "Bulin 47",
   "site.templates.rumpelstiltskin": "Rumpelstiltskin",
   "site.pricing.title": "Genjutsu AI 요금",

@@ -1006,6 +1006,7 @@
   "site.templates.apply_failed": "テンプレートを読み込めませんでした。もう一度お試しください。",
   "site.templates.apply_busy": "テンプレートを切り替える前に、現在の生成が完了するまでお待ちください。",
   "site.templates.zombie_hug": "Zombie Hug",
+  "site.templates.hotel_lobby": "Hotel Lobby",
   "site.templates.bulin_47": "Bulin 47",
   "site.templates.rumpelstiltskin": "Rumpelstiltskin",
   "site.pricing.title": "Genjutsu AIの料金",
