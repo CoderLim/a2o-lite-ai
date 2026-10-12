@@ -12,11 +12,7 @@ import { CircleHelp, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
-import {
-  estimateGenjutsuCreditsForProvider,
-  getSmallestSufficientCreditPack,
-  type GenjutsuCreditPack,
-} from '@/modules/genjutsu/pricing';
+import { estimateGenjutsuCreditsForProvider } from '@/modules/genjutsu/pricing';
 import {
   loadRumpelTemplateFile,
   RUMPEL_DEFAULT_PROMPT,
@@ -41,16 +37,11 @@ import {
   type UploadClientDiagnostics,
 } from '@/lib/upload-diagnostics';
 import { m } from '@/paraglide/messages.js';
+import { useCreditGate } from '@/hooks/use-credit-gate';
 import { usePublicConfig } from '@/hooks/use-public-config';
 import { useUserCredits } from '@/hooks/use-user-credits';
+import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { ChevronDownIcon, CloseIcon, ImageModeIcon } from '@/components/icons';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
@@ -88,11 +79,6 @@ type GenerationPoll = {
   refundedCredits?: number;
   requiredCredits?: number;
   balance?: number;
-};
-
-type CreditGateState = {
-  balance: number;
-  requiredCredits: number;
 };
 
 type PersistedGeneration = {
@@ -176,13 +162,6 @@ function createMediaItem(file: File): MediaItem {
     file,
     url: URL.createObjectURL(file),
   };
-}
-
-function formatCreditPackPrice(pack: GenjutsuCreditPack) {
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: (pack.currency || 'usd').toUpperCase(),
-  }).format(pack.priceCents / 100);
 }
 
 function isLikenessRejectionMessage(message: string) {
@@ -340,99 +319,6 @@ function PhotoSlot({
   );
 }
 
-function InsufficientCreditsModal({
-  gate,
-  pack,
-  checkoutLoading,
-  onClose,
-  onBuy,
-}: {
-  gate: CreditGateState | null;
-  pack: GenjutsuCreditPack | null;
-  checkoutLoading: boolean;
-  onClose: () => void;
-  onBuy: () => void;
-}) {
-  if (!gate) return null;
-
-  const deficit = Math.max(0, gate.requiredCredits - gate.balance);
-
-  return (
-    <Dialog
-      open={Boolean(gate)}
-      onOpenChange={(open) => {
-        if (!open && !checkoutLoading) onClose();
-      }}
-    >
-      <DialogContent
-        showCloseButton={!checkoutLoading}
-        overlayClassName="z-[490] bg-black/75 backdrop-blur-sm"
-        className="z-[500] w-full max-w-[420px] gap-0 rounded-2xl border border-white/10 bg-[rgb(31,24,20)] p-5 text-[rgb(237,234,222)] shadow-2xl sm:max-w-[420px] sm:p-6"
-      >
-        <DialogHeader className="gap-1.5 pr-8 text-left">
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {m['genjutsu.credits.insufficient_title']()}
-          </DialogTitle>
-          <DialogDescription className="text-sm leading-6 text-white/55">
-            {m['genjutsu.credits.insufficient_description']({
-              count: gate.requiredCredits.toLocaleString(),
-            })}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-5 rounded-xl border border-white/8 bg-black/15 px-4 py-3 text-sm">
-          <div className="flex items-center justify-between py-1 text-white/58">
-            <span>{m['genjutsu.credits.balance']()}</span>
-            <span className="tabular-nums">
-              {gate.balance.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-1 text-white/58">
-            <span>{m['genjutsu.credits.required']()}</span>
-            <span className="tabular-nums">
-              {gate.requiredCredits.toLocaleString()}
-            </span>
-          </div>
-          <div className="my-2 h-px bg-white/8" />
-          <div className="flex items-center justify-between py-1 font-medium">
-            <span>{m['genjutsu.credits.need_label']()}</span>
-            <span className="text-[rgb(220,155,99)] tabular-nums">
-              {m['genjutsu.credits.need_more']({
-                count: deficit.toLocaleString(),
-              })}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          disabled={checkoutLoading}
-          onClick={onBuy}
-          className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[rgb(204,144,92)] px-4 text-sm font-semibold text-[rgb(247,246,243)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          {checkoutLoading
-            ? m['genjutsu.credits.opening_checkout']()
-            : pack
-              ? m['genjutsu.credits.buy_pack']({
-                  count: pack.credits.toLocaleString(),
-                  price: formatCreditPackPrice(pack),
-                })
-              : m['genjutsu.credits.view_packs']()}
-        </button>
-
-        <button
-          type="button"
-          disabled={checkoutLoading}
-          onClick={onClose}
-          className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-lg text-sm text-white/45 transition-colors hover:bg-white/5 hover:text-white/70 disabled:pointer-events-none disabled:opacity-40"
-        >
-          {m['genjutsu.credits.maybe_later']()}
-        </button>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export function RumpelstiltskinGeneratorPanel() {
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
@@ -449,8 +335,10 @@ export function RumpelstiltskinGeneratorPanel() {
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [jobError, setJobError] = useState('');
-  const [creditGate, setCreditGate] = useState<CreditGateState | null>(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const photoUrlRef = useRef<string | null>(null);
@@ -511,18 +399,6 @@ export function RumpelstiltskinGeneratorPanel() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!creditGate || typeof creditsQuery.data?.balance !== 'number') return;
-    const balance = creditsQuery.data.balance;
-    if (balance >= creditGate.requiredCredits) {
-      setCreditGate(null);
-      return;
-    }
-    if (balance !== creditGate.balance) {
-      setCreditGate((current) => (current ? { ...current, balance } : current));
-    }
-  }, [creditGate, creditsQuery.data?.balance]);
-
   const setPhotoFile = (file: File | null) => {
     if (!file) return;
     const mime = file.type.split(';', 1)[0]?.trim().toLowerCase() || '';
@@ -540,7 +416,7 @@ export function RumpelstiltskinGeneratorPanel() {
       if (current) URL.revokeObjectURL(current.url);
       return next;
     });
-    setCreditGate(null);
+    creditGate.clear();
     setJobError('');
   };
 
@@ -600,7 +476,7 @@ export function RumpelstiltskinGeneratorPanel() {
         ) {
           localStorage.removeItem(activeGenerationKey(active.userId));
           setPhase('idle');
-          setCreditGate(null);
+          creditGate.clear();
           setJobError(
             polled.providerStatus === 'ready'
               ? 'Upload completed, but generation was not started. Click Generate to try again.'
@@ -649,12 +525,12 @@ export function RumpelstiltskinGeneratorPanel() {
             Number.isFinite(requiredCredits) &&
             Number.isFinite(balance)
           ) {
-            setCreditGate({ requiredCredits, balance });
+            creditGate.open({ requiredCredits, balance });
             setJobError('');
             return;
           }
 
-          setCreditGate(null);
+          creditGate.clear();
           setJobError(
             polled.error ||
               m['site.generator.failed_status']({
@@ -670,7 +546,7 @@ export function RumpelstiltskinGeneratorPanel() {
       setPhase('locked');
       setJobError(m['site.generator.still_processing']());
     },
-    [creditsQuery]
+    [creditGate.clear, creditGate.open, creditsQuery]
   );
 
   useEffect(() => {
@@ -693,7 +569,7 @@ export function RumpelstiltskinGeneratorPanel() {
 
       const runId = ++generationRunRef.current;
       setJobError('');
-      setCreditGate(null);
+      creditGate.clear();
       setGenerationId(active.generationId);
       if (
         active.resolution === '480p' ||
@@ -721,7 +597,7 @@ export function RumpelstiltskinGeneratorPanel() {
     }
 
     setResultUrl(null);
-    setCreditGate(null);
+    creditGate.clear();
     setJobError('');
     setPhase('uploading');
 
@@ -855,13 +731,13 @@ export function RumpelstiltskinGeneratorPanel() {
           const requiredCredits = Number(apiData?.requiredCredits);
           const balance = Number(apiData?.balance);
           if (Number.isFinite(requiredCredits) && Number.isFinite(balance)) {
-            setCreditGate({ requiredCredits, balance });
+            creditGate.open({ requiredCredits, balance });
             setJobError('');
             return;
           }
         }
 
-        setCreditGate(null);
+        creditGate.clear();
         const uiMessage = providerSubmitUiMessage(cause);
         if (
           apiData?.code === 'PROVIDER_LIKENESS_REJECTED' ||
@@ -878,7 +754,7 @@ export function RumpelstiltskinGeneratorPanel() {
       if (raw) {
         try {
           const active = JSON.parse(raw) as PersistedGeneration;
-          setCreditGate(null);
+          creditGate.clear();
           setPhase('generating');
           setJobError(
             submissionUnknown
@@ -895,72 +771,12 @@ export function RumpelstiltskinGeneratorPanel() {
       }
 
       setPhase('idle');
-      setCreditGate(null);
+      creditGate.clear();
       setJobError(
         cause instanceof Error
           ? cause.message
           : m['site.generator.failed_unexpected']()
       );
-    }
-  };
-
-  const recommendedCreditPack = useMemo(
-    () =>
-      creditGate
-        ? getSmallestSufficientCreditPack({
-            balance: creditGate.balance,
-            requiredCredits: creditGate.requiredCredits,
-            email: session?.user?.email,
-          })
-        : null,
-    [creditGate, session?.user?.email]
-  );
-
-  const handleBuyCredits = async () => {
-    if (!creditGate || checkoutLoading) return;
-
-    if (!recommendedCreditPack) {
-      const pricingWindow = window.open('/pricing', '_blank');
-      if (pricingWindow) {
-        pricingWindow.opener = null;
-      } else {
-        window.location.href = '/pricing';
-      }
-      return;
-    }
-
-    const checkoutWindow = window.open('', '_blank');
-    if (checkoutWindow) checkoutWindow.opener = null;
-
-    setCheckoutLoading(true);
-    try {
-      const redirect = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const checkout = await apiPost<{ checkout_url?: string }>(
-        '/api/payment/checkout',
-        {
-          product_id: recommendedCreditPack.id,
-          redirect,
-        }
-      );
-
-      if (!checkout.checkout_url) {
-        throw new Error(m['site.generator.checkout_url_missing']());
-      }
-
-      if (checkoutWindow && !checkoutWindow.closed) {
-        checkoutWindow.location.href = checkout.checkout_url;
-      } else {
-        window.location.href = checkout.checkout_url;
-      }
-    } catch (cause) {
-      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-      toast.error(
-        cause instanceof Error
-          ? cause.message
-          : m['genjutsu.credits.checkout_failed']()
-      );
-    } finally {
-      setCheckoutLoading(false);
     }
   };
 
@@ -1146,11 +962,11 @@ export function RumpelstiltskinGeneratorPanel() {
       ) : null}
 
       <InsufficientCreditsModal
-        gate={creditGate}
-        pack={recommendedCreditPack}
-        checkoutLoading={checkoutLoading}
-        onClose={() => setCreditGate(null)}
-        onBuy={() => void handleBuyCredits()}
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
       />
     </div>
   );

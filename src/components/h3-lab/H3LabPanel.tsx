@@ -3,7 +3,6 @@ import { Download, LoaderCircle, Play, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
-import { Link } from '@/core/i18n/navigation';
 import {
   estimateH3LabCredits,
   H3_MAX_PROMPT_LENGTH,
@@ -15,7 +14,9 @@ import {
 } from '@/modules/hotel-lobby/pricing';
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { useCreditGate } from '@/hooks/use-credit-gate';
 import { useUserCredits } from '@/hooks/use-user-credits';
+import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -130,6 +131,10 @@ function redirectToSignIn() {
 export function H3LabPanel() {
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits();
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
   const localUrlsRef = useRef<Set<string>>(new Set());
   const mountedRef = useRef(true);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -155,10 +160,6 @@ export function H3LabPanel() {
   const [providerStatus, setProviderStatus] = useState('');
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
-  const [creditError, setCreditError] = useState<{
-    required: number;
-    balance: number;
-  } | null>(null);
 
   const busy = phase !== 'idle' && phase !== 'done';
 
@@ -331,7 +332,7 @@ export function H3LabPanel() {
   };
 
   const generate = async () => {
-    setCreditError(null);
+    creditGate.clear();
 
     if (!session?.user) {
       redirectToSignIn();
@@ -361,7 +362,7 @@ export function H3LabPanel() {
     const requiredCredits = estimatedCredits;
     const balance = creditsQuery.data?.balance ?? 0;
     if (!creditsQuery.isPending && balance < requiredCredits) {
-      setCreditError({ required: requiredCredits, balance });
+      creditGate.open({ requiredCredits, balance });
       return;
     }
 
@@ -444,8 +445,8 @@ export function H3LabPanel() {
             ? (error.data as Record<string, unknown>)
             : null;
         if (data?.code === 'INSUFFICIENT_CREDITS') {
-          setCreditError({
-            required: Number(data.requiredCredits) || requiredCredits,
+          creditGate.open({
+            requiredCredits: Number(data.requiredCredits) || requiredCredits,
             balance: Number(data.balance) || 0,
           });
           setPhase('idle');
@@ -780,21 +781,6 @@ export function H3LabPanel() {
         </div>
       </section>
 
-      {creditError ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-medium">Not enough credits</p>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Need {creditError.required.toLocaleString()} · balance{' '}
-              {creditError.balance.toLocaleString()}
-            </p>
-          </div>
-          <Link href="/pricing" className={cn(buttonVariants({ size: 'sm' }))}>
-            Buy credits
-          </Link>
-        </div>
-      ) : null}
-
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
           Balance:{' '}
@@ -867,6 +853,14 @@ export function H3LabPanel() {
           />
         </section>
       ) : null}
+
+      <InsufficientCreditsModal
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
+      />
     </div>
   );
 }

@@ -13,11 +13,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
-import {
-  estimateGenjutsuCreditsForProvider,
-  getSmallestSufficientCreditPack,
-  type GenjutsuCreditPack,
-} from '@/modules/genjutsu/pricing';
+import { estimateGenjutsuCreditsForProvider } from '@/modules/genjutsu/pricing';
 import {
   ApiError,
   apiGet,
@@ -31,8 +27,10 @@ import {
   type UploadClientDiagnostics,
 } from '@/lib/upload-diagnostics';
 import { m } from '@/paraglide/messages.js';
+import { useCreditGate } from '@/hooks/use-credit-gate';
 import { usePublicConfig } from '@/hooks/use-public-config';
 import { useUserCredits } from '@/hooks/use-user-credits';
+import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import {
   ChevronDownIcon,
   CloseIcon,
@@ -42,13 +40,6 @@ import {
   ObjectsSwapIcon,
   PlusIcon,
 } from '@/components/icons';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
@@ -1004,11 +995,6 @@ type GenerationPoll = {
   balance?: number;
 };
 
-type CreditGateState = {
-  balance: number;
-  requiredCredits: number;
-};
-
 type PersistedGeneration = {
   userId: string;
   generationId: string;
@@ -1021,114 +1007,6 @@ const sleep = (ms: number) =>
 
 const activeGenerationKey = (userId: string) =>
   `genjutsu_active_generation:${userId}`;
-
-function formatCreditPackPrice(pack: GenjutsuCreditPack) {
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: (pack.currency || 'usd').toUpperCase(),
-  }).format(pack.priceCents / 100);
-}
-
-function InsufficientCreditsModal({
-  gate,
-  pack,
-  checkoutLoading,
-  onClose,
-  onBuy,
-}: {
-  gate: CreditGateState | null;
-  pack: GenjutsuCreditPack | null;
-  checkoutLoading: boolean;
-  onClose: () => void;
-  onBuy: () => void;
-}) {
-  if (!gate) return null;
-
-  const deficit = Math.max(0, gate.requiredCredits - gate.balance);
-
-  return (
-    <Dialog
-      open={Boolean(gate)}
-      onOpenChange={(open) => {
-        if (!open && !checkoutLoading) onClose();
-      }}
-    >
-      <DialogContent
-        showCloseButton={!checkoutLoading}
-        overlayClassName="z-[490] bg-black/75 backdrop-blur-sm"
-        className="z-[500] w-full max-w-[420px] gap-0 rounded-2xl border border-white/10 bg-[rgb(31,24,20)] p-5 text-[rgb(237,234,222)] shadow-2xl sm:max-w-[420px] sm:p-6"
-      >
-        <DialogHeader className="gap-1.5 pr-8 text-left">
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {m['genjutsu.credits.insufficient_title']()}
-          </DialogTitle>
-          <DialogDescription className="text-sm leading-6 text-white/55">
-            {m['genjutsu.credits.insufficient_description']({
-              count: gate.requiredCredits.toLocaleString(),
-            })}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-5 rounded-xl border border-white/8 bg-black/15 px-4 py-3 text-sm">
-          <div className="flex items-center justify-between py-1 text-white/58">
-            <span>{m['genjutsu.credits.balance']()}</span>
-            <span className="tabular-nums">
-              {gate.balance.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-1 text-white/58">
-            <span>{m['genjutsu.credits.required']()}</span>
-            <span className="tabular-nums">
-              {gate.requiredCredits.toLocaleString()}
-            </span>
-          </div>
-          <div className="my-2 h-px bg-white/8" />
-          <div className="flex items-center justify-between py-1 font-medium">
-            <span>{m['genjutsu.credits.need_label']()}</span>
-            <span className="text-[rgb(220,155,99)] tabular-nums">
-              {m['genjutsu.credits.need_more']({
-                count: deficit.toLocaleString(),
-              })}
-            </span>
-          </div>
-        </div>
-
-        {!pack ? (
-          <p className="mt-3 text-xs leading-5 text-white/50">
-            {m['genjutsu.credits.no_single_pack']({
-              count: deficit.toLocaleString(),
-            })}
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          disabled={checkoutLoading}
-          onClick={onBuy}
-          className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[rgb(204,144,92)] px-4 text-sm font-semibold text-[rgb(247,246,243)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          {checkoutLoading
-            ? m['genjutsu.credits.opening_checkout']()
-            : pack
-              ? m['genjutsu.credits.buy_pack']({
-                  count: pack.credits.toLocaleString(),
-                  price: formatCreditPackPrice(pack),
-                })
-              : m['genjutsu.credits.view_packs']()}
-        </button>
-
-        <button
-          type="button"
-          disabled={checkoutLoading}
-          onClick={onClose}
-          className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-lg text-sm text-white/45 transition-colors hover:bg-white/5 hover:text-white/70 disabled:pointer-events-none disabled:opacity-40"
-        >
-          {m['genjutsu.credits.maybe_later']()}
-        </button>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function ResultPanel({
   status,
@@ -1267,8 +1145,10 @@ export function GeneratorPanel({
   const [status, setStatus] = useState<GenerationStatus>('idle');
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [error, setError] = useState('');
-  const [creditGate, setCreditGate] = useState<CreditGateState | null>(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const generationRunRef = useRef(0);
@@ -1292,20 +1172,6 @@ export function GeneratorPanel({
     window.addEventListener('focus', refreshCredits);
     return () => window.removeEventListener('focus', refreshCredits);
   }, [creditsQuery.refetch, session?.user]);
-
-  useEffect(() => {
-    const balance = creditsQuery.data?.balance;
-    if (!creditGate || typeof balance !== 'number') return;
-
-    if (balance >= creditGate.requiredCredits) {
-      setCreditGate(null);
-      return;
-    }
-
-    if (balance !== creditGate.balance) {
-      setCreditGate((current) => (current ? { ...current, balance } : current));
-    }
-  }, [creditGate, creditsQuery.data?.balance]);
 
   useEffect(() => {
     return () => {
@@ -1357,7 +1223,7 @@ export function GeneratorPanel({
         setResolution(template.resolution);
         setVideo(nextVideo);
         setError('');
-        setCreditGate(null);
+        creditGate.clear();
         revokeItem(prevVideo);
         nextVideo = null;
         onTemplateSettled?.({ requestId, ok: true });
@@ -1463,7 +1329,7 @@ export function GeneratorPanel({
           localStorage.removeItem(activeGenerationKey(active.userId));
           setStatus('idle');
           setResult(null);
-          setCreditGate(null);
+          creditGate.clear();
           setError(
             polled.providerStatus === 'ready'
               ? 'Upload completed, but generation was not started. Click Generate to try again.'
@@ -1523,12 +1389,12 @@ export function GeneratorPanel({
             Number.isFinite(requiredCredits) &&
             Number.isFinite(balance)
           ) {
-            setCreditGate({ requiredCredits, balance });
+            creditGate.open({ requiredCredits, balance });
             setError('');
             return;
           }
 
-          setCreditGate(null);
+          creditGate.clear();
           const uiError =
             generationFailureUiMessage(polled.error, polled.errorCode) ||
             m['site.generator.failed_status']({
@@ -1545,7 +1411,7 @@ export function GeneratorPanel({
       // enabling Generate would make a second paid generation too easy.
       setError(m['site.generator.still_processing']());
     },
-    []
+    [creditGate.clear, creditGate.open]
   );
 
   useEffect(() => {
@@ -1569,7 +1435,7 @@ export function GeneratorPanel({
 
       const runId = ++generationRunRef.current;
       setError('');
-      setCreditGate(null);
+      creditGate.clear();
       setResult({
         ...active.draft,
         reservedCredits: active.reservedCredits,
@@ -1671,7 +1537,7 @@ export function GeneratorPanel({
     };
 
     setError('');
-    setCreditGate(null);
+    creditGate.clear();
     setResult(draft);
     setStatus('generating');
 
@@ -1831,13 +1697,13 @@ export function GeneratorPanel({
           const requiredCredits = Number(apiData?.requiredCredits);
           const balance = Number(apiData?.balance);
           if (Number.isFinite(requiredCredits) && Number.isFinite(balance)) {
-            setCreditGate({ requiredCredits, balance });
+            creditGate.open({ requiredCredits, balance });
             setError('');
             return;
           }
         }
 
-        setCreditGate(null);
+        creditGate.clear();
         const likenessRejected =
           apiData?.code === 'PROVIDER_LIKENESS_REJECTED' ||
           (typeof cause.message === 'string' &&
@@ -1855,7 +1721,7 @@ export function GeneratorPanel({
       if (raw) {
         try {
           const active = JSON.parse(raw) as PersistedGeneration;
-          setCreditGate(null);
+          creditGate.clear();
           setResult({
             ...active.draft,
             reservedCredits: active.reservedCredits,
@@ -1877,7 +1743,7 @@ export function GeneratorPanel({
 
       setStatus('idle');
       setResult(null);
-      setCreditGate(null);
+      creditGate.clear();
       setError(
         cause instanceof Error
           ? cause.message
@@ -1885,66 +1751,6 @@ export function GeneratorPanel({
       );
     } finally {
       revokeItem(previewClip);
-    }
-  };
-
-  const recommendedCreditPack = useMemo(
-    () =>
-      creditGate
-        ? getSmallestSufficientCreditPack({
-            balance: creditGate.balance,
-            requiredCredits: creditGate.requiredCredits,
-            email: session?.user?.email,
-          })
-        : null,
-    [creditGate, session?.user?.email]
-  );
-
-  const handleBuyCredits = async () => {
-    if (!creditGate || checkoutLoading) return;
-
-    if (!recommendedCreditPack) {
-      const pricingWindow = window.open('/pricing', '_blank');
-      if (pricingWindow) {
-        pricingWindow.opener = null;
-      } else {
-        window.location.href = '/pricing';
-      }
-      return;
-    }
-
-    const checkoutWindow = window.open('', '_blank');
-    if (checkoutWindow) checkoutWindow.opener = null;
-
-    setCheckoutLoading(true);
-    try {
-      const redirect = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const checkout = await apiPost<{ checkout_url?: string }>(
-        '/api/payment/checkout',
-        {
-          product_id: recommendedCreditPack.id,
-          redirect,
-        }
-      );
-
-      if (!checkout.checkout_url) {
-        throw new Error(m['site.generator.checkout_url_missing']());
-      }
-
-      if (checkoutWindow && !checkoutWindow.closed) {
-        checkoutWindow.location.href = checkout.checkout_url;
-      } else {
-        window.location.href = checkout.checkout_url;
-      }
-    } catch (cause) {
-      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-      toast.error(
-        cause instanceof Error
-          ? cause.message
-          : m['genjutsu.credits.checkout_failed']()
-      );
-    } finally {
-      setCheckoutLoading(false);
     }
   };
 
@@ -2135,11 +1941,11 @@ export function GeneratorPanel({
       ) : null}
 
       <InsufficientCreditsModal
-        gate={creditGate}
-        pack={recommendedCreditPack}
-        checkoutLoading={checkoutLoading}
-        onClose={() => setCreditGate(null)}
-        onBuy={() => void handleBuyCredits()}
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
       />
     </div>
   );

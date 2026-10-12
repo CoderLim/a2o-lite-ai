@@ -8,10 +8,8 @@ import {
 } from 'react';
 import { Download, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages.js';
 
 import { useSession } from '@/core/auth/client';
-import { Link } from '@/core/i18n/navigation';
 import {
   estimateHotelLobbyCredits,
   HOTEL_LOBBY_MAX_VIDEO_EDGE_PX,
@@ -19,7 +17,10 @@ import {
 } from '@/modules/hotel-lobby/pricing';
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
 import { trimVideoToFile } from '@/lib/trim-video';
+import { m } from '@/paraglide/messages.js';
+import { useCreditGate } from '@/hooks/use-credit-gate';
 import { useUserCredits } from '@/hooks/use-user-credits';
+import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { CloseIcon, FilmIcon, ImageModeIcon } from '@/components/icons';
 import { HotelLobbyTrimBar } from '@/components/landing/hotel-lobby-trim-bar';
 
@@ -221,7 +222,9 @@ function PersonSlot({
           className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/14 bg-white/[0.025] text-center text-white/42 transition hover:border-[rgba(204,144,92,0.55)] hover:bg-[rgba(204,144,92,0.05)] hover:text-[rgb(220,155,99)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ImageModeIcon className="size-6" />
-          <span className="text-xs font-medium">{m['site.common.add_photo']()}</span>
+          <span className="text-xs font-medium">
+            {m['site.common.add_photo']()}
+          </span>
         </button>
       )}
     </div>
@@ -231,6 +234,10 @@ function PersonSlot({
 export function HotelLobbyGeneratorPanel() {
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
   const videoInputRef = useRef<HTMLInputElement>(null);
   const firstImageInputRef = useRef<HTMLInputElement>(null);
   const secondImageInputRef = useRef<HTMLInputElement>(null);
@@ -254,10 +261,6 @@ export function HotelLobbyGeneratorPanel() {
   const [providerStatus, setProviderStatus] = useState('');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
-  const [creditError, setCreditError] = useState<{
-    required: number;
-    balance: number;
-  } | null>(null);
 
   const busy = !['idle', 'done'].includes(phase) || trimming;
   const imageItems = [firstImage, secondImage].filter(
@@ -536,13 +539,11 @@ export function HotelLobbyGeneratorPanel() {
     }
 
     setPhase('idle');
-    throw new Error(
-      m['site.hotel.running']()
-    );
+    throw new Error(m['site.hotel.running']());
   };
 
   const generate = async () => {
-    setCreditError(null);
+    creditGate.clear();
 
     if (!session?.user) {
       redirectToSignIn();
@@ -564,9 +565,7 @@ export function HotelLobbyGeneratorPanel() {
       return;
     }
     if (!estimatedCredits) {
-      toast.error(
-        m['site.hotel.reading_duration']()
-      );
+      toast.error(m['site.hotel.reading_duration']());
       return;
     }
 
@@ -574,7 +573,7 @@ export function HotelLobbyGeneratorPanel() {
     const balance = creditsQuery.data?.balance ?? 0;
 
     if (!creditsQuery.isPending && balance < requiredCredits) {
-      setCreditError({ required: requiredCredits, balance });
+      creditGate.open({ requiredCredits, balance });
       return;
     }
 
@@ -679,8 +678,8 @@ export function HotelLobbyGeneratorPanel() {
             ? (error.data as Record<string, unknown>)
             : null;
         if (data?.code === 'INSUFFICIENT_CREDITS') {
-          setCreditError({
-            required: Number(data.requiredCredits) || requiredCredits,
+          creditGate.open({
+            requiredCredits: Number(data.requiredCredits) || requiredCredits,
             balance: Number(data.balance) || 0,
           });
           setPhase('idle');
@@ -872,25 +871,6 @@ export function HotelLobbyGeneratorPanel() {
         </div>
 
         <div className="border-t border-white/8 p-4 sm:p-5">
-          {creditError ? (
-            <div className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium text-amber-100/90">
-                  {m['genjutsu.credits.insufficient_title']()}
-                </p>
-                <p className="mt-0.5 text-xs text-amber-100/55">
-                  {m['site.common.required_balance']({ required: creditError.required.toLocaleString(), balance: creditError.balance.toLocaleString() })}
-                </p>
-              </div>
-              <Link
-                href="/pricing"
-                className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-xs font-semibold text-white transition hover:brightness-105"
-              >
-                {m['site.pricing.buy']()}
-              </Link>
-            </div>
-          ) : null}
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
             <button
               type="button"
@@ -911,7 +891,9 @@ export function HotelLobbyGeneratorPanel() {
                   : busy
                     ? phaseLabel
                     : estimatedCredits
-                      ? m['site.common.generate_estimate']({ count: String(estimatedCredits) })
+                      ? m['site.common.generate_estimate']({
+                          count: String(estimatedCredits),
+                        })
                       : m['site.generator.generate']()}
               </span>
             </button>
@@ -923,7 +905,9 @@ export function HotelLobbyGeneratorPanel() {
         <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(25,20,17,0.94)] p-3 shadow-2xl sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <div>
-              <p className="text-sm font-semibold text-white/90">{m['site.common.your_video']()}</p>
+              <p className="text-sm font-semibold text-white/90">
+                {m['site.common.your_video']()}
+              </p>
               <p className="mt-0.5 text-xs text-white/38">Kling O3</p>
             </div>
             <a
@@ -957,6 +941,14 @@ export function HotelLobbyGeneratorPanel() {
           ) : null}
         </div>
       ) : null}
+
+      <InsufficientCreditsModal
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
+      />
     </div>
   );
 }

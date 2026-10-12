@@ -12,7 +12,6 @@ import { CircleHelp, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
-import { Link } from '@/core/i18n/navigation';
 import { estimateGenjutsuCredits } from '@/modules/genjutsu/pricing';
 import {
   getZombieHugPublicTemplatePath,
@@ -27,7 +26,9 @@ import {
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
+import { useCreditGate } from '@/hooks/use-credit-gate';
 import { useUserCredits } from '@/hooks/use-user-credits';
+import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { ChevronDownIcon, CloseIcon, ImageModeIcon } from '@/components/icons';
 import {
   Tooltip,
@@ -227,6 +228,10 @@ function PersonSlot({
 export function ZombieHugGeneratorPanel() {
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
 
   const [survivorImage, setSurvivorImage] = useState<MediaItem | null>(null);
   const [lovedOneImage, setLovedOneImage] = useState<MediaItem | null>(null);
@@ -248,10 +253,6 @@ export function ZombieHugGeneratorPanel() {
   const [resultAspectRatio, setResultAspectRatio] =
     useState<ZombieHugAspectRatio>(ZOMBIE_HUG_DEFAULT_ASPECT_RATIO);
   const [jobError, setJobError] = useState('');
-  const [creditError, setCreditError] = useState<{
-    required: number;
-    balance: number;
-  } | null>(null);
 
   const survivorInputRef = useRef<HTMLInputElement>(null);
   const lovedOneInputRef = useRef<HTMLInputElement>(null);
@@ -341,7 +342,7 @@ export function ZombieHugGeneratorPanel() {
         return next;
       });
     }
-    setCreditError(null);
+    creditGate.clear();
   };
 
   const clearImageAt = (slot: 'survivor' | 'lovedOne') => {
@@ -563,7 +564,7 @@ export function ZombieHugGeneratorPanel() {
                   Number.isFinite(balance) &&
                   balance >= 0
                 ) {
-                  setCreditError({ required, balance });
+                  creditGate.open({ requiredCredits: required, balance });
                   setJobError('');
                   return;
                 }
@@ -628,7 +629,7 @@ export function ZombieHugGeneratorPanel() {
               Number.isFinite(balance) &&
               balance >= 0
             ) {
-              setCreditError({ required, balance });
+              creditGate.open({ requiredCredits: required, balance });
               setJobError('');
               return;
             }
@@ -648,7 +649,7 @@ export function ZombieHugGeneratorPanel() {
         'Generation is still processing. This job remains reserved; refresh the page to resume checking it.'
       );
     },
-    [creditsQuery]
+    [creditGate.open, creditsQuery]
   );
 
   useEffect(() => {
@@ -671,7 +672,7 @@ export function ZombieHugGeneratorPanel() {
 
       const runId = ++generationRunRef.current;
       setJobError('');
-      setCreditError(null);
+      creditGate.clear();
       setGenerationId(active.generationId);
       setPhase('generating');
       void pollGeneration(active, runId);
@@ -695,7 +696,7 @@ export function ZombieHugGeneratorPanel() {
     // Higgsfield's server-side quote and credit reservation are authoritative.
 
     setResultUrl(null);
-    setCreditError(null);
+    creditGate.clear();
     setJobError('');
     setPhase('uploading');
 
@@ -860,7 +861,7 @@ export function ZombieHugGeneratorPanel() {
             Number.isFinite(balance) &&
             balance >= 0
           ) {
-            setCreditError({ required, balance });
+            creditGate.open({ requiredCredits: required, balance });
             return;
           }
         }
@@ -953,25 +954,6 @@ export function ZombieHugGeneratorPanel() {
         </div>
 
         <div className="border-t border-white/8 p-4 sm:p-5">
-          {creditError ? (
-            <div className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium text-amber-100/90">
-                  {m['genjutsu.credits.insufficient_title']()}
-                </p>
-                <p className="mt-0.5 text-xs text-amber-100/55">
-                  {m['site.common.required_balance']({ required: creditError.required.toLocaleString(), balance: creditError.balance.toLocaleString() })}
-                </p>
-              </div>
-              <Link
-                href="/pricing"
-                className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-xs font-semibold text-[rgb(247,246,243)] transition hover:brightness-105"
-              >
-                {m['site.pricing.buy']()}
-              </Link>
-            </div>
-          ) : null}
-
           {jobError ? (
             <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/60">
               {jobError}
@@ -1011,7 +993,9 @@ export function ZombieHugGeneratorPanel() {
                 <FloatingPanel>
                   <div className="space-y-2">
                     <section className="p-1">
-                      <SectionLabel>{m['site.generator.resolution']()}</SectionLabel>
+                      <SectionLabel>
+                        {m['site.generator.resolution']()}
+                      </SectionLabel>
                       <OptionRow>
                         {ZOMBIE_HUG_RESOLUTIONS.map((n) => (
                           <SegmentButton
@@ -1082,7 +1066,9 @@ export function ZombieHugGeneratorPanel() {
                     : 'bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
                 )}
               >
-                {busy ? m['site.common.generating']() : m['site.generator.generate']()}
+                {busy
+                  ? m['site.common.generating']()
+                  : m['site.generator.generate']()}
               </button>
             </div>
           </div>
@@ -1093,7 +1079,9 @@ export function ZombieHugGeneratorPanel() {
         <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(18,20,24,0.94)] p-3 shadow-2xl sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <div>
-              <p className="text-sm font-semibold text-white/90">{m['site.common.your_video']()}</p>
+              <p className="text-sm font-semibold text-white/90">
+                {m['site.common.your_video']()}
+              </p>
               <p className="mt-0.5 text-xs text-white/38">
                 {m['site.zombie.provider_label']()}
               </p>
@@ -1127,6 +1115,14 @@ export function ZombieHugGeneratorPanel() {
           />
         </div>
       ) : null}
+
+      <InsufficientCreditsModal
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
+      />
     </div>
   );
 }
