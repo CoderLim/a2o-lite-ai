@@ -16,6 +16,7 @@ import {
 } from '@/modules/genjutsu/pricing';
 import { estimateSeedanceProviderCost } from '@/modules/genjutsu/seedance';
 import { HOTEL_LOBBY_SCENE } from '@/modules/hotel-lobby/billing';
+import { displayNameForHotelLobbyPresetId } from '@/modules/hotel-lobby/presets';
 import {
   estimateH3LabCredits,
   estimateHotelLobbyCredits,
@@ -322,7 +323,8 @@ async function GET({ request }: { request: Request }) {
           typeof options?.mode === 'string'
             ? options.mode
             : row.scene === HOTEL_LOBBY_SCENE
-              ? 'Hotel Lobby'
+              ? displayNameForHotelLobbyPresetId(options?.presetId) ||
+                'Hotel Lobby'
               : null,
         resolution:
           typeof options?.resolution === 'string' ? options.resolution : null,

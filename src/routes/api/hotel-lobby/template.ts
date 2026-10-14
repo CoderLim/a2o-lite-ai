@@ -1,10 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { resolveHotelLobbyPreset } from '@/modules/hotel-lobby/presets';
+import { HotelLobbyPreflightError } from '@/modules/hotel-lobby/service';
 import { getHotelLobbyTemplatePreviewUrl } from '@/modules/hotel-lobby/storage';
 
-async function GET() {
+async function GET({ request }: { request: Request }) {
   try {
-    const url = await getHotelLobbyTemplatePreviewUrl();
+    const { searchParams } = new URL(request.url);
+    // Preview may load a disabled preset (Generate stays blocked elsewhere).
+    const preset = resolveHotelLobbyPreset(searchParams.get('presetId'), {
+      requireEnabled: false,
+    });
+    const url = await getHotelLobbyTemplatePreviewUrl(preset.id);
     return new Response(null, {
       status: 302,
       headers: {
@@ -14,8 +21,12 @@ async function GET() {
     });
   } catch (error) {
     console.error('hotel-lobby template unavailable:', error);
-    return new Response('Hotel Lobby template is not configured', {
-      status: 404,
+    const message =
+      error instanceof HotelLobbyPreflightError
+        ? error.message
+        : 'Hotel Lobby template is not configured';
+    return new Response(message, {
+      status: error instanceof HotelLobbyPreflightError ? 400 : 404,
       headers: { 'Cache-Control': 'no-store' },
     });
   }

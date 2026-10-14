@@ -131,6 +131,8 @@ export async function submitHotelLobby(input: {
   videoUrl: string;
   imageUrls: string[];
   maxReferenceImages?: number;
+  /** Trusted from preset registry — never take client-supplied keep_audio. */
+  keepAudio?: boolean;
   /** @deprecated Ignored — Kling O3 has no resolution / expansion options. */
   resolution?: HotelLobbyResolution;
   aspectRatio?: HotelLobbyAspectRatio;
@@ -140,6 +142,7 @@ export async function submitHotelLobby(input: {
   const normalized = validateHotelLobbyInput(input);
   const provider = await getFalProvider();
   const callbackUrl = getHotelLobbyWebhookUrl() ?? undefined;
+  const keepAudio = input.keepAudio !== false;
 
   const result = await provider.generate({
     params: {
@@ -150,7 +153,7 @@ export async function submitHotelLobby(input: {
       options: {
         video_url: normalized.videoUrl,
         elements: buildKlingElements(normalized.imageUrls),
-        keep_audio: true,
+        keep_audio: keepAudio,
         shot_type: 'customize',
       },
     },

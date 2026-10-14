@@ -9,6 +9,7 @@ import {
   LISTABLE_GENERATION_SCENES,
 } from '@/modules/generations/scenes';
 import { HOTEL_LOBBY_SCENE } from '@/modules/hotel-lobby/billing';
+import { displayNameForHotelLobbyPresetId } from '@/modules/hotel-lobby/presets';
 import { respErr, respPage } from '@/lib/resp';
 
 function parseJson(value: string | null) {
@@ -70,12 +71,12 @@ async function GET({ request }: { request: Request }) {
       const hasSourceVideo =
         typeof options?.videoKey === 'string' && options.videoKey.length > 0;
       const mediaBase = generationMediaBasePath(row.scene);
+      const presetDisplayName =
+        row.scene === HOTEL_LOBBY_SCENE
+          ? displayNameForHotelLobbyPresetId(options?.presetId) || 'Hotel Lobby'
+          : null;
       const mode =
-        typeof options?.mode === 'string'
-          ? options.mode
-          : row.scene === HOTEL_LOBBY_SCENE
-            ? 'Hotel Lobby'
-            : null;
+        typeof options?.mode === 'string' ? options.mode : presetDisplayName;
       return {
         id: row.id,
         scene: row.scene,

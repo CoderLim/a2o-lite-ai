@@ -4,14 +4,17 @@ import { classifyFalSubmitFailure } from '@/core/ai';
 import { getAuth } from '@/core/auth';
 import {
   assertHotelLobbyGenerationId,
+  assertHotelLobbyTaskMatches,
   claimHotelLobbySubmission,
   getHotelLobbyTaskById,
+  HotelLobbyGenerationConflictError,
   HotelLobbyInsufficientCreditsError,
   markHotelLobbySubmissionUnknown,
   markHotelLobbySubmitted,
   refundHotelLobbyGeneration,
   reserveHotelLobbyGeneration,
 } from '@/modules/hotel-lobby/billing';
+import { resolveHotelLobbyPreset } from '@/modules/hotel-lobby/presets';
 import {
   estimateHotelLobbyCredits,
   estimateHotelLobbyProviderCost,
@@ -19,7 +22,7 @@ import {
   HOTEL_LOBBY_MODEL,
 } from '@/modules/hotel-lobby/pricing';
 import {
-  buildHotelLobbyPrompt,
+  HotelLobbyPreflightError,
   submitHotelLobby,
 } from '@/modules/hotel-lobby/service';
 import {
@@ -33,7 +36,6 @@ import {
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
-const HOTEL_LOBBY_ASPECT_RATIO = '16:9' as const;
 const HOTEL_LOBBY_PROMPT_EXPANSION_MODE = 'disabled' as const;
 
 function taskResponse(task: any) {
@@ -64,13 +66,23 @@ async function POST({ request }: { request: Request }) {
     const body = await request.json().catch(() => ({}));
     generationId = assertHotelLobbyGenerationId(body.generationId);
 
-    const existing = await getHotelLobbyTaskById({
-      generationId,
-      userId,
-    });
-    if (existing) return respData(taskResponse(existing));
-
+    const preset = resolveHotelLobbyPreset(body.presetId);
     const useDefaultTemplate = body.useDefaultTemplate === true;
+
+    if (!preset.allowCustomVideo) {
+      if (!useDefaultTemplate) {
+        return respErr(
+          `${preset.displayName} only supports the fixed reference template`,
+          { status: 400 }
+        );
+      }
+      if (typeof body.videoKey === 'string' && body.videoKey.length > 0) {
+        return respErr(
+          `${preset.displayName} does not accept a custom reference video`,
+          { status: 400 }
+        );
+      }
+    }
 
     const videoKey =
       typeof body.videoKey === 'string' ? body.videoKey : undefined;
@@ -88,8 +100,18 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (imageKeys.length < 1 || imageKeys.length > 2) {
-      return respErr('Provide one or two reference images', { status: 400 });
+    if (
+      imageKeys.length < preset.imageCount.min ||
+      imageKeys.length > preset.imageCount.max
+    ) {
+      return respErr(
+        preset.imageCount.min === preset.imageCount.max
+          ? `Provide exactly ${preset.imageCount.min} reference image${
+              preset.imageCount.min === 1 ? '' : 's'
+            }`
+          : `Provide between ${preset.imageCount.min} and ${preset.imageCount.max} reference images`,
+        { status: 400 }
+      );
     }
 
     const expectedUploadCount = imageKeys.length + (useDefaultTemplate ? 0 : 1);
@@ -111,6 +133,10 @@ async function POST({ request }: { request: Request }) {
       imageKeys,
       contentTypes,
       contentLengths,
+      maxReferenceImages: preset.imageCount.max,
+      templateVideoKey: useDefaultTemplate
+        ? preset.templateVideoKey
+        : undefined,
     });
     const providerInput = await resolveHotelLobbyInputUrls({
       userId,
@@ -137,29 +163,52 @@ async function POST({ request }: { request: Request }) {
     // Kling O3 rejects out-of-range pixels; fail before credit reservation.
     await probeHotelLobbyVideoDimensions(providerInput.videoUrl);
 
-    const prompt = buildHotelLobbyPrompt(imageKeys.length);
+    const prompt = preset.promptFor(imageKeys.length);
     const providerCostUsd = estimateHotelLobbyProviderCost({
       duration,
       imageCount: imageKeys.length,
+      maxImages: preset.imageCount.max,
     });
     const credits = estimateHotelLobbyCredits({
       duration,
       imageCount: imageKeys.length,
+      maxImages: preset.imageCount.max,
     });
+
+    const matchSnapshot = {
+      prompt,
+      duration,
+      resolution: HOTEL_LOBBY_BILLING_RESOLUTION,
+      aspectRatio: preset.aspectRatio,
+      promptExpansionMode: HOTEL_LOBBY_PROMPT_EXPANSION_MODE,
+      videoKey: sealed.videoKey,
+      imageKeys: sealed.imageKeys,
+      presetId: preset.id,
+      presetVersion: preset.version,
+      keepAudio: preset.keepAudio,
+    };
+
+    // Conflict-check before reserve so a reused generationId with a different
+    // preset/inputs returns 409 instead of silently replaying the old task.
+    const existing = await getHotelLobbyTaskById({
+      generationId,
+      userId,
+    });
+    if (existing) {
+      assertHotelLobbyTaskMatches(existing, matchSnapshot);
+      return respData(taskResponse(existing));
+    }
 
     const task = await reserveHotelLobbyGeneration({
       generationId,
       userId,
       userEmail: session.user.email,
       model: HOTEL_LOBBY_MODEL,
-      prompt,
-      duration,
-      resolution: HOTEL_LOBBY_BILLING_RESOLUTION,
-      aspectRatio: HOTEL_LOBBY_ASPECT_RATIO,
-      promptExpansionMode: HOTEL_LOBBY_PROMPT_EXPANSION_MODE,
+      ...matchSnapshot,
       ...sealed,
       providerCostUsd,
       credits,
+      creditDescription: preset.creditDescription,
     });
 
     if (task.status !== 'reserved') {
@@ -176,30 +225,17 @@ async function POST({ request }: { request: Request }) {
       return respData(taskResponse(current));
     }
 
+    let requestId: string | null = null;
     try {
       const result = await submitHotelLobby({
         prompt,
         duration,
+        keepAudio: preset.keepAudio,
+        maxReferenceImages: preset.imageCount.max,
         ...providerInput,
       });
-
-      const submitted = await markHotelLobbySubmitted({
-        generationId,
-        userId,
-        requestId: result.requestId,
-      });
-
-      return respData(
-        submitted
-          ? taskResponse(submitted)
-          : {
-              generationId,
-              requestId: result.requestId,
-              status: 'submitted',
-              reservedCredits: credits,
-            }
-      );
-    } catch (error: any) {
+      requestId = result.requestId;
+    } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Kling O3 submission failed';
 
@@ -238,6 +274,54 @@ async function POST({ request }: { request: Request }) {
         { status: 502 }
       );
     }
+
+    // Bind is a separate error boundary: Fal already accepted the job.
+    // Never refund or treat bind failure as a provider rejection.
+    try {
+      const submitted = await markHotelLobbySubmitted({
+        generationId,
+        userId,
+        requestId,
+      });
+
+      return respData(
+        submitted
+          ? taskResponse(submitted)
+          : {
+              generationId,
+              requestId,
+              status: 'submitted',
+              reservedCredits: credits,
+            }
+      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to bind Fal request id';
+
+      console.error('[ops] hotel-lobby bind_failed requestId_persisted', {
+        generationId,
+        userId,
+        requestId,
+        error: message,
+        hasRequestId: true,
+      });
+
+      await markHotelLobbySubmissionUnknown({
+        generationId,
+        userId,
+        requestId,
+        error: `bind_failed: ${message}`,
+      });
+
+      return respJson(
+        -1,
+        'Generation was accepted by the provider but could not be bound locally. Credits remain reserved; do not retry this generation.',
+        { code: 'SUBMISSION_UNKNOWN', generationId, requestId },
+        { status: 502 }
+      );
+    }
   } catch (error: any) {
     if (error instanceof HotelLobbyInsufficientCreditsError) {
       return respJson(
@@ -250,6 +334,21 @@ async function POST({ request }: { request: Request }) {
         },
         { status: 402 }
       );
+    }
+
+    if (error instanceof HotelLobbyGenerationConflictError) {
+      return respJson(
+        -1,
+        error.message,
+        { code: 'GENERATION_CONFLICT' },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (error instanceof HotelLobbyPreflightError) {
+      return respErr(error.message, { status: 400 });
     }
 
     console.error('hotel-lobby generate failed:', error);

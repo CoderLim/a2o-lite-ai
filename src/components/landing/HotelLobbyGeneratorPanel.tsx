@@ -70,12 +70,37 @@ type GenerationPoll = {
   refundedCredits?: number;
 };
 
-const TEMPLATE_URL = '/api/hotel-lobby/template';
+const TEMPLATE_API = '/api/hotel-lobby/template';
 const TEMPLATE_FILE_URL = '/api/hotel-lobby/template-file';
 const MAX_VIDEO_BYTES = 80 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 const MIN_REFERENCE_VIDEO_SECONDS = 3;
 const MAX_REFERENCE_VIDEO_SECONDS = 15;
+
+export type HotelLobbyPanelPresetId = 'hotel-lobby' | 'crazy-frog';
+
+type PresetUiMeta = {
+  presetId: HotelLobbyPanelPresetId;
+  enabled: boolean;
+  templateAvailable: boolean;
+  allowCustomVideo: boolean;
+  allowTrim: boolean;
+  aspectRatio: string;
+  imageCount: { min: number; max: number };
+  estimatedCredits: number | null;
+};
+
+function templateUrlFor(presetId: HotelLobbyPanelPresetId) {
+  return presetId === 'hotel-lobby'
+    ? TEMPLATE_API
+    : `${TEMPLATE_API}?presetId=${encodeURIComponent(presetId)}`;
+}
+
+function templateMetaUrlFor(presetId: HotelLobbyPanelPresetId) {
+  return presetId === 'hotel-lobby'
+    ? '/api/hotel-lobby/template-meta'
+    : `/api/hotel-lobby/template-meta?presetId=${encodeURIComponent(presetId)}`;
+}
 
 function isFullSourceClip(
   startSeconds: number,
@@ -231,7 +256,14 @@ function PersonSlot({
   );
 }
 
-export function HotelLobbyGeneratorPanel() {
+export function HotelLobbyGeneratorPanel({
+  presetId = 'hotel-lobby',
+}: {
+  presetId?: HotelLobbyPanelPresetId;
+} = {}) {
+  const isCrazyFrog = presetId === 'crazy-frog';
+  const isFixedTemplate = isCrazyFrog;
+  const templateUrl = templateUrlFor(presetId);
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
   const creditGate = useCreditGate({
@@ -247,9 +279,10 @@ export function HotelLobbyGeneratorPanel() {
   const previewVideoRef = useRef<HTMLVideoElement>(null);
   const [video, setVideo] = useState<VideoSource | null>({
     kind: 'template',
-    url: TEMPLATE_URL,
+    url: templateUrl,
   });
   const [templateAvailable, setTemplateAvailable] = useState(true);
+  const [presetMeta, setPresetMeta] = useState<PresetUiMeta | null>(null);
   const [firstImage, setFirstImage] = useState<MediaItem | null>(null);
   const [secondImage, setSecondImage] = useState<MediaItem | null>(null);
   const [trimStart, setTrimStart] = useState(0);
@@ -263,9 +296,21 @@ export function HotelLobbyGeneratorPanel() {
   const [generationId, setGenerationId] = useState<string | null>(null);
 
   const busy = !['idle', 'done'].includes(phase) || trimming;
-  const imageItems = [firstImage, secondImage].filter(
-    (item): item is MediaItem => Boolean(item)
-  );
+  const allowCustomVideo = presetMeta?.allowCustomVideo ?? !isFixedTemplate;
+  const allowTrim = presetMeta?.allowTrim ?? !isFixedTemplate;
+  const minImages = presetMeta?.imageCount.min ?? (isCrazyFrog ? 2 : 1);
+  const maxImages = presetMeta?.imageCount.max ?? 2;
+  const presetEnabled = presetMeta?.enabled ?? !isFixedTemplate;
+  const aspectRatio = presetMeta?.aspectRatio ?? (isCrazyFrog ? '4:3' : '16:9');
+  const previewAspectClass =
+    aspectRatio === '9:16'
+      ? 'aspect-[9/16]'
+      : aspectRatio === '4:3'
+        ? 'aspect-[4/3]'
+        : 'aspect-video';
+  const imageItems = (
+    maxImages > 1 ? [firstImage, secondImage] : [firstImage]
+  ).filter((item): item is MediaItem => Boolean(item));
   const sourceDuration =
     typeof video?.durationSeconds === 'number' &&
     Number.isFinite(video.durationSeconds) &&
@@ -282,17 +327,18 @@ export function HotelLobbyGeneratorPanel() {
     if (!billedDuration) return null;
     const imageCount = Math.max(
       1,
-      (firstImage ? 1 : 0) + (secondImage ? 1 : 0)
+      (firstImage ? 1 : 0) + (secondImage && maxImages > 1 ? 1 : 0)
     );
     try {
       return estimateHotelLobbyCredits({
         duration: billedDuration,
         imageCount,
+        maxImages,
       });
     } catch {
       return null;
     }
-  }, [billedDuration, firstImage, secondImage]);
+  }, [billedDuration, firstImage, secondImage, maxImages]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -304,15 +350,84 @@ export function HotelLobbyGeneratorPanel() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    void apiGet<{
+      durationSeconds: number | null;
+      estimatedCredits: number | null;
+      templateAvailable: boolean;
+      presetId: HotelLobbyPanelPresetId;
+      enabled: boolean;
+      allowCustomVideo: boolean;
+      allowTrim: boolean;
+      aspectRatio: string;
+      imageCount: { min: number; max: number };
+    }>(templateMetaUrlFor(presetId))
+      .then((data) => {
+        if (cancelled) return;
+        setPresetMeta({
+          presetId: data.presetId || presetId,
+          enabled: data.enabled !== false,
+          templateAvailable: data.templateAvailable !== false,
+          allowCustomVideo: data.allowCustomVideo !== false,
+          allowTrim: data.allowTrim !== false,
+          aspectRatio: data.aspectRatio || (isCrazyFrog ? '4:3' : '16:9'),
+          imageCount: data.imageCount || {
+            min: isCrazyFrog ? 2 : 1,
+            max: 2,
+          },
+          estimatedCredits: data.estimatedCredits,
+        });
+        setTemplateAvailable(data.templateAvailable !== false);
+        const seconds = data.durationSeconds;
+        if (
+          typeof seconds === 'number' &&
+          Number.isFinite(seconds) &&
+          seconds > 0
+        ) {
+          setVideo((current) =>
+            current?.kind === 'template'
+              ? { ...current, url: templateUrl, durationSeconds: seconds }
+              : current
+          );
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPresetMeta({
+          presetId,
+          enabled: !isCrazyFrog,
+          templateAvailable: false,
+          allowCustomVideo: !isCrazyFrog,
+          allowTrim: !isCrazyFrog,
+          aspectRatio: isCrazyFrog ? '4:3' : '16:9',
+          imageCount: { min: isCrazyFrog ? 2 : 1, max: 2 },
+          estimatedCredits: null,
+        });
+        if (isCrazyFrog) setTemplateAvailable(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [presetId, templateUrl, isCrazyFrog]);
+
+  useEffect(() => {
     if (video?.kind !== 'template') return;
     if (hasKnownDuration) return;
 
     let cancelled = false;
-    void apiGet<{ durationSeconds: number }>('/api/hotel-lobby/template-meta')
+    void apiGet<{ durationSeconds: number | null }>(
+      templateMetaUrlFor(presetId)
+    )
       .then((data) => {
         if (cancelled) return;
         const seconds = data.durationSeconds;
-        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        if (
+          typeof seconds !== 'number' ||
+          !Number.isFinite(seconds) ||
+          seconds <= 0
+        )
+          return;
         setVideo((current) =>
           current?.kind === 'template'
             ? { ...current, durationSeconds: seconds }
@@ -326,7 +441,7 @@ export function HotelLobbyGeneratorPanel() {
     return () => {
       cancelled = true;
     };
-  }, [video?.kind, video?.url, hasKnownDuration]);
+  }, [video?.kind, video?.url, hasKnownDuration, presetId]);
 
   useEffect(() => {
     if (sourceDuration == null) {
@@ -483,6 +598,7 @@ export function HotelLobbyGeneratorPanel() {
   };
 
   const clearVideo = () => {
+    if (!allowCustomVideo) return;
     if (video?.kind === 'upload') {
       URL.revokeObjectURL(video.url);
       localUrlsRef.current.delete(video.url);
@@ -497,7 +613,7 @@ export function HotelLobbyGeneratorPanel() {
       localUrlsRef.current.delete(video.url);
     }
     setTemplateAvailable(true);
-    setVideo({ kind: 'template', url: TEMPLATE_URL });
+    setVideo({ kind: 'template', url: templateUrl });
     setResultUrl(null);
     setPhase('idle');
   };
@@ -549,12 +665,32 @@ export function HotelLobbyGeneratorPanel() {
       redirectToSignIn();
       return;
     }
+    if (!presetEnabled || (!allowCustomVideo && !templateAvailable)) {
+      toast.error(m['site.crazy.unavailable']());
+      return;
+    }
     if (!video || sourceDuration == null) {
-      toast.error(m['site.hotel.need_video']());
+      toast.error(
+        isCrazyFrog
+          ? m['site.crazy.need_template']()
+          : m['site.hotel.need_video']()
+      );
       return;
     }
     if (!firstImage) {
-      toast.error(m['site.hotel.need_first']());
+      toast.error(
+        isCrazyFrog
+          ? m['site.crazy.need_first']()
+          : m['site.hotel.need_first']()
+      );
+      return;
+    }
+    if (minImages >= 2 && !secondImage) {
+      toast.error(
+        isCrazyFrog
+          ? m['site.crazy.need_second']()
+          : m['site.hotel.need_first']()
+      );
       return;
     }
     if (
@@ -584,9 +720,11 @@ export function HotelLobbyGeneratorPanel() {
     const id = crypto.randomUUID();
     setGenerationId(id);
 
+    // Fixed-template presets always seal the server template; never upload/trim video.
     const useFullTemplate =
-      video.kind === 'template' &&
-      isFullSourceClip(trimStart, trimEnd, sourceDuration);
+      !allowCustomVideo ||
+      (video.kind === 'template' &&
+        isFullSourceClip(trimStart, trimEnd, sourceDuration));
 
     try {
       let referenceVideoFile: File | null = null;
@@ -608,30 +746,34 @@ export function HotelLobbyGeneratorPanel() {
       }
 
       const useDefaultTemplate = useFullTemplate;
-      const files = useDefaultTemplate
-        ? imageItems.map((item) => item.file)
-        : [referenceVideoFile as File, ...imageItems.map((item) => item.file)];
-      const contentTypes = files.map(
+      const filesForUpload = useDefaultTemplate
+        ? imageItems.slice(0, maxImages).map((item) => item.file)
+        : [
+            referenceVideoFile as File,
+            ...imageItems.slice(0, maxImages).map((item) => item.file),
+          ];
+      const contentTypes = filesForUpload.map(
         (file) => file.type || 'application/octet-stream'
       );
-      const contentLengths = files.map((file) => file.size);
+      const contentLengths = filesForUpload.map((file) => file.size);
 
       const setup = await apiPost<UploadSetup>('/api/hotel-lobby/upload-url', {
         generationId: id,
+        presetId,
         useDefaultTemplate,
         contentTypes,
         contentLengths,
       });
 
-      if (setup.uploads.length !== files.length) {
+      if (setup.uploads.length !== filesForUpload.length) {
         throw new Error('Upload setup returned an incomplete file list');
       }
 
-      for (let index = 0; index < files.length; index += 1) {
+      for (let index = 0; index < filesForUpload.length; index += 1) {
         const upload = setup.uploads[index];
         await uploadToSignedUrl({
           url: upload.uploadUrl,
-          file: files[index],
+          file: filesForUpload[index],
           headers: upload.uploadHeaders,
         });
       }
@@ -647,6 +789,7 @@ export function HotelLobbyGeneratorPanel() {
         '/api/hotel-lobby/generate',
         {
           generationId: id,
+          presetId,
           useDefaultTemplate,
           videoKey: videoUpload?.storageKey,
           imageKeys: imageUploads.map((item) => item.storageKey),
@@ -715,10 +858,14 @@ export function HotelLobbyGeneratorPanel() {
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-white/90">
-                  {m['site.hotel.reference']()}
+                  {isCrazyFrog
+                    ? m['site.crazy.reference']()
+                    : m['site.hotel.reference']()}
                 </p>
                 <p className="mt-0.5 text-xs leading-5 text-white/40">
-                  {m['site.hotel.reference_note']()}
+                  {isCrazyFrog
+                    ? m['site.crazy.reference_note']()
+                    : m['site.hotel.reference_note']()}
                 </p>
               </div>
               {video?.kind === 'template' ? (
@@ -728,20 +875,24 @@ export function HotelLobbyGeneratorPanel() {
               ) : null}
             </div>
 
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/mp4,video/quicktime"
-              className="hidden"
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                void replaceVideo(event.target.files?.[0] || null);
-                event.target.value = '';
-              }}
-            />
+            {allowCustomVideo ? (
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime"
+                className="hidden"
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  void replaceVideo(event.target.files?.[0] || null);
+                  event.target.value = '';
+                }}
+              />
+            ) : null}
 
             {video ? (
               <div>
-                <div className="relative aspect-video overflow-hidden rounded-2xl border border-[rgba(204,144,92,0.24)] bg-black">
+                <div
+                  className={`relative overflow-hidden rounded-2xl border border-[rgba(204,144,92,0.24)] bg-black ${previewAspectClass} ${''}`}
+                >
                   <video
                     ref={previewVideoRef}
                     key={video.url}
@@ -765,21 +916,23 @@ export function HotelLobbyGeneratorPanel() {
                     onError={() => {
                       if (video.kind === 'template') {
                         setTemplateAvailable(false);
-                        setVideo(null);
+                        if (allowCustomVideo) setVideo(null);
                       }
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={clearVideo}
-                    disabled={busy}
-                    aria-label={m['site.generator.video_remove']()}
-                    className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur transition hover:bg-black/90 disabled:opacity-40"
-                  >
-                    <CloseIcon className="size-4" />
-                  </button>
+                  {allowCustomVideo ? (
+                    <button
+                      type="button"
+                      onClick={clearVideo}
+                      disabled={busy}
+                      aria-label={m['site.generator.video_remove']()}
+                      className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur transition hover:bg-black/90 disabled:opacity-40"
+                    >
+                      <CloseIcon className="size-4" />
+                    </button>
+                  ) : null}
                 </div>
-                {sourceDuration != null ? (
+                {allowTrim && sourceDuration != null ? (
                   <HotelLobbyTrimBar
                     durationSeconds={sourceDuration}
                     startSeconds={trimStart}
@@ -811,7 +964,7 @@ export function HotelLobbyGeneratorPanel() {
                   />
                 ) : null}
               </div>
-            ) : (
+            ) : allowCustomVideo ? (
               <div className="space-y-2">
                 <button
                   type="button"
@@ -843,38 +996,81 @@ export function HotelLobbyGeneratorPanel() {
                     : m['site.hotel.retry']()}
                 </button>
               </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/14 bg-white/[0.025] px-4 py-10 text-center text-sm text-white/45">
+                {m['site.crazy.template_missing']()}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={restoreTemplate}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(220,155,99)] transition hover:text-[rgb(235,174,119)] disabled:opacity-50"
+                >
+                  <RotateCcw className="size-3.5" />
+                  {m['site.hotel.retry']()}
+                </button>
+              </div>
             )}
           </div>
 
           <div className="p-4 sm:p-5">
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`grid gap-3 ${maxImages > 1 ? 'grid-cols-2' : 'max-w-sm grid-cols-1'}`}
+            >
               <PersonSlot
-                title={m['site.hotel.first']()}
-                note={m['site.hotel.first_note']()}
+                title={
+                  isCrazyFrog
+                    ? m['site.crazy.first']()
+                    : m['site.hotel.first']()
+                }
+                note={
+                  isCrazyFrog
+                    ? m['site.crazy.first_note']()
+                    : m['site.hotel.first_note']()
+                }
                 item={firstImage}
                 inputRef={firstImageInputRef}
                 disabled={busy}
                 onPick={(file) => setImageAt('first', file)}
                 onRemove={() => clearImageAt('first')}
               />
-              <PersonSlot
-                title={m['site.hotel.second']()}
-                note={m['site.hotel.second_note']()}
-                item={secondImage}
-                inputRef={secondImageInputRef}
-                disabled={busy}
-                onPick={(file) => setImageAt('second', file)}
-                onRemove={() => clearImageAt('second')}
-              />
+              {maxImages > 1 ? (
+                <PersonSlot
+                  title={
+                    isCrazyFrog
+                      ? m['site.crazy.second']()
+                      : m['site.hotel.second']()
+                  }
+                  note={
+                    isCrazyFrog
+                      ? m['site.crazy.second_note']()
+                      : m['site.hotel.second_note']()
+                  }
+                  item={secondImage}
+                  inputRef={secondImageInputRef}
+                  disabled={busy}
+                  onPick={(file) => setImageAt('second', file)}
+                  onRemove={() => clearImageAt('second')}
+                />
+              ) : null}
             </div>
           </div>
         </div>
 
         <div className="border-t border-white/8 p-4 sm:p-5">
+          {!presetEnabled || (!allowCustomVideo && !templateAvailable) ? (
+            <p className="mb-3 text-center text-xs text-white/40 sm:text-left">
+              {m['site.crazy.unavailable']()}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
             <button
               type="button"
-              disabled={busy || sessionPending}
+              disabled={
+                busy ||
+                sessionPending ||
+                !presetEnabled ||
+                (!allowCustomVideo && !templateAvailable)
+              }
               onClick={() => void generate()}
               className="inline-flex h-11 w-full min-w-[240px] items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,rgb(222,151,92),rgb(189,111,64))] px-5 text-sm font-semibold text-white shadow-[0_12px_32px_-12px_rgba(218,134,75,0.7)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
             >
@@ -918,7 +1114,7 @@ export function HotelLobbyGeneratorPanel() {
               }
               download={
                 generationId
-                  ? `hotel-lobby-${generationId.slice(0, 8)}.mp4`
+                  ? `${isCrazyFrog ? 'crazy-frog' : 'hotel-lobby'}-${generationId.slice(0, 8)}.mp4`
                   : undefined
               }
               className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
@@ -932,7 +1128,7 @@ export function HotelLobbyGeneratorPanel() {
             controls
             autoPlay
             playsInline
-            className="mx-auto aspect-video max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain"
+            className={`mx-auto max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain ${previewAspectClass}`}
           />
           {generationId ? (
             <p className="mt-2 px-1 text-[10px] text-white/25">

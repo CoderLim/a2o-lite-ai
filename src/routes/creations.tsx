@@ -247,10 +247,14 @@ function GenerationCard({
           <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
             <span>
               {generation.scene === 'hotel-lobby'
-                ? m['creations.scene.hotel_lobby']()
+                ? generation.mode === 'Crazy Frog'
+                  ? m['creations.scene.crazy_frog']()
+                  : m['creations.scene.hotel_lobby']()
                 : m['creations.scene.genjutsu']()}
             </span>
-            {generation.mode ? <span>{generation.mode}</span> : null}
+            {generation.mode && generation.scene !== 'hotel-lobby' ? (
+              <span>{generation.mode}</span>
+            ) : null}
             {generation.resolution ? (
               <span>{generation.resolution}</span>
             ) : null}
