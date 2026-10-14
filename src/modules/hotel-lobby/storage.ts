@@ -764,6 +764,76 @@ export async function createHotelLobbyR2ReadUrl(key: string) {
   return signed.url;
 }
 
+/**
+ * Authenticated byte-range GET for probe/metadata. Prefer this over
+ * query-signed URLs + ad-hoc `Range` headers — Workers → R2 signed URLs
+ * sometimes return bodies that fail ISO-BMFF parsing.
+ */
+export async function readHotelLobbyObjectRange(params: {
+  key: string;
+  /** Inclusive start byte. */
+  start: number;
+  /** Inclusive end byte; omit to read through EOF. */
+  end?: number;
+}): Promise<{ bytes: Uint8Array; totalBytes: number | null; status: number }> {
+  assertSafeObjectKey(params.key);
+  if (!params.key.startsWith('hotel-lobby/')) {
+    throw new Error('Invalid Hotel Lobby storage key');
+  }
+  if (!Number.isSafeInteger(params.start) || params.start < 0) {
+    throw new Error('Invalid Hotel Lobby range start');
+  }
+  if (
+    params.end != null &&
+    (!Number.isSafeInteger(params.end) || params.end < params.start)
+  ) {
+    throw new Error('Invalid Hotel Lobby range end');
+  }
+
+  const config = await getR2SigningConfig();
+  const range =
+    params.end == null
+      ? `bytes=${params.start}-`
+      : `bytes=${params.start}-${params.end}`;
+  const response = await createR2Client(config).fetch(
+    new Request(buildR2ObjectUrl(config, params.key), {
+      method: 'GET',
+      headers: { Range: range },
+    })
+  );
+
+  if (response.status !== 206 && response.status !== 200) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(
+      `Failed to read Hotel Lobby object range: HTTP ${response.status}${
+        detail ? ` - ${detail.slice(0, 200)}` : ''
+      }`
+    );
+  }
+
+  const contentRange = response.headers.get('content-range');
+  let totalBytes: number | null = null;
+  if (contentRange) {
+    const match = /\/(\d+)$/.exec(contentRange);
+    if (match) {
+      const total = Number(match[1]);
+      if (Number.isSafeInteger(total) && total > 0) totalBytes = total;
+    }
+  }
+  if (totalBytes == null && response.status === 200) {
+    const contentLength = Number(response.headers.get('content-length') || '');
+    if (Number.isSafeInteger(contentLength) && contentLength > 0) {
+      totalBytes = contentLength;
+    }
+  }
+
+  return {
+    bytes: new Uint8Array(await response.arrayBuffer()),
+    totalBytes,
+    status: response.status,
+  };
+}
+
 export async function resolveHotelLobbyInputUrls(params: {
   userId: string;
   generationId: string;
