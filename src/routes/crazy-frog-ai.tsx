@@ -9,11 +9,35 @@ import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGenerat
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
 
-/** Same chase clip used as the page demo / VideoObject and the generator template. */
-const CRAZY_FROG_DEMO_VIDEO = '/videos/crazy-frog-tpl.mp4';
-const CRAZY_FROG_DEMO_POSTER = '/videos/crazy-frog-tpl-poster.jpg';
+/** Real chase outputs shown in the Example results gallery + VideoObject. */
+const CRAZY_FROG_EXAMPLE_CASES = [
+  {
+    id: 'case-01',
+    src: '/videos/demos/crazy-frog-case-01.mp4',
+    poster: '/videos/demos/crazy-frog-case-01-poster.jpg',
+    duration: 'PT13S',
+  },
+  {
+    id: 'case-02',
+    src: '/videos/demos/crazy-frog-case-02.mp4',
+    poster: '/videos/demos/crazy-frog-case-02-poster.jpg',
+    duration: 'PT18S',
+  },
+  {
+    id: 'case-03',
+    src: '/videos/demos/crazy-frog-case-03.mp4',
+    poster: '/videos/demos/crazy-frog-case-03-poster.jpg',
+    duration: 'PT11S',
+  },
+  {
+    id: 'case-04',
+    src: '/videos/demos/crazy-frog-case-04.mp4',
+    poster: '/videos/demos/crazy-frog-case-04-poster.jpg',
+    duration: 'PT15S',
+  },
+] as const;
+
 const CRAZY_FROG_DEMO_UPLOAD_DATE = '2026-10-14';
-const CRAZY_FROG_DEMO_DURATION = 'PT11S';
 
 const FAQ_ITEMS = [
   { question: m['site.crazy.faq1_q'], answer: m['site.crazy.faq1_a'] },
@@ -127,16 +151,17 @@ function softwareApplicationJsonLd() {
 }
 
 function videoJsonLd() {
+  const primary = CRAZY_FROG_EXAMPLE_CASES[0];
   return {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: 'Crazy Frog AI chase video',
+    name: 'Crazy Frog AI chase video example',
     description:
-      'Crazy Frog AI chase clip — front runner and chaser layout used by this generator.',
-    contentUrl: absoluteUrl(CRAZY_FROG_DEMO_VIDEO),
-    thumbnailUrl: absoluteUrl(CRAZY_FROG_DEMO_POSTER),
+      'Example Crazy Frog AI chase result with two people swapped into the front runner and chaser roles.',
+    contentUrl: absoluteUrl(primary.src),
+    thumbnailUrl: absoluteUrl(primary.poster),
     uploadDate: CRAZY_FROG_DEMO_UPLOAD_DATE,
-    duration: CRAZY_FROG_DEMO_DURATION,
+    duration: primary.duration,
   };
 }
 
@@ -184,19 +209,26 @@ function CrazyFrogAiPage() {
             <p className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
               {m['site.crazy.example_title']()}
             </p>
-            <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-black/25 p-3">
-              <video
-                src={CRAZY_FROG_DEMO_VIDEO}
-                poster={CRAZY_FROG_DEMO_POSTER}
-                controls
-                playsInline
-                preload="metadata"
-                className="mx-auto aspect-[4/3] max-h-[620px] w-full max-w-full rounded-2xl bg-black object-contain"
-              />
-              <p className="px-1 pt-3 text-center text-xs text-white/34">
-                {m['site.crazy.example_caption']()}
-              </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {CRAZY_FROG_EXAMPLE_CASES.map((clip) => (
+                <div
+                  key={clip.id}
+                  className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
+                >
+                  <video
+                    src={clip.src}
+                    poster={clip.poster}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="aspect-video w-full rounded-xl bg-black object-contain"
+                  />
+                </div>
+              ))}
             </div>
+            <p className="mt-3 text-center text-xs text-white/34">
+              {m['site.crazy.example_caption']()}
+            </p>
           </section>
 
           <section className="border-y border-white/7 bg-white/[0.018]">

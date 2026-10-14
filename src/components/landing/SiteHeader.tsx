@@ -31,6 +31,7 @@ const NAV_LINKS = [
 ] as const;
 
 const TRENDING_LINKS = [
+  { label: 'Crazy Frog AI', href: '/crazy-frog-ai' },
   { label: 'Rumpelstiltskin AI', href: '/ai-rumpelstiltskin' },
   { label: 'Bulin 47 AI', href: '/bulin-47-ai' },
   { label: 'Hotel Lobby', href: '/hotel-lobby-ai' },

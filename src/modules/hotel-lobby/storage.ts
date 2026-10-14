@@ -468,40 +468,51 @@ async function putHotelLobbyObjectBytes(params: {
 
 /**
  * Ensure the preset template exists in R2. On local Node, seed Crazy Frog
- * from `public/videos/crazy-frog-tpl.mp4` when missing.
+ * from `public/videos/crazy-frog-tpl.mp4` when missing or size-mismatched
+ * (so swapping the public smoke/full clip refreshes R2 automatically).
  */
 export async function ensureHotelLobbyTemplateInR2(
   presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
 ) {
   const key = getHotelLobbyTemplateVideoKey(presetId);
+  const localRelative = LOCAL_TEMPLATE_BY_PRESET[presetId];
+
+  let remoteBytes: number | null = null;
   try {
-    await headR2Object(key);
-    return key;
+    const head = await headR2Object(key);
+    remoteBytes = head.contentLength;
   } catch {
-    // continue to seed when a local source is configured
+    // missing — seed below when a local source is configured
   }
 
-  const localRelative = LOCAL_TEMPLATE_BY_PRESET[presetId];
   if (!localRelative) {
+    if (remoteBytes != null) return key;
     throw new Error(
       `Hotel Lobby template missing from R2 (${key}). Upload the template to that key.`
     );
   }
 
   if (isCloudflareWorkersRuntime()) {
+    if (remoteBytes != null) return key;
     throw new Error(
       `Hotel Lobby template missing from R2 (${key}). Upload ${localRelative} to that key.`
     );
   }
 
-  const { readFile } = await import('node:fs/promises');
+  const { readFile, stat } = await import('node:fs/promises');
   const { existsSync } = await import('node:fs');
   const path = await import('node:path');
   const localPath = path.join(process.cwd(), localRelative);
   if (!existsSync(localPath)) {
+    if (remoteBytes != null) return key;
     throw new Error(
       `Hotel Lobby template missing from R2 (${key}) and local file ${localPath} was not found`
     );
+  }
+
+  const localBytes = (await stat(localPath)).size;
+  if (remoteBytes != null && remoteBytes === localBytes) {
+    return key;
   }
 
   const bytes = new Uint8Array(await readFile(localPath));

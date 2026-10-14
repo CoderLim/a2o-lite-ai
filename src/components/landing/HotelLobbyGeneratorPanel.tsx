@@ -387,10 +387,13 @@ export function HotelLobbyGeneratorPanel({
             ? {
                 ...current,
                 url: templateUrl,
-                durationSeconds:
-                  typeof data.durationSeconds === 'number' &&
-                  Number.isFinite(data.durationSeconds) &&
-                  data.durationSeconds > 0
+                // Crazy Frog previews the public file; prefer its browser
+                // duration so a stale R2 smoke clip cannot show ~65 credits.
+                durationSeconds: isCrazyFrog
+                  ? current.durationSeconds
+                  : typeof data.durationSeconds === 'number' &&
+                      Number.isFinite(data.durationSeconds) &&
+                      data.durationSeconds > 0
                     ? data.durationSeconds
                     : current.durationSeconds,
               }
@@ -424,6 +427,8 @@ export function HotelLobbyGeneratorPanel({
   useEffect(() => {
     if (video?.kind !== 'template') return;
     if (hasKnownDuration) return;
+    // Public Crazy Frog preview duration comes from the <video> element.
+    if (isCrazyFrog) return;
 
     let cancelled = false;
     void apiGet<{ durationSeconds: number | null }>(
@@ -451,7 +456,7 @@ export function HotelLobbyGeneratorPanel({
     return () => {
       cancelled = true;
     };
-  }, [video?.kind, video?.url, hasKnownDuration, presetId]);
+  }, [video?.kind, video?.url, hasKnownDuration, presetId, isCrazyFrog]);
 
   useEffect(() => {
     if (sourceDuration == null) {
