@@ -5,19 +5,35 @@ import { buildHotelLobbyPrompt, HotelLobbyPreflightError } from './prompt';
 
 export const HOTEL_LOBBY_PRESET_ID = 'hotel-lobby' as const;
 export const CRAZY_FROG_PRESET_ID = 'crazy-frog' as const;
+export const RUMPELSTILTSKIN_PRESET_ID = 'rumpelstiltskin' as const;
+export const BULIN_47_PRESET_ID = 'bulin-47' as const;
 
-export type HotelLobbyPresetId =
-  | typeof HOTEL_LOBBY_PRESET_ID
-  | typeof CRAZY_FROG_PRESET_ID;
+const DEFAULT_HOTEL_LOBBY_TEMPLATE_KEY = 'hotel-lobby/templates/default.mp4';
+const CRAZY_FROG_TEMPLATE_KEY = 'hotel-lobby/templates/crazy-frog-v1.mp4';
+const RUMPELSTILTSKIN_TEMPLATE_KEY =
+  'hotel-lobby/templates/rumpelstiltskin-v1.mp4';
+const BULIN_47_TEMPLATE_KEY = 'hotel-lobby/templates/bulin-47-v1.mp4';
 
-export type HotelLobbyPreset = {
-  id: HotelLobbyPresetId;
+function hotelLobbyTemplateVideoKey() {
+  return (
+    envConfigs.hotel_lobby_template_video_key?.trim() ||
+    DEFAULT_HOTEL_LOBBY_TEMPLATE_KEY
+  );
+}
+
+type HotelLobbyPresetDef = {
+  id: string;
   version: number;
   /** Display name for My Creations / admin. */
   displayName: string;
   /** Credit ledger description while reserving. */
   creditDescription: string;
   templateVideoKey: string;
+  /** Node-only seed from repo; Workers require the R2 key already present. */
+  localTemplatePath?: string;
+  previewUrl: string;
+  posterUrl: string;
+  downloadPrefix: string;
   imageCount: { min: number; max: number };
   allowCustomVideo: boolean;
   allowTrim: boolean;
@@ -27,16 +43,6 @@ export type HotelLobbyPreset = {
   enabled: boolean;
   promptFor: (imageCount: number) => string;
 };
-
-const DEFAULT_HOTEL_LOBBY_TEMPLATE_KEY = 'hotel-lobby/templates/default.mp4';
-const CRAZY_FROG_TEMPLATE_KEY = 'hotel-lobby/templates/crazy-frog-v1.mp4';
-
-function hotelLobbyTemplateVideoKey() {
-  return (
-    envConfigs.hotel_lobby_template_video_key?.trim() ||
-    DEFAULT_HOTEL_LOBBY_TEMPLATE_KEY
-  );
-}
 
 /**
  * Crazy Frog chase — Element1 = foreground lead (facing camera),
@@ -61,7 +67,35 @@ export function buildCrazyFrogPrompt(imageCount: number) {
   ].join(' ');
 }
 
-const PRESETS: Record<HotelLobbyPresetId, HotelLobbyPreset> = {
+export function buildRumpelstiltskinPrompt(imageCount: number) {
+  if (imageCount !== 1) {
+    throw new HotelLobbyPreflightError(
+      'Rumpelstiltskin requires exactly one reference image'
+    );
+  }
+  return [
+    'Use @Video1 only for motion, timing, gestures, camera, barn set, and tiptoe staging.',
+    'Change the dancer in @Video1 who tiptoes and shushes to be the person or character from @Element1 — do not keep the original dancer.',
+    'Match @Element1 for face, hair, body, clothing, and species throughout the clip.',
+    'Keep the barn, shush gesture, camera path, and tiptoe timing from @Video1.',
+  ].join(' ');
+}
+
+export function buildBulin47Prompt(imageCount: number) {
+  if (imageCount !== 1) {
+    throw new HotelLobbyPreflightError(
+      'Bulin 47 requires exactly one reference image'
+    );
+  }
+  return [
+    'Use @Video1 only for motion, timing, gestures, camera, crowd, and freestyle staging.',
+    'Change the freestyle performer in @Video1 to be the person or character from @Element1 — do not keep the original performer.',
+    'Match @Element1 for face, hair, body, clothing, and species throughout the clip.',
+    'Keep the freestyle moves, camera path, crowd, and timing from @Video1.',
+  ].join(' ');
+}
+
+const PRESETS = {
   [HOTEL_LOBBY_PRESET_ID]: {
     id: HOTEL_LOBBY_PRESET_ID,
     version: 1,
@@ -70,6 +104,9 @@ const PRESETS: Record<HotelLobbyPresetId, HotelLobbyPreset> = {
     get templateVideoKey() {
       return hotelLobbyTemplateVideoKey();
     },
+    previewUrl: '/api/hotel-lobby/template',
+    posterUrl: '/readme/hotel-lobby.jpg',
+    downloadPrefix: 'hotel-lobby',
     imageCount: { min: 1, max: 2 },
     allowCustomVideo: true,
     allowTrim: true,
@@ -84,6 +121,10 @@ const PRESETS: Record<HotelLobbyPresetId, HotelLobbyPreset> = {
     displayName: 'Crazy Frog',
     creditDescription: 'Reserve credits for Crazy Frog AI generation',
     templateVideoKey: CRAZY_FROG_TEMPLATE_KEY,
+    localTemplatePath: 'public/videos/crazy-frog-tpl.mp4',
+    previewUrl: '/videos/crazy-frog-tpl.mp4',
+    posterUrl: '/videos/crazy-frog-tpl-poster.jpg',
+    downloadPrefix: 'crazy-frog',
     imageCount: { min: 2, max: 2 },
     allowCustomVideo: false,
     allowTrim: false,
@@ -92,12 +133,57 @@ const PRESETS: Record<HotelLobbyPresetId, HotelLobbyPreset> = {
     enabled: true,
     promptFor: buildCrazyFrogPrompt,
   },
-};
+  [RUMPELSTILTSKIN_PRESET_ID]: {
+    id: RUMPELSTILTSKIN_PRESET_ID,
+    version: 1,
+    displayName: 'Rumpelstiltskin',
+    creditDescription: 'Reserve credits for Rumpelstiltskin AI generation',
+    templateVideoKey: RUMPELSTILTSKIN_TEMPLATE_KEY,
+    localTemplatePath: 'public/videos/rumpelstiltskin-tpl.mp4',
+    previewUrl: '/videos/rumpelstiltskin-tpl.mp4',
+    posterUrl: '/videos/rumpelstiltskin-tpl-poster.jpg',
+    downloadPrefix: 'rumpelstiltskin',
+    imageCount: { min: 1, max: 1 },
+    allowCustomVideo: false,
+    allowTrim: false,
+    keepAudio: true,
+    aspectRatio: '16:9',
+    enabled: true,
+    promptFor: buildRumpelstiltskinPrompt,
+  },
+  [BULIN_47_PRESET_ID]: {
+    id: BULIN_47_PRESET_ID,
+    version: 1,
+    displayName: 'Bulin 47',
+    creditDescription: 'Reserve credits for Bulin 47 AI generation',
+    templateVideoKey: BULIN_47_TEMPLATE_KEY,
+    localTemplatePath: 'public/videos/bulin47-tpl.mp4',
+    previewUrl: '/videos/bulin47-tpl.mp4',
+    posterUrl: '/videos/bulin47-tpl-poster.jpg',
+    downloadPrefix: 'bulin-47',
+    imageCount: { min: 1, max: 1 },
+    allowCustomVideo: false,
+    allowTrim: false,
+    keepAudio: true,
+    aspectRatio: '9:16',
+    enabled: true,
+    promptFor: buildBulin47Prompt,
+  },
+} as const satisfies Record<string, HotelLobbyPresetDef>;
+
+export type HotelLobbyPresetId = keyof typeof PRESETS;
+
+export type HotelLobbyPreset = (typeof PRESETS)[HotelLobbyPresetId];
+
+const PRESET_IDS = Object.keys(PRESETS) as HotelLobbyPresetId[];
 
 export function isHotelLobbyPresetId(
   value: unknown
 ): value is HotelLobbyPresetId {
-  return value === HOTEL_LOBBY_PRESET_ID || value === CRAZY_FROG_PRESET_ID;
+  return (
+    typeof value === 'string' &&
+    (PRESET_IDS as readonly string[]).includes(value)
+  );
 }
 
 /**
@@ -133,6 +219,9 @@ export function getHotelLobbyPresetPublicMeta(preset: HotelLobbyPreset) {
     presetId: preset.id,
     version: preset.version,
     displayName: preset.displayName,
+    previewUrl: preset.previewUrl,
+    posterUrl: preset.posterUrl,
+    downloadPrefix: preset.downloadPrefix,
     imageCount: preset.imageCount,
     allowCustomVideo: preset.allowCustomVideo,
     allowTrim: preset.allowTrim,
@@ -140,6 +229,13 @@ export function getHotelLobbyPresetPublicMeta(preset: HotelLobbyPreset) {
     aspectRatio: preset.aspectRatio,
     enabled: preset.enabled,
   };
+}
+
+/** Client-safe static defaults when template-meta is unavailable. */
+export function getHotelLobbyPresetClientDefaults(
+  presetId: HotelLobbyPresetId
+) {
+  return getHotelLobbyPresetPublicMeta(PRESETS[presetId]);
 }
 
 export function displayNameForHotelLobbyPresetId(
@@ -153,4 +249,11 @@ export function displayNameForHotelLobbyPresetId(
 export function normalizeStoredPresetId(value: unknown): HotelLobbyPresetId {
   if (isHotelLobbyPresetId(value)) return value;
   return HOTEL_LOBBY_PRESET_ID;
+}
+
+export function localTemplatePathForPreset(
+  presetId: HotelLobbyPresetId
+): string | undefined {
+  const preset = PRESETS[presetId];
+  return 'localTemplatePath' in preset ? preset.localTemplatePath : undefined;
 }

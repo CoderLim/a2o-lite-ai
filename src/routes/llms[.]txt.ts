@@ -10,20 +10,17 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '/hotel-lobby-ai',
     title: 'Hotel Lobby AI Video Generator',
-    description:
-      'Preset two-photo Hotel Lobby AI video generator powered by MiniMax H3',
+    description: 'Preset two-photo Hotel Lobby AI video generator',
   },
   {
     path: '/bulin-47-ai',
     title: 'Bulin 47 AI Video',
-    description:
-      'What the Bulin 47 freestyle AI video trend is and how to make your own from one photo',
+    description: 'One-photo Bulin 47 freestyle AI video generator',
   },
   {
     path: '/crazy-frog-ai',
     title: 'Crazy Frog AI Video',
-    description:
-      'Two-photo Crazy Frog chase AI video generator on the Hotel Lobby Kling pipeline',
+    description: 'Two-photo Crazy Frog chase AI video generator',
   },
   {
     path: '/smalltown-boy-dance',
@@ -39,8 +36,7 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '/ai-rumpelstiltskin',
     title: 'Rumpelstiltskin AI Video',
-    description:
-      'One-photo Rumpelstiltskin tiptoe AI video generator powered by Higgsfield Genjutsu',
+    description: 'One-photo Rumpelstiltskin tiptoe AI video generator',
   },
   { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
 ];

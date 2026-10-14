@@ -9,12 +9,11 @@ import {
 
 import { Link } from '@/core/i18n/navigation';
 import { localeLinks, socialMeta } from '@/lib/seo';
-import { getLocale } from '@/paraglide/runtime.js';
 import { m } from '@/paraglide/messages.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { ZombieHugGeneratorPanel } from '@/components/landing/ZombieHugGeneratorPanel';
-
 
 const FAQ_ITEMS = [
   {
@@ -30,7 +29,7 @@ const FAQ_ITEMS = [
   {
     question: 'What app is used for the zombie hug trend?',
     answer:
-      'This page runs Higgsfield Genjutsu motion transfer with a fixed zombie hug template. Tutorials online also use Dreamina or CapCut (Seedance), Kling, and Google Flow (Veo).',
+      'This page runs Genjutsu motion transfer with a fixed zombie hug template. Tutorials online also use Dreamina or CapCut, Kling, and Google Flow (Veo).',
   },
   {
     question: 'Is there a free way to do it?',
@@ -59,7 +58,6 @@ const FAQ_ITEMS = [
   },
 ] as const;
 
-
 const ZOMBIE_FAQ_COPY = [
   { question: m['site.zombie.faq1_q'], answer: m['site.zombie.faq1_a'] },
   { question: m['site.zombie.faq2_q'], answer: m['site.zombie.faq2_a'] },
@@ -84,9 +82,18 @@ const ZOMBIE_PHOTO_COPY = [
   { need: m['site.zombie.photo4_need'], why: m['site.zombie.photo4_why'] },
 ];
 const ZOMBIE_VERSION_COPY = [
-  { title: m['site.zombie.version1_title'], description: m['site.zombie.version1_desc'] },
-  { title: m['site.zombie.version2_title'], description: m['site.zombie.version2_desc'] },
-  { title: m['site.zombie.version3_title'], description: m['site.zombie.version3_desc'] },
+  {
+    title: m['site.zombie.version1_title'],
+    description: m['site.zombie.version1_desc'],
+  },
+  {
+    title: m['site.zombie.version2_title'],
+    description: m['site.zombie.version2_desc'],
+  },
+  {
+    title: m['site.zombie.version3_title'],
+    description: m['site.zombie.version3_desc'],
+  },
 ];
 
 function faqJsonLd() {
@@ -185,9 +192,7 @@ function AiZombieHugPage() {
               {m['site.zombie.trend_title']()}
             </h2>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-7 sm:text-base">
-              <p>
-                {m['site.zombie.trend_intro1']()}
-              </p>
+              <p>{m['site.zombie.trend_intro1']()}</p>
               <ol className="list-decimal space-y-3 pl-5">
                 <li>
                   <strong className="text-foreground/80">
@@ -214,9 +219,7 @@ function AiZombieHugPage() {
                   {m['site.zombie.beat4_desc']()}
                 </li>
               </ol>
-              <p>
-                {m['site.zombie.trend_intro2']()}
-              </p>
+              <p>{m['site.zombie.trend_intro2']()}</p>
             </div>
           </div>
         </section>
@@ -278,7 +281,9 @@ function AiZombieHugPage() {
             </p>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-6">
               <div>
-                <p className="text-foreground/85 font-medium">{m['site.zombie.cold']()}</p>
+                <p className="text-foreground/85 font-medium">
+                  {m['site.zombie.cold']()}
+                </p>
                 <blockquote className="border-border/60 bg-background/50 mt-2 rounded-xl border p-4">
                   {m['site.zombie.cold_prompt']()}
                 </blockquote>
@@ -303,8 +308,12 @@ function AiZombieHugPage() {
             <table className="w-full min-w-[560px] border-collapse text-left text-sm">
               <thead className="bg-card text-foreground/80">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">{m['site.zombie.need']()}</th>
-                  <th className="px-4 py-3 font-semibold">{m['site.zombie.why']()}</th>
+                  <th className="px-4 py-3 font-semibold">
+                    {m['site.zombie.need']()}
+                  </th>
+                  <th className="px-4 py-3 font-semibold">
+                    {m['site.zombie.why']()}
+                  </th>
                 </tr>
               </thead>
               <tbody className="text-muted-foreground divide-border/60 divide-y">
@@ -330,7 +339,9 @@ function AiZombieHugPage() {
                     <td className="text-foreground/80 px-4 py-3 font-medium">
                       {ZOMBIE_PHOTO_COPY[index]?.need() ?? need}
                     </td>
-                    <td className="px-4 py-3">{ZOMBIE_PHOTO_COPY[index]?.why() ?? why}</td>
+                    <td className="px-4 py-3">
+                      {ZOMBIE_PHOTO_COPY[index]?.why() ?? why}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -361,7 +372,9 @@ function AiZombieHugPage() {
                 key={title}
                 className="border-border/70 bg-card/95 rounded-2xl border p-5"
               >
-                <h3 className="text-foreground font-semibold">{ZOMBIE_VERSION_COPY[index]?.title() ?? title}</h3>
+                <h3 className="text-foreground font-semibold">
+                  {ZOMBIE_VERSION_COPY[index]?.title() ?? title}
+                </h3>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
                   {ZOMBIE_VERSION_COPY[index]?.description() ?? text}
                 </p>

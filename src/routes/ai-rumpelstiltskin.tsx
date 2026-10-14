@@ -13,7 +13,7 @@ import { Link } from '@/core/i18n/navigation';
 import { absoluteUrl, localeLinks, ogImageUrl, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
-import { RumpelstiltskinGeneratorPanel } from '@/components/landing/RumpelstiltskinGeneratorPanel';
+import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGeneratorPanel';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
@@ -204,7 +204,7 @@ function AiRumpelstiltskinPage() {
           </p>
 
           <div id="generator" className="mt-8 scroll-mt-24 text-left sm:mt-10">
-            <RumpelstiltskinGeneratorPanel />
+            <HotelLobbyGeneratorPanel presetId="rumpelstiltskin" />
           </div>
         </section>
       </div>
@@ -342,8 +342,8 @@ function AiRumpelstiltskinPage() {
               ))}
             </div>
             <p className="text-muted-foreground mt-8 text-sm leading-7 sm:text-base">
-              Prefer the homepage Objects Swap flow with your own template
-              upload? See the step-by-step guide:{' '}
+              Prefer the homepage Genjutsu flow with your own template upload?
+              See the step-by-step guide:{' '}
               <Link
                 href="/blog/how-to-make-rumpelstiltskin-ai-video"
                 className="text-primary underline-offset-2 hover:underline"

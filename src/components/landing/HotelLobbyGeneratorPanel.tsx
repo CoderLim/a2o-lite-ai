@@ -6,10 +6,22 @@ import {
   type ChangeEvent,
   type RefObject,
 } from 'react';
-import { Download, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react';
+import {
+  CircleHelp,
+  Download,
+  LoaderCircle,
+  Play,
+  RotateCcw,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
+import {
+  getHotelLobbyPresetClientDefaults,
+  HOTEL_LOBBY_PRESET_ID,
+  isHotelLobbyPresetId,
+  type HotelLobbyPresetId,
+} from '@/modules/hotel-lobby/presets';
 import {
   estimateHotelLobbyCredits,
   HOTEL_LOBBY_MAX_VIDEO_EDGE_PX,
@@ -17,12 +29,19 @@ import {
 } from '@/modules/hotel-lobby/pricing';
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
 import { trimVideoToFile } from '@/lib/trim-video';
+import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { useCreditGate } from '@/hooks/use-credit-gate';
 import { useUserCredits } from '@/hooks/use-user-credits';
 import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { CloseIcon, FilmIcon, ImageModeIcon } from '@/components/icons';
 import { HotelLobbyTrimBar } from '@/components/landing/hotel-lobby-trim-bar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type MediaItem = {
   id: string;
@@ -70,36 +89,36 @@ type GenerationPoll = {
   refundedCredits?: number;
 };
 
-const TEMPLATE_API = '/api/hotel-lobby/template';
-const TEMPLATE_FILE_URL = '/api/hotel-lobby/template-file';
 const MAX_VIDEO_BYTES = 80 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 const MIN_REFERENCE_VIDEO_SECONDS = 3;
 const MAX_REFERENCE_VIDEO_SECONDS = 15;
+/** Paid preview length — Kling min is 3s; match homepage Genjutsu preview. */
+const PREVIEW_DURATION_SECONDS = 4;
 
-export type HotelLobbyPanelPresetId = 'hotel-lobby' | 'crazy-frog';
+export type HotelLobbyPanelPresetId = HotelLobbyPresetId;
 
 type PresetUiMeta = {
-  presetId: HotelLobbyPanelPresetId;
+  presetId: HotelLobbyPresetId;
   enabled: boolean;
   templateAvailable: boolean;
   allowCustomVideo: boolean;
   allowTrim: boolean;
   aspectRatio: string;
+  previewUrl: string;
+  posterUrl: string;
+  downloadPrefix: string;
+  displayName: string;
   imageCount: { min: number; max: number };
   estimatedCredits: number | null;
 };
 
-/** Fixed-template presets ship a public preview; R2 is only required to generate. */
-const CRAZY_FROG_PUBLIC_TEMPLATE = '/videos/crazy-frog-tpl.mp4';
-
-function templateUrlFor(presetId: HotelLobbyPanelPresetId) {
-  if (presetId === 'crazy-frog') return CRAZY_FROG_PUBLIC_TEMPLATE;
-  return TEMPLATE_API;
+function resolvePanelPresetId(value: string | undefined): HotelLobbyPresetId {
+  return isHotelLobbyPresetId(value) ? value : HOTEL_LOBBY_PRESET_ID;
 }
 
-function templateMetaUrlFor(presetId: HotelLobbyPanelPresetId) {
-  return presetId === 'hotel-lobby'
+function templateMetaUrlFor(presetId: HotelLobbyPresetId) {
+  return presetId === HOTEL_LOBBY_PRESET_ID
     ? '/api/hotel-lobby/template-meta'
     : `/api/hotel-lobby/template-meta?presetId=${encodeURIComponent(presetId)}`;
 }
@@ -201,6 +220,8 @@ function PersonSlot({
   onRemove,
   inputRef,
   disabled,
+  aspectClass = 'aspect-[4/5]',
+  frameClassName,
 }: {
   title: string;
   note: string;
@@ -209,6 +230,8 @@ function PersonSlot({
   onRemove: () => void;
   inputRef: RefObject<HTMLInputElement | null>;
   disabled: boolean;
+  aspectClass?: string;
+  frameClassName?: string;
 }) {
   return (
     <div className="min-w-0">
@@ -229,7 +252,13 @@ function PersonSlot({
       />
 
       {item ? (
-        <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+        <div
+          className={cn(
+            'group relative overflow-hidden rounded-2xl border border-white/10 bg-black/30',
+            aspectClass,
+            frameClassName
+          )}
+        >
           <img src={item.url} alt={title} className="size-full object-cover" />
           <button
             type="button"
@@ -246,7 +275,11 @@ function PersonSlot({
           type="button"
           disabled={disabled}
           onClick={() => inputRef.current?.click()}
-          className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/14 bg-white/[0.025] text-center text-white/42 transition hover:border-[rgba(204,144,92,0.55)] hover:bg-[rgba(204,144,92,0.05)] hover:text-[rgb(220,155,99)] disabled:cursor-not-allowed disabled:opacity-50"
+          className={cn(
+            'flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/14 bg-white/[0.025] text-center text-white/42 transition hover:border-[rgba(204,144,92,0.55)] hover:bg-[rgba(204,144,92,0.05)] hover:text-[rgb(220,155,99)] disabled:cursor-not-allowed disabled:opacity-50',
+            aspectClass,
+            frameClassName
+          )}
         >
           <ImageModeIcon className="size-6" />
           <span className="text-xs font-medium">
@@ -259,13 +292,13 @@ function PersonSlot({
 }
 
 export function HotelLobbyGeneratorPanel({
-  presetId = 'hotel-lobby',
+  presetId: presetIdProp = HOTEL_LOBBY_PRESET_ID,
 }: {
   presetId?: HotelLobbyPanelPresetId;
 } = {}) {
-  const isCrazyFrog = presetId === 'crazy-frog';
-  const isFixedTemplate = isCrazyFrog;
-  const templateUrl = templateUrlFor(presetId);
+  const presetId = resolvePanelPresetId(presetIdProp);
+  const clientDefaults = getHotelLobbyPresetClientDefaults(presetId);
+  const previewUrl = clientDefaults.previewUrl;
   const { data: session, isPending: sessionPending } = useSession();
   const creditsQuery = useUserCredits(Boolean(session?.user));
   const creditGate = useCreditGate({
@@ -279,9 +312,11 @@ export function HotelLobbyGeneratorPanel({
   const localUrlsRef = useRef<Set<string>>(new Set());
 
   const previewVideoRef = useRef<HTMLVideoElement>(null);
+  const resultPanelRef = useRef<HTMLDivElement>(null);
+  const generationStartedAtRef = useRef<number | null>(null);
   const [video, setVideo] = useState<VideoSource | null>({
     kind: 'template',
-    url: templateUrl,
+    url: previewUrl,
   });
   const [templateAvailable, setTemplateAvailable] = useState(true);
   const [presetMeta, setPresetMeta] = useState<PresetUiMeta | null>(null);
@@ -295,21 +330,39 @@ export function HotelLobbyGeneratorPanel({
   >('idle');
   const [providerStatus, setProviderStatus] = useState('');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultKind, setResultKind] = useState<'preview' | 'full' | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
+  const [progressPercent, setProgressPercent] = useState(0);
 
-  const busy = !['idle', 'done'].includes(phase) || trimming;
-  const allowCustomVideo = presetMeta?.allowCustomVideo ?? !isFixedTemplate;
-  const allowTrim = presetMeta?.allowTrim ?? !isFixedTemplate;
-  const minImages = presetMeta?.imageCount.min ?? (isCrazyFrog ? 2 : 1);
-  const maxImages = presetMeta?.imageCount.max ?? 2;
-  const presetEnabled = presetMeta?.enabled ?? !isFixedTemplate;
-  const aspectRatio = presetMeta?.aspectRatio ?? (isCrazyFrog ? '4:3' : '16:9');
+  const jobBusy = !['idle', 'done'].includes(phase);
+  const busy = jobBusy || trimming;
+  const allowCustomVideo =
+    presetMeta?.allowCustomVideo ?? clientDefaults.allowCustomVideo;
+  const allowTrim = presetMeta?.allowTrim ?? clientDefaults.allowTrim;
+  const minImages = presetMeta?.imageCount.min ?? clientDefaults.imageCount.min;
+  const maxImages = presetMeta?.imageCount.max ?? clientDefaults.imageCount.max;
+  const presetEnabled = presetMeta?.enabled ?? clientDefaults.enabled;
+  const aspectRatio = presetMeta?.aspectRatio ?? clientDefaults.aspectRatio;
+  const posterUrl = presetMeta?.posterUrl ?? clientDefaults.posterUrl;
+  const downloadPrefix =
+    presetMeta?.downloadPrefix ?? clientDefaults.downloadPrefix;
+  const displayName = presetMeta?.displayName ?? clientDefaults.displayName;
+  const isFixedTemplate = !allowCustomVideo;
+  const usesDualSubjectCopy = isFixedTemplate && minImages >= 2;
   const previewAspectClass =
     aspectRatio === '9:16'
       ? 'aspect-[9/16]'
       : aspectRatio === '4:3'
         ? 'aspect-[4/3]'
         : 'aspect-video';
+  // Keep fixed-template media pairs visually matched and capped so 9:16
+  // doesn't dominate the viewport.
+  const fixedMediaFrameClass =
+    aspectRatio === '9:16'
+      ? 'mx-auto max-w-[260px]'
+      : aspectRatio === '4:3'
+        ? 'mx-auto max-w-md'
+        : 'w-full';
   const imageItems = (
     maxImages > 1 ? [firstImage, secondImage] : [firstImage]
   ).filter((item): item is MediaItem => Boolean(item));
@@ -325,22 +378,74 @@ export function HotelLobbyGeneratorPanel({
     ? clampReferenceDuration(clipDurationSeconds)
     : null;
 
+  const estimateImageCount = Math.max(
+    minImages,
+    (firstImage ? 1 : 0) + (secondImage && maxImages > 1 ? 1 : 0)
+  );
+
   const estimatedCredits = useMemo(() => {
-    if (!billedDuration) return null;
-    const imageCount = Math.max(
-      1,
-      (firstImage ? 1 : 0) + (secondImage && maxImages > 1 ? 1 : 0)
-    );
+    // Fixed templates: Kling price is duration-only. Prefer server template-meta
+    // estimate so uploading photos does not clear the button label.
+    if (
+      isFixedTemplate &&
+      typeof presetMeta?.estimatedCredits === 'number' &&
+      presetMeta.estimatedCredits > 0
+    ) {
+      return presetMeta.estimatedCredits;
+    }
+
+    const durationForEstimate = isFixedTemplate
+      ? sourceDuration != null
+        ? clampReferenceDuration(sourceDuration)
+        : null
+      : billedDuration;
+    if (!durationForEstimate) return null;
+
     try {
       return estimateHotelLobbyCredits({
-        duration: billedDuration,
-        imageCount,
+        duration: durationForEstimate,
+        imageCount: estimateImageCount,
         maxImages,
       });
     } catch {
       return null;
     }
-  }, [billedDuration, firstImage, secondImage, maxImages]);
+  }, [
+    billedDuration,
+    sourceDuration,
+    estimateImageCount,
+    maxImages,
+    isFixedTemplate,
+    presetMeta?.estimatedCredits,
+  ]);
+
+  const previewEstimatedCredits = useMemo(() => {
+    if (sourceDuration == null) return null;
+    const previewSeconds = Math.min(
+      clampReferenceDuration(sourceDuration),
+      PREVIEW_DURATION_SECONDS
+    );
+    if (previewSeconds < MIN_REFERENCE_VIDEO_SECONDS) return null;
+    try {
+      return estimateHotelLobbyCredits({
+        duration: previewSeconds,
+        imageCount: estimateImageCount,
+        maxImages,
+      });
+    } catch {
+      return null;
+    }
+  }, [sourceDuration, estimateImageCount, maxImages]);
+
+  const inputsReady =
+    Boolean(video) &&
+    sourceDuration != null &&
+    Boolean(firstImage) &&
+    (minImages < 2 || Boolean(secondImage)) &&
+    clipDurationSeconds >= MIN_REFERENCE_VIDEO_SECONDS &&
+    clipDurationSeconds <= MAX_REFERENCE_VIDEO_SECONDS;
+  const canPreview = presetEnabled && inputsReady && !busy && !sessionPending;
+  const canGenerateFull = canPreview && (allowCustomVideo || templateAvailable);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -351,45 +456,99 @@ export function HotelLobbyGeneratorPanel({
     };
   }, []);
 
+  // Soft elapsed progress while waiting on the provider (caps below 100%).
+  useEffect(() => {
+    if (!jobBusy) {
+      if (resultUrl) setProgressPercent(100);
+      else setProgressPercent(0);
+      generationStartedAtRef.current = null;
+      return;
+    }
+
+    if (generationStartedAtRef.current == null) {
+      generationStartedAtRef.current = Date.now();
+    }
+
+    const tick = () => {
+      const started = generationStartedAtRef.current ?? Date.now();
+      const elapsedSec = (Date.now() - started) / 1000;
+      // Asymptotic toward ~92% — Kling jobs often finish in 1–3 minutes.
+      const next = Math.min(
+        92,
+        Math.round(8 + 84 * (1 - Math.exp(-elapsedSec / 50)))
+      );
+      setProgressPercent(next);
+    };
+    tick();
+    const id = window.setInterval(tick, 400);
+    return () => window.clearInterval(id);
+  }, [jobBusy, resultUrl]);
+
+  useEffect(() => {
+    if (!jobBusy && !resultUrl) return;
+    resultPanelRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }, [jobBusy, resultUrl, generationId]);
+
   useEffect(() => {
     let cancelled = false;
+    const defaults = getHotelLobbyPresetClientDefaults(presetId);
+    setVideo({ kind: 'template', url: defaults.previewUrl });
+    setTemplateAvailable(true);
+    setPresetMeta(null);
+
     void apiGet<{
       durationSeconds: number | null;
       estimatedCredits: number | null;
       templateAvailable: boolean;
-      presetId: HotelLobbyPanelPresetId;
+      presetId: HotelLobbyPresetId;
       enabled: boolean;
       allowCustomVideo: boolean;
       allowTrim: boolean;
       aspectRatio: string;
+      previewUrl: string;
+      posterUrl: string;
+      downloadPrefix: string;
+      displayName: string;
       imageCount: { min: number; max: number };
     }>(templateMetaUrlFor(presetId))
       .then((data) => {
         if (cancelled) return;
-        // R2 availability gates generation only; Crazy Frog preview is public.
         const r2Ready = data.templateAvailable !== false;
-        setPresetMeta({
-          presetId: data.presetId || presetId,
+        const nextMeta: PresetUiMeta = {
+          presetId: isHotelLobbyPresetId(data.presetId)
+            ? data.presetId
+            : presetId,
           enabled: data.enabled !== false,
           templateAvailable: r2Ready,
-          allowCustomVideo: data.allowCustomVideo !== false,
-          allowTrim: data.allowTrim !== false,
-          aspectRatio: data.aspectRatio || (isCrazyFrog ? '4:3' : '16:9'),
-          imageCount: data.imageCount || {
-            min: isCrazyFrog ? 2 : 1,
-            max: 2,
-          },
+          allowCustomVideo:
+            typeof data.allowCustomVideo === 'boolean'
+              ? data.allowCustomVideo
+              : defaults.allowCustomVideo,
+          allowTrim:
+            typeof data.allowTrim === 'boolean'
+              ? data.allowTrim
+              : defaults.allowTrim,
+          aspectRatio: data.aspectRatio || defaults.aspectRatio,
+          previewUrl: data.previewUrl || defaults.previewUrl,
+          posterUrl: data.posterUrl || defaults.posterUrl,
+          downloadPrefix: data.downloadPrefix || defaults.downloadPrefix,
+          displayName: data.displayName || defaults.displayName,
+          imageCount: data.imageCount || defaults.imageCount,
           estimatedCredits: data.estimatedCredits,
-        });
+        };
+        setPresetMeta(nextMeta);
         setTemplateAvailable(r2Ready);
         setVideo((current) =>
           current?.kind === 'template'
             ? {
                 ...current,
-                url: templateUrl,
-                // Crazy Frog previews the public file; prefer its browser
-                // duration so a stale R2 smoke clip cannot show ~65 credits.
-                durationSeconds: isCrazyFrog
+                url: nextMeta.previewUrl,
+                // Public fixed-template previews: prefer browser duration so a
+                // stale R2 object cannot skew the credit estimate.
+                durationSeconds: !nextMeta.allowCustomVideo
                   ? current.durationSeconds
                   : typeof data.durationSeconds === 'number' &&
                       Number.isFinite(data.durationSeconds) &&
@@ -402,33 +561,28 @@ export function HotelLobbyGeneratorPanel({
       })
       .catch(() => {
         if (cancelled) return;
+        // Fail closed for fixed templates — never fall back to custom-video UX.
         setPresetMeta({
-          presetId,
-          enabled: !isCrazyFrog,
+          ...defaults,
           templateAvailable: false,
-          allowCustomVideo: !isCrazyFrog,
-          allowTrim: !isCrazyFrog,
-          aspectRatio: isCrazyFrog ? '4:3' : '16:9',
-          imageCount: { min: isCrazyFrog ? 2 : 1, max: 2 },
           estimatedCredits: null,
         });
         setTemplateAvailable(false);
-        // Keep the public preview mounted even when R2 meta fails.
-        if (isCrazyFrog) {
-          setVideo({ kind: 'template', url: templateUrl });
+        if (!defaults.allowCustomVideo) {
+          setVideo({ kind: 'template', url: defaults.previewUrl });
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [presetId, templateUrl, isCrazyFrog]);
+  }, [presetId]);
 
   useEffect(() => {
     if (video?.kind !== 'template') return;
     if (hasKnownDuration) return;
-    // Public Crazy Frog preview duration comes from the <video> element.
-    if (isCrazyFrog) return;
+    // Fixed-template public previews get duration from the <video> element.
+    if (isFixedTemplate) return;
 
     let cancelled = false;
     void apiGet<{ durationSeconds: number | null }>(
@@ -456,7 +610,7 @@ export function HotelLobbyGeneratorPanel({
     return () => {
       cancelled = true;
     };
-  }, [video?.kind, video?.url, hasKnownDuration, presetId, isCrazyFrog]);
+  }, [video?.kind, video?.url, hasKnownDuration, presetId, isFixedTemplate]);
 
   useEffect(() => {
     if (sourceDuration == null) {
@@ -487,7 +641,9 @@ export function HotelLobbyGeneratorPanel({
     setTrimming(true);
     try {
       const sourceUrl =
-        video.kind === 'template' ? TEMPLATE_FILE_URL : video.url;
+        video.kind === 'template'
+          ? '/api/hotel-lobby/template-file'
+          : video.url;
       const trimmed = await trimVideoToFile({
         sourceUrl,
         startSeconds: trimStart,
@@ -628,7 +784,7 @@ export function HotelLobbyGeneratorPanel({
       localUrlsRef.current.delete(video.url);
     }
     setTemplateAvailable(true);
-    setVideo({ kind: 'template', url: templateUrl });
+    setVideo({ kind: 'template', url: previewUrl });
     setResultUrl(null);
     setPhase('idle');
   };
@@ -673,36 +829,45 @@ export function HotelLobbyGeneratorPanel({
     throw new Error(m['site.hotel.running']());
   };
 
-  const generate = async () => {
+  const generate = async (kind: 'preview' | 'full' = 'full') => {
     creditGate.clear();
+    const isPreview = kind === 'preview';
 
     if (!session?.user) {
       redirectToSignIn();
       return;
     }
-    if (!presetEnabled || (!allowCustomVideo && !templateAvailable)) {
+    if (!presetEnabled) {
+      toast.error(m['site.crazy.unavailable']());
+      return;
+    }
+    if (!isPreview && !allowCustomVideo && !templateAvailable) {
       toast.error(m['site.crazy.unavailable']());
       return;
     }
     if (!video || sourceDuration == null) {
       toast.error(
-        isCrazyFrog
+        usesDualSubjectCopy
           ? m['site.crazy.need_template']()
-          : m['site.hotel.need_video']()
+          : isFixedTemplate
+            ? m['site.kling.need_template']()
+            : m['site.hotel.need_video']()
       );
       return;
     }
     if (!firstImage) {
       toast.error(
-        isCrazyFrog
+        usesDualSubjectCopy
           ? m['site.crazy.need_first']()
-          : m['site.hotel.need_first']()
+          : isFixedTemplate
+            ? m['site.kling.need_photo']()
+            : m['site.hotel.need_first']()
       );
       return;
     }
     if (minImages >= 2 && !secondImage) {
       toast.error(
-        isCrazyFrog
+        usesDualSubjectCopy
           ? m['site.crazy.need_second']()
           : m['site.hotel.need_first']()
       );
@@ -715,48 +880,92 @@ export function HotelLobbyGeneratorPanel({
       toast.error(m['site.hotel.trim_error']());
       return;
     }
-    if (!estimatedCredits) {
+
+    const requiredCredits = isPreview
+      ? previewEstimatedCredits
+      : estimatedCredits;
+    if (!requiredCredits) {
       toast.error(m['site.hotel.reading_duration']());
       return;
     }
 
-    const requiredCredits = estimatedCredits;
     const balance = creditsQuery.data?.balance ?? 0;
-
     if (!creditsQuery.isPending && balance < requiredCredits) {
       creditGate.open({ requiredCredits, balance });
       return;
     }
 
     setResultUrl(null);
+    setResultKind(null);
     setProviderStatus('');
     setPhase('uploading');
 
     const id = crypto.randomUUID();
     setGenerationId(id);
 
-    // Fixed-template presets always seal the server template; never upload/trim video.
+    // Full fixed-template jobs seal the server R2 template.
+    // Preview always uploads a trimmed ≤4s clip (including fixed presets).
     const useFullTemplate =
-      !allowCustomVideo ||
-      (video.kind === 'template' &&
-        isFullSourceClip(trimStart, trimEnd, sourceDuration));
+      !isPreview &&
+      (!allowCustomVideo ||
+        (video.kind === 'template' &&
+          isFullSourceClip(trimStart, trimEnd, sourceDuration)));
 
     try {
       let referenceVideoFile: File | null = null;
+      let uploadDurationSeconds = billedDuration;
+
       if (!useFullTemplate) {
-        if (
+        const sourceUrl =
+          video.kind === 'template'
+            ? video.url.startsWith('/api/')
+              ? '/api/hotel-lobby/template-file'
+              : video.url
+            : video.url;
+
+        if (isPreview) {
+          const previewEnd = Math.min(
+            sourceDuration,
+            Math.max(MIN_REFERENCE_VIDEO_SECONDS, PREVIEW_DURATION_SECONDS)
+          );
+          if (
+            video.kind === 'upload' &&
+            trimStart <= 0.05 &&
+            sourceDuration <= PREVIEW_DURATION_SECONDS + 0.05
+          ) {
+            referenceVideoFile = video.file;
+            uploadDurationSeconds = clampReferenceDuration(sourceDuration);
+          } else {
+            referenceVideoFile = await trimVideoToFile({
+              sourceUrl,
+              startSeconds: 0,
+              endSeconds: previewEnd,
+            });
+            uploadDurationSeconds = clampReferenceDuration(previewEnd);
+          }
+        } else if (
           video.kind === 'upload' &&
           isFullSourceClip(trimStart, trimEnd, sourceDuration)
         ) {
           referenceVideoFile = video.file;
         } else {
-          const sourceUrl =
-            video.kind === 'template' ? TEMPLATE_FILE_URL : video.url;
           referenceVideoFile = await trimVideoToFile({
             sourceUrl,
             startSeconds: trimStart,
             endSeconds: trimEnd,
           });
+        }
+
+        if (
+          !referenceVideoFile ||
+          referenceVideoFile.size <= 0 ||
+          referenceVideoFile.size > MAX_VIDEO_BYTES
+        ) {
+          throw new Error(
+            isPreview
+              ? m['site.generator.preview_trim_failed']()
+              : 'Could not prepare the reference clip'
+          );
         }
       }
 
@@ -776,6 +985,7 @@ export function HotelLobbyGeneratorPanel({
         generationId: id,
         presetId,
         useDefaultTemplate,
+        preview: isPreview,
         contentTypes,
         contentLengths,
       });
@@ -806,11 +1016,12 @@ export function HotelLobbyGeneratorPanel({
           generationId: id,
           presetId,
           useDefaultTemplate,
+          preview: isPreview,
           videoKey: videoUpload?.storageKey,
           imageKeys: imageUploads.map((item) => item.storageKey),
           contentTypes,
           contentLengths,
-          durationSeconds: billedDuration,
+          durationSeconds: uploadDurationSeconds,
         }
       );
 
@@ -827,6 +1038,7 @@ export function HotelLobbyGeneratorPanel({
         );
       }
 
+      setResultKind(kind);
       setPhase('generating');
       await pollUntilComplete(id);
     } catch (error) {
@@ -852,7 +1064,7 @@ export function HotelLobbyGeneratorPanel({
     }
   };
 
-  const phaseLabel = isCrazyFrog
+  const phaseLabel = isFixedTemplate
     ? m['site.common.generating']()
     : phase === 'uploading'
       ? 'Preparing clip…'
@@ -869,19 +1081,35 @@ export function HotelLobbyGeneratorPanel({
   return (
     <div className="mx-auto w-full max-w-[1120px]">
       <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-[0_30px_90px_-30px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
-        <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0">
-            <div className="mb-3 flex items-start justify-between gap-3">
+        <div
+          className={cn(
+            'grid gap-0',
+            isFixedTemplate
+              ? 'lg:grid-cols-2 lg:items-start'
+              : 'lg:grid-cols-[0.95fr_1.05fr]'
+          )}
+        >
+          <div
+            className={cn(
+              'flex flex-col border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0',
+              isFixedTemplate && 'lg:h-auto'
+            )}
+          >
+            <div className="mb-3 flex shrink-0 items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-white/90">
-                  {isCrazyFrog
+                  {usesDualSubjectCopy
                     ? m['site.crazy.reference']()
-                    : m['site.hotel.reference']()}
+                    : isFixedTemplate
+                      ? m['site.kling.fixed_reference']()
+                      : m['site.hotel.reference']()}
                 </p>
                 <p className="mt-0.5 text-xs leading-5 text-white/40">
-                  {isCrazyFrog
+                  {usesDualSubjectCopy
                     ? m['site.crazy.reference_note']()
-                    : m['site.hotel.reference_note']()}
+                    : isFixedTemplate
+                      ? m['site.kling.fixed_reference_note']()
+                      : m['site.hotel.reference_note']()}
                 </p>
               </div>
               {video?.kind === 'template' ? (
@@ -905,19 +1133,24 @@ export function HotelLobbyGeneratorPanel({
             ) : null}
 
             {video ? (
-              <div>
+              <div
+                className={cn(
+                  'flex min-h-0 flex-col',
+                  !isFixedTemplate && 'flex-1 justify-center'
+                )}
+              >
                 <div
-                  className={`relative overflow-hidden rounded-2xl border border-[rgba(204,144,92,0.24)] bg-black ${previewAspectClass} ${''}`}
+                  className={cn(
+                    'relative overflow-hidden rounded-2xl border border-[rgba(204,144,92,0.24)] bg-black',
+                    previewAspectClass,
+                    isFixedTemplate ? fixedMediaFrameClass : 'w-full'
+                  )}
                 >
                   <video
                     ref={previewVideoRef}
                     key={video.url}
                     src={video.url}
-                    poster={
-                      isCrazyFrog
-                        ? '/videos/crazy-frog-tpl-poster.jpg'
-                        : undefined
-                    }
+                    poster={isFixedTemplate ? posterUrl : undefined}
                     controls
                     muted
                     playsInline
@@ -936,8 +1169,8 @@ export function HotelLobbyGeneratorPanel({
                     }}
                     onError={() => {
                       if (video.kind !== 'template') return;
-                      // Public Crazy Frog preview failure is not an R2 gate signal.
-                      if (isCrazyFrog) return;
+                      // Public fixed-template preview failure is not an R2 gate.
+                      if (isFixedTemplate) return;
                       setTemplateAvailable(false);
                       if (allowCustomVideo) setVideo(null);
                     }}
@@ -1036,34 +1269,53 @@ export function HotelLobbyGeneratorPanel({
 
           <div className="p-4 sm:p-5">
             <div
-              className={`grid gap-3 ${maxImages > 1 ? 'grid-cols-2' : 'max-w-sm grid-cols-1'}`}
+              className={cn(
+                'grid gap-3',
+                maxImages > 1
+                  ? 'grid-cols-2'
+                  : isFixedTemplate
+                    ? 'grid-cols-1'
+                    : 'max-w-sm grid-cols-1'
+              )}
             >
               <PersonSlot
                 title={
-                  isCrazyFrog
+                  usesDualSubjectCopy
                     ? m['site.crazy.first']()
-                    : m['site.hotel.first']()
+                    : isFixedTemplate
+                      ? m['site.kling.fixed_photo']()
+                      : m['site.hotel.first']()
                 }
                 note={
-                  isCrazyFrog
+                  usesDualSubjectCopy
                     ? m['site.crazy.first_note']()
-                    : m['site.hotel.first_note']()
+                    : isFixedTemplate
+                      ? m['site.kling.fixed_photo_note']()
+                      : m['site.hotel.first_note']()
                 }
                 item={firstImage}
                 inputRef={firstImageInputRef}
                 disabled={busy}
                 onPick={(file) => setImageAt('first', file)}
                 onRemove={() => clearImageAt('first')}
+                aspectClass={
+                  isFixedTemplate ? previewAspectClass : 'aspect-[4/5]'
+                }
+                frameClassName={
+                  isFixedTemplate && maxImages === 1
+                    ? fixedMediaFrameClass
+                    : undefined
+                }
               />
               {maxImages > 1 ? (
                 <PersonSlot
                   title={
-                    isCrazyFrog
+                    usesDualSubjectCopy
                       ? m['site.crazy.second']()
                       : m['site.hotel.second']()
                   }
                   note={
-                    isCrazyFrog
+                    usesDualSubjectCopy
                       ? m['site.crazy.second_note']()
                       : m['site.hotel.second_note']()
                   }
@@ -1072,6 +1324,9 @@ export function HotelLobbyGeneratorPanel({
                   disabled={busy}
                   onPick={(file) => setImageAt('second', file)}
                   onRemove={() => clearImageAt('second')}
+                  aspectClass={
+                    isFixedTemplate ? previewAspectClass : 'aspect-[4/5]'
+                  }
                 />
               ) : null}
             </div>
@@ -1084,80 +1339,227 @@ export function HotelLobbyGeneratorPanel({
               {m['site.crazy.unavailable']()}
             </p>
           ) : null}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
-            <button
-              type="button"
-              disabled={
-                busy ||
-                sessionPending ||
-                !presetEnabled ||
-                (!allowCustomVideo && !templateAvailable)
-              }
-              onClick={() => void generate()}
-              className="inline-flex h-11 w-full min-w-[240px] items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,rgb(222,151,92),rgb(189,111,64))] px-5 text-sm font-semibold text-white shadow-[0_12px_32px_-12px_rgba(218,134,75,0.7)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
-            >
-              {busy ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : session?.user ? (
-                <Play className="size-4 fill-current" />
-              ) : (
-                <Upload className="size-4" />
-              )}
-              <span>
-                {!session?.user
-                  ? m['site.common.signin_generate']()
-                  : busy
-                    ? phaseLabel
-                    : estimatedCredits
-                      ? m['site.common.generate_estimate']({
-                          count: String(estimatedCredits),
-                        })
-                      : m['site.generator.generate']()}
-              </span>
-            </button>
+          <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
+                  {m['site.hotel.preview_spec']()}
+                </span>
+                <span>
+                  {previewEstimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: previewEstimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={!canPreview || Boolean(session?.user && busy)}
+                onClick={() => {
+                  if (!session?.user) {
+                    redirectToSignIn();
+                    return;
+                  }
+                  void generate('preview');
+                }}
+                title={m['site.hotel.preview_help']()}
+                className={cn(
+                  'inline-flex h-8 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
+                  canPreview && !busy
+                    ? 'cursor-pointer border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
+                    : 'cursor-not-allowed border-white/10 text-[rgb(237,234,222)]/38'
+                )}
+              >
+                {busy ? (
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                ) : (
+                  m['site.generator.preview']()
+                )}
+              </button>
+            </div>
+            <div
+              className="hidden h-8 w-px shrink-0 self-end bg-white/15 sm:block"
+              aria-hidden
+            />
+            <div className="flex items-center gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
+                  {m['site.generator.full_video']()}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  {estimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: estimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                  <TooltipProvider delay={200}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="inline-flex size-4 cursor-pointer items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
+                        aria-label={m['genjutsu.estimate.help_aria']()}
+                      >
+                        <CircleHelp className="size-3.5" aria-hidden />
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="end"
+                        className="max-w-[240px] text-left leading-snug"
+                      >
+                        {m['site.hotel.estimate_tooltip']()}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={!canGenerateFull || Boolean(session?.user && busy)}
+                onClick={() => {
+                  if (!session?.user) {
+                    redirectToSignIn();
+                    return;
+                  }
+                  void generate('full');
+                }}
+                className={cn(
+                  'relative inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
+                  canGenerateFull && !busy
+                    ? 'cursor-pointer bg-[rgb(204,144,92)] text-[rgb(247,246,243)] hover:brightness-105'
+                    : 'cursor-not-allowed bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
+                )}
+              >
+                {busy ? (
+                  <>
+                    <LoaderCircle className="size-3.5 animate-spin" />
+                    <span>{phaseLabel}</span>
+                  </>
+                ) : (
+                  m['site.generator.generate']()
+                )}
+              </button>
+            </div>
           </div>
+          {!session?.user && !sessionPending ? (
+            <p className="mt-3 text-right text-xs text-white/40">
+              {m['site.common.signin_generate']()}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      {resultUrl ? (
-        <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(25,20,17,0.94)] p-3 shadow-2xl sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-3 px-1">
-            <div>
+      {jobBusy || resultUrl ? (
+        <div
+          ref={resultPanelRef}
+          id="generation-result"
+          className="mt-5 scroll-mt-24 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(25,20,17,0.94)] shadow-2xl"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3 sm:px-5">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-white/90">
-                {m['site.common.your_video']()}
+                {resultUrl && !jobBusy
+                  ? resultKind === 'preview'
+                    ? m['site.generator.preview_result']()
+                    : m['site.common.your_video']()
+                  : m['site.generator.generating']()}
               </p>
-              {isCrazyFrog ? null : (
-                <p className="mt-0.5 text-xs text-white/38">Hotel Lobby</p>
-              )}
+              <p className="mt-0.5 truncate text-xs text-white/40">
+                {resultUrl && !jobBusy
+                  ? displayName
+                  : phase === 'uploading' || phase === 'starting'
+                    ? m['site.generator.starting']()
+                    : providerStatus
+                      ? `${displayName} · ${providerStatus}`
+                      : m['site.generator.progress']({
+                          resolution: displayName,
+                        })}
+              </p>
             </div>
-            <a
-              href={
-                generationId
-                  ? `/api/hotel-lobby/result/${encodeURIComponent(generationId)}?download=1`
-                  : resultUrl
-              }
-              download={
-                generationId
-                  ? `${isCrazyFrog ? 'crazy-frog' : 'hotel-lobby'}-${generationId.slice(0, 8)}.mp4`
-                  : undefined
-              }
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
-            >
-              <Download className="size-3.5" />
-              {m['site.common.download']()}
-            </a>
+            {resultUrl && !jobBusy ? (
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {resultKind === 'preview' ? (
+                  <button
+                    type="button"
+                    disabled={!canGenerateFull || busy}
+                    onClick={() => void generate('full')}
+                    className={cn(
+                      'inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition',
+                      canGenerateFull && !busy
+                        ? 'bg-[rgb(204,144,92)] text-[rgb(247,246,243)] hover:brightness-105'
+                        : 'cursor-not-allowed bg-white/10 text-white/40'
+                    )}
+                  >
+                    <Play className="size-3.5 fill-current" />
+                    {m['site.generator.generate_full']()}
+                  </button>
+                ) : null}
+                <a
+                  href={
+                    generationId
+                      ? `/api/hotel-lobby/result/${encodeURIComponent(generationId)}?download=1`
+                      : resultUrl
+                  }
+                  download={
+                    generationId
+                      ? `${downloadPrefix}-${resultKind === 'preview' ? 'preview-' : ''}${generationId.slice(0, 8)}.mp4`
+                      : undefined
+                  }
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+                >
+                  <Download className="size-3.5" />
+                  {m['site.common.download']()}
+                </a>
+              </div>
+            ) : (
+              <span className="shrink-0 text-xs font-medium text-white/45 tabular-nums">
+                {progressPercent}%
+              </span>
+            )}
           </div>
-          <video
-            src={resultUrl}
-            controls
-            autoPlay
-            playsInline
-            className={`mx-auto max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain ${previewAspectClass}`}
-          />
-          {generationId ? (
-            <p className="mt-2 px-1 text-[10px] text-white/25">
-              {m['site.common.generation_id']({ id: generationId.slice(0, 8) })}
-            </p>
+
+          {jobBusy ? (
+            <div className="space-y-4 px-4 py-8 sm:px-5 sm:py-10">
+              <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+                <span className="size-9 animate-spin rounded-full border-2 border-[rgb(204,144,92)] border-t-transparent" />
+                <p className="text-center text-sm text-white/55">
+                  {phase === 'uploading' || phase === 'starting'
+                    ? m['site.generator.starting']()
+                    : m['site.generator.progress']({
+                        resolution: displayName,
+                      })}
+                </p>
+              </div>
+              <div
+                className="mx-auto h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="h-full rounded-full bg-[rgb(204,144,92)] transition-[width] duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          ) : resultUrl ? (
+            <div className="bg-black/35 p-3 sm:p-4">
+              <video
+                src={resultUrl}
+                controls
+                autoPlay
+                playsInline
+                className={`mx-auto max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain ${previewAspectClass}`}
+              />
+              {generationId ? (
+                <p className="mt-2 px-1 text-[10px] text-white/25">
+                  {m['site.common.generation_id']({
+                    id: generationId.slice(0, 8),
+                  })}
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
       ) : null}

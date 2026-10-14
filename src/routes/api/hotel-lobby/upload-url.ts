@@ -28,6 +28,7 @@ async function POST({ request }: { request: Request }) {
     const generationId = assertHotelLobbyGenerationId(body.generationId);
     const preset = resolveHotelLobbyPreset(body.presetId);
     const useDefaultTemplate = body.useDefaultTemplate === true;
+    const isPreview = body.preview === true;
     const contentTypes = Array.isArray(body.contentTypes)
       ? body.contentTypes.filter(
           (value: unknown): value is string => typeof value === 'string'
@@ -37,11 +38,17 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (!preset.allowCustomVideo && !useDefaultTemplate) {
+    // Paid 4s preview uploads a trimmed clip even for fixed-template presets.
+    if (!preset.allowCustomVideo && !useDefaultTemplate && !isPreview) {
       return respErr(
         `${preset.displayName} only supports the fixed reference template`,
         { status: 400 }
       );
+    }
+    if (isPreview && useDefaultTemplate) {
+      return respErr('Preview requires a short trimmed reference clip', {
+        status: 400,
+      });
     }
 
     const minImages = preset.imageCount.min;
