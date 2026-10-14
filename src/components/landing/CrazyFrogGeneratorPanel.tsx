@@ -51,7 +51,8 @@ import {
 
 type MediaItem = {
   id: string;
-  file: File;
+  /** Null for refresh-restored previews served from `/api/genjutsu/reference/...`. */
+  file: File | null;
   url: string;
 };
 
@@ -86,6 +87,8 @@ type PersistedGeneration = {
   generationId: string;
   resolution: CrazyFrogResolution;
   reservedCredits: number;
+  /** Stable preview URLs for lead/chaser after seal (survive refresh). */
+  referencePreviewUrls?: [string, string];
 };
 
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
@@ -162,6 +165,28 @@ function createMediaItem(file: File): MediaItem {
     file,
     url: URL.createObjectURL(file),
   };
+}
+
+function createPreviewMediaItem(
+  url: string,
+  slot: 'front' | 'back'
+): MediaItem {
+  return {
+    id: `preview-${slot}-${url}`,
+    file: null,
+    url,
+  };
+}
+
+function revokeMediaUrl(url: string | null | undefined) {
+  if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+}
+
+function referencePreviewUrlsFor(generationId: string): [string, string] {
+  return [
+    `/api/genjutsu/reference/${encodeURIComponent(generationId)}/1`,
+    `/api/genjutsu/reference/${encodeURIComponent(generationId)}/2`,
+  ];
 }
 
 function isLikenessRejectionMessage(message: string) {
@@ -445,8 +470,8 @@ export function CrazyFrogGeneratorPanel() {
 
   useEffect(() => {
     return () => {
-      if (frontUrlRef.current) URL.revokeObjectURL(frontUrlRef.current);
-      if (backUrlRef.current) URL.revokeObjectURL(backUrlRef.current);
+      revokeMediaUrl(frontUrlRef.current);
+      revokeMediaUrl(backUrlRef.current);
     };
   }, []);
 
@@ -465,7 +490,7 @@ export function CrazyFrogGeneratorPanel() {
     const next = createMediaItem(file);
     const setter = slot === 'front' ? setFrontPhoto : setBackPhoto;
     setter((current) => {
-      if (current) URL.revokeObjectURL(current.url);
+      revokeMediaUrl(current?.url);
       return next;
     });
     creditGate.clear();
@@ -475,7 +500,7 @@ export function CrazyFrogGeneratorPanel() {
   const clearSlot = (slot: 'front' | 'back') => {
     const setter = slot === 'front' ? setFrontPhoto : setBackPhoto;
     setter((current) => {
-      if (current) URL.revokeObjectURL(current.url);
+      revokeMediaUrl(current?.url);
       return null;
     });
   };
@@ -620,6 +645,22 @@ export function CrazyFrogGeneratorPanel() {
         return;
       }
 
+      const previewUrls =
+        Array.isArray(active.referencePreviewUrls) &&
+        active.referencePreviewUrls.length === 2
+          ? active.referencePreviewUrls
+          : referencePreviewUrlsFor(active.generationId);
+
+      // Restore sealed reference previews (blob: uploads do not survive refresh).
+      setFrontPhoto((current) => {
+        revokeMediaUrl(current?.url);
+        return createPreviewMediaItem(previewUrls[0], 'front');
+      });
+      setBackPhoto((current) => {
+        revokeMediaUrl(current?.url);
+        return createPreviewMediaItem(previewUrls[1], 'back');
+      });
+
       const runId = ++generationRunRef.current;
       setJobError('');
       creditGate.clear();
@@ -640,7 +681,7 @@ export function CrazyFrogGeneratorPanel() {
       return;
     }
     if (busy) return;
-    if (!frontPhoto || !backPhoto) {
+    if (!frontPhoto?.file || !backPhoto?.file) {
       toast.error(m['site.crazy.upload_required']());
       return;
     }
@@ -657,6 +698,8 @@ export function CrazyFrogGeneratorPanel() {
     setGenerationId(id);
     const runId = ++generationRunRef.current;
     const prompt = CRAZY_FROG_DEFAULT_PROMPT;
+    const leadFile = frontPhoto.file;
+    const chaserFile = backPhoto.file;
 
     try {
       await apiPost('/api/genjutsu/attempt', {
@@ -668,7 +711,7 @@ export function CrazyFrogGeneratorPanel() {
       });
 
       // Server seals the fixed R2 template; client only uploads front + back.
-      const media = [frontPhoto.file, backPhoto.file];
+      const media = [leadFile, chaserFile];
       const contentTypes = media.map((file) => file.type || 'image/jpeg');
       const contentLengths = media.map((file) => file.size);
 
@@ -732,6 +775,7 @@ export function CrazyFrogGeneratorPanel() {
         generationId: id,
         resolution,
         reservedCredits: 0,
+        referencePreviewUrls: referencePreviewUrlsFor(id),
       };
       localStorage.setItem(
         activeGenerationKey(session.user.id),
@@ -824,7 +868,7 @@ export function CrazyFrogGeneratorPanel() {
   };
 
   const canGenerate =
-    Boolean(frontPhoto && backPhoto) && !busy && !sessionPending;
+    Boolean(frontPhoto?.file && backPhoto?.file) && !busy && !sessionPending;
 
   return (
     <div className="mx-auto w-full max-w-[1120px]">
