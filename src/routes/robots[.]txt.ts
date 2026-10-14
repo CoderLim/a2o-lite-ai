@@ -6,9 +6,11 @@ export const Route = createFileRoute('/robots.txt')({
   server: {
     handlers: {
       GET: () => {
-        const body = [
-          'User-Agent: *',
-          'Allow: /',
+        // OAI-SearchBot = ChatGPT Search crawl (allow). GPTBot = model-training
+        // crawl (disallow). Specific user-agent groups do not inherit from `*`,
+        // so OAI-SearchBot repeats the same public-path Disallows.
+        // @see https://developers.openai.com/api/docs/bots
+        const publicDisallows = [
           'Disallow: /admin',
           'Disallow: /settings',
           'Disallow: /api/',
@@ -21,6 +23,19 @@ export const Route = createFileRoute('/robots.txt')({
           'Disallow: /redeem-invite',
           'Disallow: /h3-lab',
           'Disallow: /*?*',
+        ];
+
+        const body = [
+          'User-agent: OAI-SearchBot',
+          'Allow: /',
+          ...publicDisallows,
+          '',
+          'User-agent: GPTBot',
+          'Disallow: /',
+          '',
+          'User-agent: *',
+          'Allow: /',
+          ...publicDisallows,
           '',
           `Sitemap: ${envConfigs.app_url}/sitemap.xml`,
           '',

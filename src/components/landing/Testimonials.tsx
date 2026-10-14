@@ -16,16 +16,18 @@ const TESTIMONIAL_COPY = [
   { quote: m['site.testimonials.quote9'], role: m['site.testimonials.role9'] },
 ];
 
-function QuoteCard({ item }: { item: Testimonial }) {
+function QuoteCard({ item, index }: { item: Testimonial; index: number }) {
+  const copy = TESTIMONIAL_COPY[index];
+
   return (
     <article
       className={cn(
-        'border-border w-full max-w-xs rounded-3xl border p-10',
+        'border-border w-full rounded-3xl border p-10',
         'shadow-primary/10 shadow-lg'
       )}
     >
       <div className="text-foreground/90 text-sm leading-relaxed">
-        {TESTIMONIAL_COPY[TESTIMONIALS.findIndex((p) => p.name === item.name)]?.quote() ?? item.quote}
+        {copy?.quote() ?? item.quote}
       </div>
       <div className="mt-5 flex items-center gap-2">
         <img
@@ -39,47 +41,16 @@ function QuoteCard({ item }: { item: Testimonial }) {
           <div className="text-foreground leading-5 font-medium tracking-tight">
             {item.name}
           </div>
-          <div className="leading-5 tracking-tight opacity-60">{TESTIMONIAL_COPY[TESTIMONIALS.findIndex((p) => p.name === item.name)]?.role() ?? item.role}</div>
+          <div className="leading-5 tracking-tight opacity-60">
+            {copy?.role() ?? item.role}
+          </div>
         </div>
       </div>
     </article>
   );
 }
 
-function ScrollColumn({
-  items,
-  duration,
-  className,
-}: {
-  items: Testimonial[];
-  duration: string;
-  className?: string;
-}) {
-  const loop = [...items, ...items];
-
-  return (
-    <div className={className}>
-      <div
-        className="animate-scroll bg-background flex flex-col gap-6 pb-6"
-        style={{ animationDuration: duration }}
-      >
-        {loop.map((item, index) => (
-          <QuoteCard key={`${item.name}-${index}`} item={item} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const COLUMN_DURATIONS = ['15s', '19s', '17s'] as const;
-
 export function Testimonials() {
-  const columns = [
-    TESTIMONIALS.slice(0, 3),
-    TESTIMONIALS.slice(3, 6),
-    TESTIMONIALS.slice(6, 9),
-  ];
-
   return (
     <section className="bg-background relative my-20">
       <div className="z-10 container mx-auto px-4">
@@ -102,22 +73,9 @@ export function Testimonials() {
           </p>
         </div>
 
-        <div
-          className={cn(
-            'mt-10 flex max-h-[740px] justify-center gap-6 overflow-hidden',
-            '[mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]'
-          )}
-        >
-          {columns.map((items, index) => (
-            <ScrollColumn
-              key={index}
-              items={items}
-              duration={COLUMN_DURATIONS[index]!}
-              className={cn(
-                index === 1 && 'hidden md:block',
-                index === 2 && 'hidden lg:block'
-              )}
-            />
+        <div className="mx-auto mt-10 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {TESTIMONIALS.map((item, index) => (
+            <QuoteCard key={item.name} item={item} index={index} />
           ))}
         </div>
       </div>

@@ -38,6 +38,7 @@ const CRAZY_FROG_EXAMPLE_CASES = [
 ] as const;
 
 const CRAZY_FROG_DEMO_UPLOAD_DATE = '2026-10-14';
+const CRAZY_FROG_OG_IMAGE = '/videos/demos/crazy-frog-case-01-poster.jpg';
 
 const FAQ_ITEMS = [
   { question: m['site.crazy.faq1_q'], answer: m['site.crazy.faq1_a'] },
@@ -110,23 +111,23 @@ function howToJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to turn the Crazy Frog AI video into two people',
+    name: m['site.crazy.how_title'](),
     totalTime: 'PT2M',
     step: [
       {
         '@type': 'HowToStep',
-        name: 'Upload a photo of the two people',
-        text: 'Add one clear photo for the front runner and one for the chaser.',
+        name: m['site.crazy.step1_title'](),
+        text: m['site.crazy.step1_desc'](),
       },
       {
         '@type': 'HowToStep',
-        name: 'Keep the frog layout — front runner and the chaser',
-        text: 'Leave the chase template as-is so timing and camera stay intact.',
+        name: m['site.crazy.step2_title'](),
+        text: m['site.crazy.step2_desc'](),
       },
       {
         '@type': 'HowToStep',
-        name: 'Export a vertical 9:16 clip for Reels, Shorts and TikTok',
-        text: 'Generate, download the MP4, then post with a licensed Axel F sound when required.',
+        name: m['site.crazy.step3_title'](),
+        text: m['site.crazy.step3_desc'](),
       },
     ],
   };
@@ -155,9 +156,8 @@ function videoJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: 'Crazy Frog AI chase video example',
-    description:
-      'Example Crazy Frog AI chase result with two people swapped into the front runner and chaser roles.',
+    name: m['site.crazy.example_title'](),
+    description: m['site.crazy.example_caption'](),
     contentUrl: absoluteUrl(primary.src),
     thumbnailUrl: absoluteUrl(primary.poster),
     uploadDate: CRAZY_FROG_DEMO_UPLOAD_DATE,
@@ -206,11 +206,11 @@ function CrazyFrogAiPage() {
           </section>
 
           <section className="mx-auto max-w-5xl px-4 pb-14 md:px-5 md:pb-16">
-            <p className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
+            <h2 className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
               {m['site.crazy.example_title']()}
-            </p>
+            </h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {CRAZY_FROG_EXAMPLE_CASES.map((clip) => (
+              {CRAZY_FROG_EXAMPLE_CASES.map((clip, index) => (
                 <div
                   key={clip.id}
                   className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
@@ -218,6 +218,7 @@ function CrazyFrogAiPage() {
                   <video
                     src={clip.src}
                     poster={clip.poster}
+                    title={`${m['site.crazy.example_title']()} ${index + 1}`}
                     controls
                     playsInline
                     preload="metadata"
@@ -400,22 +401,25 @@ function CrazyFrogAiPage() {
 export const Route = createFileRoute('/crazy-frog-ai')({
   loader: () => {
     const locale = getLocale();
-    return {
-      title: m['site.crazy.page_title']({}, { locale }),
-      description: m['site.crazy.page_description']({}, { locale }),
-    };
+    return { locale };
   },
   head: ({ loaderData }) => {
-    const title = loaderData?.title ?? 'Crazy Frog AI';
-    const description = loaderData?.description ?? '';
-    const url = absoluteUrl('/crazy-frog-ai');
+    const locale = loaderData?.locale ?? 'en';
+    const title = m['site.crazy.page_title']({}, { locale });
+    const description = m['site.crazy.page_description']({}, { locale });
+    const { canonical, alternates } = localeLinks('/crazy-frog-ai', locale);
     return {
       meta: [
         { title },
         { name: 'description', content: description },
-        ...socialMeta({ title, description, url }),
+        ...socialMeta({
+          title,
+          description,
+          url: canonical,
+          image: absoluteUrl(CRAZY_FROG_OG_IMAGE),
+        }),
       ],
-      links: localeLinks('/crazy-frog-ai'),
+      links: [{ rel: 'canonical', href: canonical }, ...alternates],
     };
   },
   component: CrazyFrogAiPage,
