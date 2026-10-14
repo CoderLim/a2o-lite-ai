@@ -14,6 +14,8 @@ export const SMALLTOWN_BOY_DANCE_PRODUCT = 'smalltown-boy-dance' as const;
 /** Keep inline to avoid a cycle with seedance-higgsfield.ts → workflow. */
 const SEEDANCE_HIGGSFIELD_MODEL_ID =
   'bytedance/seedance-2.5/reference-to-video';
+/** Dual-role swap must use video-edit — see seedance-higgsfield.ts. */
+const SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID = 'bytedance/seedance-2.5/video-edit';
 
 const PRODUCT_PROVIDER_TARGETS: Record<
   GenjutsuProductId,
@@ -21,7 +23,7 @@ const PRODUCT_PROVIDER_TARGETS: Record<
 > = {
   [SMALLTOWN_BOY_DANCE_PRODUCT]: {
     provider: 'seedance-higgsfield',
-    model: SEEDANCE_HIGGSFIELD_MODEL_ID,
+    model: SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID,
   },
 };
 
@@ -72,11 +74,14 @@ export function resolveGenjutsuProviderTarget(
   }
 
   if (provider === 'seedance-higgsfield') {
+    const configured = envConfigs.seedance_higgsfield_model?.trim();
     return {
       provider,
       model:
-        envConfigs.seedance_higgsfield_model?.trim() ||
-        SEEDANCE_HIGGSFIELD_MODEL_ID,
+        configured ||
+        (mode === 'objects-swap'
+          ? SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID
+          : SEEDANCE_HIGGSFIELD_MODEL_ID),
     };
   }
 

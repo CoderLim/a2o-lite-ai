@@ -5,7 +5,14 @@ import {
   SEEDANCE_LIKENESS_REJECTION_MESSAGE,
 } from './seedance';
 
-/** Stable English copy returned to end users for provider/infra failures. */
+/**
+ * Stable English copy returned to end users for provider/infra failures.
+ * Raw dumps (e.g. Higgsfield "The selected parameters are not supported for
+ * this request…") stay in server logs / providerError — never in this string.
+ * That Higgsfield message often means dual-role swap was sent to
+ * reference-to-video with fixed aspect/duration; Smalltown uses video-edit
+ * instead (see SEEDANCE_HIGGSFIELD_EDIT_MODEL).
+ */
 export const GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE =
   'Generation failed. Please try again later.';
 
