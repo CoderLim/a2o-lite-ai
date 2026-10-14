@@ -43,29 +43,9 @@ export function isDefiniteFalSubmitRejection(status: number) {
   );
 }
 
-/**
- * Fal rejected the media/input itself (safe to refund). Covers:
- * - submit-time / result-body `input_value_error` + "Failed to load video"
- * - `file_download_error`
- * - our pre-submit CDN mirror failures (`fal_input_mirror_failed:`)
- */
-export function isFalDefiniteInputRejection(message: string) {
-  const text = message.trim();
-  if (!text) return false;
-  if (text.includes('fal_input_mirror_failed:')) return true;
-  const lower = text.toLowerCase();
-  if (lower.includes('failed to load video')) return true;
-  if (lower.includes('file_download_error')) return true;
-  if (lower.includes('input_value_error') && lower.includes('video')) {
-    return true;
-  }
-  return false;
-}
-
 export function classifyFalSubmitFailure(
   message: string
 ): 'refund' | 'uncertain' {
-  if (isFalDefiniteInputRejection(message)) return 'refund';
   const status = parseFalHttpStatusFromError(message);
   if (status == null) return 'uncertain';
   return isDefiniteFalSubmitRejection(status) ? 'refund' : 'uncertain';
@@ -225,21 +205,6 @@ export class FalProvider implements AIProvider {
       const detail = await statusResp.text().catch(() => '');
       const message =
         detail || `request failed with status: ${statusResp.status}`;
-      // Definite input rejections sometimes surface as HTTP 4xx on status
-      // with a model-error body — treat as failed jobs (refundable), not
-      // ambiguous lookup failures that hold credits.
-      if (isFalDefiniteInputRejection(message)) {
-        return {
-          taskId,
-          taskStatus: AITaskStatus.FAILED,
-          taskInfo: {
-            status: 'FAILED',
-            errorCode: String(statusResp.status),
-            errorMessage: message,
-          },
-          taskResult: { error: message },
-        };
-      }
       // 429/5xx (and 408): retryable. 4xx like 401/403/404: permanent lookup
       // failure — callers must not keep polling forever or auto-refund.
       const transient = isTransientFalHttpStatus(statusResp.status);
@@ -283,18 +248,6 @@ export class FalProvider implements AIProvider {
       const detail = await resultResp.text().catch(() => '');
       const message =
         detail || `request failed with status: ${resultResp.status}`;
-      if (isFalDefiniteInputRejection(message)) {
-        return {
-          taskId,
-          taskStatus: AITaskStatus.FAILED,
-          taskInfo: {
-            status: 'FAILED',
-            errorCode: String(resultResp.status),
-            errorMessage: message,
-          },
-          taskResult: { error: message },
-        };
-      }
       const transient = isTransientFalHttpStatus(resultResp.status);
       return {
         taskId,
