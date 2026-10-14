@@ -2,7 +2,9 @@ import {
   AIMediaType,
   AITaskStatus,
   FalProvider,
+  isFalDefiniteInputRejection,
   isFalPermanentQueryFailure,
+  mirrorHotelLobbyInputsToFalCdn,
 } from '@/core/ai';
 import { envConfigs } from '@/config';
 import { getConfig } from '@/modules/config/service';
@@ -144,6 +146,14 @@ export async function submitHotelLobby(input: {
   const callbackUrl = getHotelLobbyWebhookUrl() ?? undefined;
   const keepAudio = input.keepAudio !== false;
 
+  // Kling runners sometimes fail to fetch R2 account-endpoint signed URLs
+  // ("Failed to load video"). Mirror onto fal CDN before queue submit.
+  const mirrored = await mirrorHotelLobbyInputsToFalCdn({
+    apiKey: provider.configs.apiKey,
+    videoUrl: normalized.videoUrl,
+    imageUrls: normalized.imageUrls,
+  });
+
   const result = await provider.generate({
     params: {
       mediaType: AIMediaType.VIDEO,
@@ -151,8 +161,8 @@ export async function submitHotelLobby(input: {
       prompt: normalized.prompt,
       callbackUrl,
       options: {
-        video_url: normalized.videoUrl,
-        elements: buildKlingElements(normalized.imageUrls),
+        video_url: mirrored.videoUrl,
+        elements: buildKlingElements(mirrored.imageUrls),
         keep_audio: keepAudio,
         shot_type: 'customize',
       },
@@ -315,7 +325,12 @@ export async function getHotelLobbyProviderStatus(
 
     // Permanent status/result lookup failures are not confirmed model fails —
     // hold credits for manual recovery instead of auto-refunding.
-    if (isFalPermanentQueryFailure(result.taskInfo)) {
+    // Exception: definite input rejections (e.g. Failed to load video) are
+    // safe to refund even when they arrive via a 4xx status/result body.
+    if (
+      isFalPermanentQueryFailure(result.taskInfo) &&
+      !isFalDefiniteInputRejection(error)
+    ) {
       return {
         status: 'unresolved' as const,
         providerStatus: result.taskInfo?.status || 'QUERY_PERMANENT_ERROR',

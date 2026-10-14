@@ -5,9 +5,11 @@ import {
   classifyFalSubmitFailure,
   falQueueQueryModel,
   isDefiniteFalSubmitRejection,
+  isFalDefiniteInputRejection,
   isTransientFalHttpStatus,
   parseFalHttpStatusFromError,
 } from './fal';
+import { falInputMirrorFailureMessage } from './fal-storage';
 
 test('classifies definite 4xx submit rejections as refundable', () => {
   assert.equal(
@@ -29,6 +31,30 @@ test('classifies definite 4xx submit rejections as refundable', () => {
   assert.equal(
     classifyFalSubmitFailure('request failed with status: 422'),
     'refund'
+  );
+});
+
+test('classifies Failed to load video / mirror failures as refundable', () => {
+  const loadVideoError = JSON.stringify({
+    detail: [
+      {
+        loc: ['body', 'video_url'],
+        msg: 'Failed to load video.',
+        type: 'input_value_error',
+      },
+    ],
+  });
+  assert.equal(isFalDefiniteInputRejection(loadVideoError), true);
+  assert.equal(classifyFalSubmitFailure(loadVideoError), 'refund');
+  assert.equal(
+    classifyFalSubmitFailure(
+      falInputMirrorFailureMessage('source fetch HTTP 403')
+    ),
+    'refund'
+  );
+  assert.equal(
+    isFalDefiniteInputRejection('{"type":"file_download_error"}'),
+    true
   );
 });
 
