@@ -4,8 +4,8 @@ import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
 
 import {
-  CRAZY_FROG_PRESET_ID,
   HOTEL_LOBBY_PRESET_ID,
+  localTemplatePathForPreset,
   resolveHotelLobbyPreset,
   type HotelLobbyPresetId,
 } from './presets';
@@ -413,11 +413,6 @@ async function copyR2Object(params: {
   }
 }
 
-/** Local public files used to seed missing preset templates on Node. */
-const LOCAL_TEMPLATE_BY_PRESET: Partial<Record<HotelLobbyPresetId, string>> = {
-  [CRAZY_FROG_PRESET_ID]: 'public/videos/crazy-frog-tpl.mp4',
-};
-
 export function getHotelLobbyTemplateVideoKey(
   presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
 ) {
@@ -467,15 +462,15 @@ async function putHotelLobbyObjectBytes(params: {
 }
 
 /**
- * Ensure the preset template exists in R2. On local Node, seed Crazy Frog
- * from `public/videos/crazy-frog-tpl.mp4` when missing or size-mismatched
- * (so swapping the public smoke/full clip refreshes R2 automatically).
+ * Ensure the preset template exists in R2. On local Node, seed from the
+ * preset's `localTemplatePath` when missing or size-mismatched (DX only —
+ * bump the versioned R2 key when production content changes).
  */
 export async function ensureHotelLobbyTemplateInR2(
   presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
 ) {
   const key = getHotelLobbyTemplateVideoKey(presetId);
-  const localRelative = LOCAL_TEMPLATE_BY_PRESET[presetId];
+  const localRelative = localTemplatePathForPreset(presetId);
 
   let remoteBytes: number | null = null;
   try {
@@ -562,6 +557,8 @@ export async function sealHotelLobbyInputs(params: {
   maxReferenceImages?: number;
   /** Trusted template key when useDefaultTemplate (from preset registry). */
   templateVideoKey?: string;
+  /** When set with useDefaultTemplate, ensure/seed this preset's R2 template. */
+  presetId?: HotelLobbyPresetId;
 }) {
   const maxReferenceImages =
     params.maxReferenceImages ?? HOTEL_LOBBY_MAX_REFERENCE_IMAGES;
@@ -656,19 +653,16 @@ export async function sealHotelLobbyInputs(params: {
   let sealedVideoKey: string;
 
   if (params.useDefaultTemplate) {
-    sourceVideoKey = params.templateVideoKey || getHotelLobbyTemplateVideoKey();
+    const presetId = params.presetId ?? HOTEL_LOBBY_PRESET_ID;
+    sourceVideoKey =
+      params.templateVideoKey || getHotelLobbyTemplateVideoKey(presetId);
     assertSafeObjectKey(sourceVideoKey);
     if (!sourceVideoKey.startsWith('hotel-lobby/')) {
       throw new Error(
         'Hotel Lobby template must use the hotel-lobby/ R2 prefix'
       );
     }
-    // Seed fixed-template presets (e.g. Crazy Frog) from public/ on local Node.
-    if (
-      sourceVideoKey === getHotelLobbyTemplateVideoKey(CRAZY_FROG_PRESET_ID)
-    ) {
-      await ensureHotelLobbyTemplateInR2(CRAZY_FROG_PRESET_ID);
-    }
+    await ensureHotelLobbyTemplateInR2(presetId);
     sourceVideoMetadata = await headR2Object(sourceVideoKey);
     assertHotelLobbyUploadSize(0, sourceVideoMetadata.contentLength);
     const videoExt = VIDEO_CONTENT_TYPES[sourceVideoMetadata.contentType];

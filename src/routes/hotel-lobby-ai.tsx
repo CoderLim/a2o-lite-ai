@@ -11,11 +11,10 @@ import {
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
-import { getLocale } from '@/paraglide/runtime.js';
 import { m } from '@/paraglide/messages.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGeneratorPanel';
 import { SiteHeader } from '@/components/landing/SiteHeader';
-
 
 const FAQ_ITEMS = [
   {
@@ -41,7 +40,7 @@ const FAQ_ITEMS = [
   {
     question: 'Do I need Higgsfield for the Hotel Lobby trend?',
     answer:
-      'No. This page uses Kling O3 video edit with a preset reference performance. Higgsfield Genjutsu is another option when you want a more general motion-transfer workflow with your own source clip.',
+      "No. You don't need a separate Higgsfield account — this page runs on your Genjutsu AI credits with a preset reference performance. Use the homepage Genjutsu flow when you want a more general motion-transfer workflow with your own source clip.",
   },
   {
     question: 'Can I do Hotel Lobby AI with my pets?',
@@ -95,7 +94,6 @@ const PHOTO_TIPS = [
   'Use the first slot for the left performer and the second slot for the right performer.',
   'Try a second run if identity or hand gestures drift. Video generation is stochastic.',
 ] as const;
-
 
 const HOTEL_FAQ_COPY = [
   { question: m['site.hotel.faq1_q'], answer: m['site.hotel.faq1_a'] },
@@ -316,15 +314,9 @@ function HotelLobbyAiPage() {
                 {m['site.hotel.trend_title']()}
               </h2>
               <div className="mt-5 space-y-4 text-sm leading-7 text-white/48 sm:text-base">
-                <p>
-                  {m['site.hotel.trend_p1']()}
-                </p>
-                <p>
-                  {m['site.hotel.trend_p2']()}
-                </p>
-                <p>
-                  {m['site.hotel.trend_p3']()}
-                </p>
+                <p>{m['site.hotel.trend_p1']()}</p>
+                <p>{m['site.hotel.trend_p2']()}</p>
+                <p>{m['site.hotel.trend_p3']()}</p>
               </div>
             </div>
           </section>
@@ -386,8 +378,12 @@ function HotelLobbyAiPage() {
                   key={title}
                   className="rounded-2xl border border-white/8 bg-white/[0.025] p-5"
                 >
-                  <h3 className="font-semibold text-white/86">{HOTEL_CAST_COPY[index]?.[0]() ?? title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/42">{HOTEL_CAST_COPY[index]?.[1]() ?? text}</p>
+                  <h3 className="font-semibold text-white/86">
+                    {HOTEL_CAST_COPY[index]?.[0]() ?? title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/42">
+                    {HOTEL_CAST_COPY[index]?.[1]() ?? text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -407,7 +403,9 @@ function HotelLobbyAiPage() {
                   <thead className="bg-white/[0.035] text-white/72">
                     <tr>
                       <th className="px-4 py-3 font-semibold"> </th>
-                      <th className="px-4 py-3 font-semibold">{m['site.hotel.this_page']()}</th>
+                      <th className="px-4 py-3 font-semibold">
+                        {m['site.hotel.this_page']()}
+                      </th>
                       <th className="px-4 py-3 font-semibold">
                         Higgsfield Genjutsu
                       </th>
@@ -451,7 +449,8 @@ function HotelLobbyAiPage() {
                                 : 'px-4 py-3'
                             }
                           >
-                            {HOTEL_COMPARISON_COPY[rowIndex * 3 + index]?.() ?? cell}
+                            {HOTEL_COMPARISON_COPY[rowIndex * 3 + index]?.() ??
+                              cell}
                           </td>
                         ))}
                       </tr>

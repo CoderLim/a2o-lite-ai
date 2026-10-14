@@ -1,18 +1,4 @@
-import {
-  BULIN_47_DEFAULT_PROMPT,
-  BULIN_47_DEFAULT_RESOLUTION,
-  BULIN_47_MODE,
-  BULIN_47_TEMPLATE_PATH,
-  BULIN_47_TEMPLATE_POSTER_PATH,
-} from '@/modules/bulin-47/constants';
 import { buildHotelLobbyPrompt } from '@/modules/hotel-lobby/prompt';
-import {
-  RUMPEL_DEFAULT_PROMPT,
-  RUMPEL_DEFAULT_RESOLUTION,
-  RUMPEL_MODE,
-  RUMPEL_TEMPLATE_PATH,
-  RUMPEL_TEMPLATE_POSTER_PATH,
-} from '@/modules/rumpelstiltskin/constants';
 import {
   ZOMBIE_HUG_DEFAULT_RESOLUTION,
   ZOMBIE_HUG_MODE,
@@ -42,6 +28,8 @@ const DEFAULT_OBJECTS_RESOLUTION = '720p' as const;
 /**
  * Homepage motion templates. Aspect follows the source clip
  * (portrait 9:16 / landscape 16:9) for gallery layout.
+ * Kling O3 product pages (Crazy Frog, Rumpelstiltskin, Bulin 47) are not
+ * listed here — Recreate would send them through Genjutsu.
  */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
   {
@@ -53,26 +41,6 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     mode: ZOMBIE_HUG_MODE,
     resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
     aspect: 'portrait',
-  },
-  {
-    id: 'bulin-47',
-    titleKey: 'site.templates.bulin_47',
-    poster: BULIN_47_TEMPLATE_POSTER_PATH,
-    sourceVideo: BULIN_47_TEMPLATE_PATH,
-    prompt: BULIN_47_DEFAULT_PROMPT,
-    mode: BULIN_47_MODE,
-    resolution: BULIN_47_DEFAULT_RESOLUTION,
-    aspect: 'portrait',
-  },
-  {
-    id: 'rumpelstiltskin',
-    titleKey: 'site.templates.rumpelstiltskin',
-    poster: RUMPEL_TEMPLATE_POSTER_PATH,
-    sourceVideo: RUMPEL_TEMPLATE_PATH,
-    prompt: RUMPEL_DEFAULT_PROMPT,
-    mode: RUMPEL_MODE,
-    resolution: RUMPEL_DEFAULT_RESOLUTION,
-    aspect: 'landscape',
   },
   {
     id: 'hotel-lobby',

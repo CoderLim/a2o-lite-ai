@@ -68,15 +68,26 @@ async function POST({ request }: { request: Request }) {
 
     const preset = resolveHotelLobbyPreset(body.presetId);
     const useDefaultTemplate = body.useDefaultTemplate === true;
+    const isPreview = body.preview === true;
+
+    if (isPreview && useDefaultTemplate) {
+      return respErr('Preview requires a short trimmed reference clip', {
+        status: 400,
+      });
+    }
 
     if (!preset.allowCustomVideo) {
-      if (!useDefaultTemplate) {
+      if (!useDefaultTemplate && !isPreview) {
         return respErr(
           `${preset.displayName} only supports the fixed reference template`,
           { status: 400 }
         );
       }
-      if (typeof body.videoKey === 'string' && body.videoKey.length > 0) {
+      if (
+        !isPreview &&
+        typeof body.videoKey === 'string' &&
+        body.videoKey.length > 0
+      ) {
         return respErr(
           `${preset.displayName} does not accept a custom reference video`,
           { status: 400 }
@@ -137,6 +148,7 @@ async function POST({ request }: { request: Request }) {
       templateVideoKey: useDefaultTemplate
         ? preset.templateVideoKey
         : undefined,
+      presetId: useDefaultTemplate ? preset.id : undefined,
     });
     const providerInput = await resolveHotelLobbyInputUrls({
       userId,
@@ -146,6 +158,7 @@ async function POST({ request }: { request: Request }) {
 
     // Output duration follows the reference video (probed from MP4/MOV/WebM),
     // rounded to the integer range Kling O3 accepts (3–15s).
+    // Fixed templates: never trust client duration — fail if probe fails.
     const clientDurationHint =
       typeof body.durationSeconds === 'number'
         ? body.durationSeconds
@@ -154,12 +167,20 @@ async function POST({ request }: { request: Request }) {
           : undefined;
     const duration = await probeHotelLobbyDurationSeconds(
       providerInput.videoUrl,
-      {
-        fallbackSeconds: Number.isFinite(clientDurationHint)
-          ? clientDurationHint
-          : undefined,
-      }
+      useDefaultTemplate
+        ? undefined
+        : {
+            fallbackSeconds: Number.isFinite(clientDurationHint)
+              ? clientDurationHint
+              : undefined,
+          }
     );
+    // Paid preview = first ~4s only (Kling min is 3s).
+    if (isPreview && duration > 4) {
+      return respErr('Preview clips must be 4 seconds or shorter', {
+        status: 400,
+      });
+    }
     // Kling O3 rejects out-of-range pixels; fail before credit reservation.
     await probeHotelLobbyVideoDimensions(providerInput.videoUrl);
 

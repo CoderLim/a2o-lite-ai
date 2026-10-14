@@ -12,7 +12,7 @@ import { Link } from '@/core/i18n/navigation';
 import { localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
-import { Bulin47GeneratorPanel } from '@/components/landing/Bulin47GeneratorPanel';
+import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGeneratorPanel';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 
@@ -165,7 +165,7 @@ function Bulin47AiPage() {
           </p>
 
           <div id="generator" className="mt-8 scroll-mt-24 text-left sm:mt-10">
-            <Bulin47GeneratorPanel />
+            <HotelLobbyGeneratorPanel presetId="bulin-47" />
           </div>
         </section>
       </div>
