@@ -26,7 +26,6 @@ import {
   submitHotelLobby,
 } from '@/modules/hotel-lobby/service';
 import {
-  getHotelLobbyTemplateDurationSeconds,
   resolveHotelLobbyInputUrls,
   sealHotelLobbyInputs,
 } from '@/modules/hotel-lobby/storage';
@@ -68,13 +67,8 @@ async function POST({ request }: { request: Request }) {
     generationId = assertHotelLobbyGenerationId(body.generationId);
 
     const preset = resolveHotelLobbyPreset(body.presetId);
+    const useDefaultTemplate = body.useDefaultTemplate === true;
     const isPreview = body.preview === true;
-    // Fixed-template presets must never trust a client "custom video" flag for
-    // full jobs — otherwise we probe a sealed copy / trim and can false-fail.
-    const useDefaultTemplate =
-      !preset.allowCustomVideo && !isPreview
-        ? true
-        : body.useDefaultTemplate === true;
 
     if (isPreview && useDefaultTemplate) {
       return respErr('Preview requires a short trimmed reference clip', {
@@ -171,26 +165,29 @@ async function POST({ request }: { request: Request }) {
         : typeof body.durationSeconds === 'string'
           ? Number(body.durationSeconds)
           : undefined;
-    // Duration: fixed full jobs use the versioned R2 template (already probed
-    // by template-meta). Custom / preview clips probe the sealed upload key.
-    const duration = useDefaultTemplate
-      ? await getHotelLobbyTemplateDurationSeconds(preset.id)
-      : await probeHotelLobbyDurationSecondsFromKey(sealed.videoKey, {
-          fallbackSeconds: Number.isFinite(clientDurationHint)
-            ? clientDurationHint
-            : undefined,
-        });
+    // Probe sealed R2 keys with authenticated Range GETs — query-signed URL
+    // probes are flaky on Workers and can throw false "unreadable metadata".
+    const duration = await probeHotelLobbyDurationSecondsFromKey(
+      sealed.videoKey,
+      useDefaultTemplate
+        ? undefined
+        : {
+            fallbackSeconds: Number.isFinite(clientDurationHint)
+              ? clientDurationHint
+              : undefined,
+          }
+    );
     // Paid preview = first ~4s only (Kling min is 3s).
     if (isPreview && duration > 4) {
       return respErr('Preview clips must be 4 seconds or shorter', {
         status: 400,
       });
     }
-    // Dimension probe has been false-failing on Workers/Vite for sealed copies
-    // and ffmpeg trims. Fixed-template presets (Crazy Frog / Rumpel / Bulin)
-    // and default-template Hotel Lobby jobs skip it — templates are curated +
-    // seal-verified. Only true custom Hotel Lobby uploads are probed.
-    if (preset.allowCustomVideo && !useDefaultTemplate) {
+    // Fixed templates are versioned + seal-verified against the R2 source.
+    // Skip a second dimension parse on the sealed copy (it was failing spuriously
+    // under Workers/Vite even when the same object parses in isolation).
+    // Custom uploads still probe before we reserve credits.
+    if (!useDefaultTemplate) {
       await probeHotelLobbyVideoDimensionsFromKey(sealed.videoKey);
     }
 
