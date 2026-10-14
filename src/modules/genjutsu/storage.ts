@@ -945,15 +945,22 @@ export function getSmalltownBoyDanceTemplateVideoKey() {
   );
 }
 
-/**
- * Ensure the Smalltown Boy Dance template exists in R2.
- * On local Node, seed from public/videos/smalltown-boy-dance-tpl.mp4.
- */
-export async function ensureSmalltownBoyDanceTemplateInR2() {
-  const key = getSmalltownBoyDanceTemplateVideoKey();
+export function getCrazyFrogTemplateVideoKey() {
+  return (
+    envConfigs.crazy_frog_template_video_key?.trim() ||
+    'genjutsu/templates/crazy-frog-v1.mp4'
+  );
+}
+
+async function ensureGenjutsuPublicTemplateInR2(params: {
+  key: string;
+  localRelative: string;
+  label: string;
+}) {
+  const { key, localRelative, label } = params;
   assertSafeObjectKey(key);
   if (!key.startsWith('genjutsu/')) {
-    throw new Error('Smalltown Boy Dance template key must be under genjutsu/');
+    throw new Error(`${label} template key must be under genjutsu/`);
   }
 
   try {
@@ -963,11 +970,9 @@ export async function ensureSmalltownBoyDanceTemplateInR2() {
     // continue to seed
   }
 
-  const localRelative = 'public/videos/smalltown-boy-dance-tpl.mp4';
-
   if (isCloudflareWorkersRuntime()) {
     throw new Error(
-      `Smalltown Boy Dance template missing from R2 (${key}). Upload ${localRelative} to that key.`
+      `${label} template missing from R2 (${key}). Upload ${localRelative} to that key.`
     );
   }
 
@@ -977,7 +982,7 @@ export async function ensureSmalltownBoyDanceTemplateInR2() {
   const localPath = path.join(process.cwd(), localRelative);
   if (!existsSync(localPath)) {
     throw new Error(
-      `Smalltown Boy Dance template missing from R2 (${key}) and local file ${localPath} was not found`
+      `${label} template missing from R2 (${key}) and local file ${localPath} was not found`
     );
   }
 
@@ -988,6 +993,30 @@ export async function ensureSmalltownBoyDanceTemplateInR2() {
     contentType: 'video/mp4',
   });
   return key;
+}
+
+/**
+ * Ensure the Smalltown Boy Dance template exists in R2.
+ * On local Node, seed from public/videos/smalltown-boy-dance-tpl.mp4.
+ */
+export async function ensureSmalltownBoyDanceTemplateInR2() {
+  return ensureGenjutsuPublicTemplateInR2({
+    key: getSmalltownBoyDanceTemplateVideoKey(),
+    localRelative: 'public/videos/smalltown-boy-dance-tpl.mp4',
+    label: 'Smalltown Boy Dance',
+  });
+}
+
+/**
+ * Ensure the Crazy Frog template exists in R2.
+ * On local Node, seed from public/videos/crazy-frog-tpl.mp4.
+ */
+export async function ensureCrazyFrogTemplateInR2() {
+  return ensureGenjutsuPublicTemplateInR2({
+    key: getCrazyFrogTemplateVideoKey(),
+    localRelative: 'public/videos/crazy-frog-tpl.mp4',
+    label: 'Crazy Frog',
+  });
 }
 
 /** HEAD helper that returns false on missing objects (does not throw). */
@@ -1055,6 +1084,7 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
   const landscapeKey = getZombieHugTemplateVideoKey('16:9');
   const portraitKey = getZombieHugTemplateVideoKey('9:16');
   const smalltownKey = getSmalltownBoyDanceTemplateVideoKey();
+  const crazyFrogKey = getCrazyFrogTemplateVideoKey();
   const templateVideoKey =
     params.templateVideoKey === landscapeKey
       ? await ensureZombieHugTemplateInR2('16:9')
@@ -1062,7 +1092,9 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
         ? await ensureZombieHugTemplateInR2('9:16')
         : params.templateVideoKey === smalltownKey
           ? await ensureSmalltownBoyDanceTemplateInR2()
-          : params.templateVideoKey;
+          : params.templateVideoKey === crazyFrogKey
+            ? await ensureCrazyFrogTemplateInR2()
+            : params.templateVideoKey;
 
   assertSafeObjectKey(templateVideoKey);
   if (!templateVideoKey.startsWith('genjutsu/')) {

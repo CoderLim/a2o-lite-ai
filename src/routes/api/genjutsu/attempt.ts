@@ -2,6 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import {
+  CRAZY_FROG_PRODUCT_ID,
+  CRAZY_FROG_RESOLUTIONS,
+} from '@/modules/crazy-frog/constants';
+import {
   assertGenerationId,
   createGenjutsuAttempt,
   GenjutsuAttemptConflictError,
@@ -56,6 +60,16 @@ async function POST({ request }: { request: Request }) {
       )
     ) {
       return respErr('Smalltown Boy Dance only supports 480p and 720p', {
+        status: 400,
+      });
+    }
+    if (
+      product === CRAZY_FROG_PRODUCT_ID &&
+      !CRAZY_FROG_RESOLUTIONS.includes(
+        resolution as (typeof CRAZY_FROG_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Crazy Frog only supports 480p and 720p', {
         status: 400,
       });
     }

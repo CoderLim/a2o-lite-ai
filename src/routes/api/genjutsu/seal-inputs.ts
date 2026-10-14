@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import { CRAZY_FROG_PRODUCT_ID } from '@/modules/crazy-frog/constants';
 import {
   assertGenerationId,
   claimGenjutsuSeal,
@@ -17,6 +18,7 @@ import {
 import {
   findExistingSealedGenjutsuTemplateInputs,
   genjutsuR2ObjectExists,
+  getCrazyFrogTemplateVideoKey,
   getGenjutsuSealedInputKey,
   getSmalltownBoyDanceTemplateVideoKey,
   getZombieHugTemplateVideoKey,
@@ -102,11 +104,13 @@ async function POST({ request }: { request: Request }) {
       ? currentOptions.aspectRatio
       : ZOMBIE_HUG_DEFAULT_ASPECT_RATIO;
     // Product-scoped templates first; zombie-hug remains the legacy default
-    // for useDefaultTemplate without a smalltown product binding.
+    // for useDefaultTemplate without a product binding.
     const sharedTemplateKey =
       product === SMALLTOWN_PRODUCT_ID
         ? getSmalltownBoyDanceTemplateVideoKey()
-        : getZombieHugTemplateVideoKey(templateAspectRatio);
+        : product === CRAZY_FROG_PRODUCT_ID
+          ? getCrazyFrogTemplateVideoKey()
+          : getZombieHugTemplateVideoKey(templateAspectRatio);
     const videoKey =
       typeof currentOptions?.videoKey === 'string'
         ? currentOptions.videoKey

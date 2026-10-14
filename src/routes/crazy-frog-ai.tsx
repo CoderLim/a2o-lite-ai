@@ -5,7 +5,7 @@ import { Link } from '@/core/i18n/navigation';
 import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
-import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGeneratorPanel';
+import { CrazyFrogGeneratorPanel } from '@/components/landing/CrazyFrogGeneratorPanel';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
 
@@ -201,7 +201,7 @@ function CrazyFrogAiPage() {
             </p>
 
             <div id="generator" className="mt-8 text-left sm:mt-10">
-              <HotelLobbyGeneratorPanel presetId="crazy-frog" />
+              <CrazyFrogGeneratorPanel />
             </div>
           </section>
 

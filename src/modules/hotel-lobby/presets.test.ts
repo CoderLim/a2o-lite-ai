@@ -35,7 +35,7 @@ test('crazy-frog preset is fixed template, two images, keep audio', () => {
   assert.equal(preset.allowTrim, false);
   assert.equal(preset.keepAudio, true);
   assert.equal(preset.aspectRatio, '4:3');
-  assert.equal(preset.enabled, true);
+  assert.equal(preset.enabled, false);
   assert.match(preset.templateVideoKey, /^hotel-lobby\/templates\//);
   assert.equal(preset.localTemplatePath, 'public/videos/crazy-frog-tpl.mp4');
   assert.equal(preset.downloadPrefix, 'crazy-frog');
@@ -76,14 +76,24 @@ test('all hotel-lobby presets keep audio by default', () => {
     RUMPELSTILTSKIN_PRESET_ID,
     BULIN_47_PRESET_ID,
   ] as const) {
-    assert.equal(resolveHotelLobbyPreset(id).keepAudio, true, id);
+    assert.equal(
+      resolveHotelLobbyPreset(id, { requireEnabled: false }).keepAudio,
+      true,
+      id
+    );
   }
 });
 
-test('enabled crazy-frog resolves when requireEnabled', () => {
-  const preset = resolveHotelLobbyPreset(CRAZY_FROG_PRESET_ID);
+test('disabled crazy-frog rejects when requireEnabled (migrated to genjutsu)', () => {
+  assert.throws(
+    () => resolveHotelLobbyPreset(CRAZY_FROG_PRESET_ID),
+    /not available|disabled|Crazy Frog/i
+  );
+  const preset = resolveHotelLobbyPreset(CRAZY_FROG_PRESET_ID, {
+    requireEnabled: false,
+  });
   assert.equal(preset.id, CRAZY_FROG_PRESET_ID);
-  assert.equal(preset.enabled, true);
+  assert.equal(preset.enabled, false);
 });
 
 test('unknown preset rejects', () => {

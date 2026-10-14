@@ -2,6 +2,11 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import {
+  CRAZY_FROG_ASPECT_RATIO,
+  CRAZY_FROG_PRODUCT_ID,
+  CRAZY_FROG_RESOLUTIONS,
+} from '@/modules/crazy-frog/constants';
+import {
   assertGenerationId,
   bindGenjutsuUploadInputs,
   createGenjutsuAttempt,
@@ -18,8 +23,10 @@ import {
   assertGenjutsuUploadSize,
   createGenjutsuProxyUploadDescriptor,
   createGenjutsuR2UploadDescriptor,
+  ensureCrazyFrogTemplateInR2,
   ensureSmalltownBoyDanceTemplateInR2,
   GENJUTSU_PROXY_UPLOAD_MAX_BYTES,
+  getCrazyFrogTemplateVideoKey,
   getGenjutsuInputKey,
   getSmalltownBoyDanceTemplateVideoKey,
 } from '@/modules/genjutsu/storage';
@@ -36,7 +43,7 @@ import {
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
-const SMALLTOWN_IMAGE_COUNT = 2;
+const FIXED_TEMPLATE_IMAGE_COUNT = 2;
 
 async function POST({ request }: { request: Request }) {
   let generationIdForFailure: string | null = null;
@@ -66,6 +73,8 @@ async function POST({ request }: { request: Request }) {
         ? body.product
         : undefined;
     const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
+    const isCrazyFrog = product === CRAZY_FROG_PRODUCT_ID;
+    const isFixedTemplateProduct = isSmalltown || isCrazyFrog;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -87,6 +96,16 @@ async function POST({ request }: { request: Request }) {
         status: 400,
       });
     }
+    if (
+      isCrazyFrog &&
+      !CRAZY_FROG_RESOLUTIONS.includes(
+        resolution as (typeof CRAZY_FROG_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Crazy Frog only supports 480p and 720p', {
+        status: 400,
+      });
+    }
 
     const contentTypes = Array.isArray(body.contentTypes)
       ? body.contentTypes.filter(
@@ -99,14 +118,17 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (isSmalltown) {
+    if (isFixedTemplateProduct) {
       if (
-        contentTypes.length !== SMALLTOWN_IMAGE_COUNT ||
-        contentLengths.length !== SMALLTOWN_IMAGE_COUNT
+        contentTypes.length !== FIXED_TEMPLATE_IMAGE_COUNT ||
+        contentLengths.length !== FIXED_TEMPLATE_IMAGE_COUNT
       ) {
-        return respErr('Upload exactly two reference images (front and back)', {
-          status: 400,
-        });
+        return respErr(
+          isCrazyFrog
+            ? 'Upload exactly two reference images (lead and chaser)'
+            : 'Upload exactly two reference images (front and back)',
+          { status: 400 }
+        );
       }
       for (const contentType of contentTypes) {
         const mime = contentType.split(';', 1)[0]?.trim().toLowerCase() || '';
@@ -121,8 +143,12 @@ async function POST({ request }: { request: Request }) {
       try {
         if (isGenjutsuE2EMockEnabled()) {
           ensureGenjutsuE2ETemplateObject(
-            getSmalltownBoyDanceTemplateVideoKey()
+            isCrazyFrog
+              ? getCrazyFrogTemplateVideoKey()
+              : getSmalltownBoyDanceTemplateVideoKey()
           );
+        } else if (isCrazyFrog) {
+          await ensureCrazyFrogTemplateInR2();
         } else {
           await ensureSmalltownBoyDanceTemplateInR2();
         }
@@ -130,7 +156,9 @@ async function POST({ request }: { request: Request }) {
         return respJson(
           -1,
           error?.message ||
-            'Smalltown Boy Dance template is not configured in R2.',
+            (isCrazyFrog
+              ? 'Crazy Frog template is not configured in R2.'
+              : 'Smalltown Boy Dance template is not configured in R2.'),
           { code: 'TEMPLATE_NOT_CONFIGURED' },
           { status: 503 }
         );
@@ -146,11 +174,11 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    // Smalltown: indices 1–2 are images (0 reserved for server template).
+    // Fixed-template products: indices 1–2 are images (0 reserved for server template).
     // Homepage: index 0 = video, 1+ = images.
     const normalizedInputs = contentTypes.map(
       (contentType: string, fileIndex: number) => {
-        const storageIndex = isSmalltown ? fileIndex + 1 : fileIndex;
+        const storageIndex = isFixedTemplateProduct ? fileIndex + 1 : fileIndex;
         const contentLength = contentLengths[fileIndex];
         assertGenjutsuUploadSize(storageIndex, contentLength);
         return {
@@ -191,7 +219,7 @@ async function POST({ request }: { request: Request }) {
       ...target,
     });
 
-    if (isSmalltown) {
+    if (isFixedTemplateProduct) {
       await bindGenjutsuUploadInputs({
         generationId,
         userId: session.user.id,
@@ -201,7 +229,9 @@ async function POST({ request }: { request: Request }) {
         product,
         ...target,
         useDefaultTemplate: true,
-        aspectRatio: SMALLTOWN_ASPECT_RATIO,
+        aspectRatio: isCrazyFrog
+          ? CRAZY_FROG_ASPECT_RATIO
+          : SMALLTOWN_ASPECT_RATIO,
         imageKeys: normalizedInputs.map((item) => item.key),
         contentTypes: normalizedInputs.map((item) => item.contentType),
         contentLengths,
@@ -258,7 +288,7 @@ async function POST({ request }: { request: Request }) {
     }
 
     return respData({
-      uploads: isSmalltown
+      uploads: isFixedTemplateProduct
         ? uploads.map((upload, fileIndex) => ({
             ...upload,
             index: fileIndex + 1,

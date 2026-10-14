@@ -1,6 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import {
+  assertCrazyFrogInputs,
+  CrazyFrogPreflightError,
+} from '@/modules/crazy-frog/assert';
+import {
+  CRAZY_FROG_ASPECT_RATIO,
+  CRAZY_FROG_PRODUCT_ID,
+} from '@/modules/crazy-frog/constants';
 import { getBalance } from '@/modules/credits/service';
 import {
   assertGenerationId,
@@ -259,10 +267,17 @@ async function POST({ request }: { request: Request }) {
     if (product === SMALLTOWN_PRODUCT_ID) {
       assertSmalltownBoyDanceInputs(taskOptions);
     }
+    if (product === CRAZY_FROG_PRODUCT_ID) {
+      assertCrazyFrogInputs(taskOptions);
+    }
     // Aspect is product-scoped (not provider-scoped) so other seedance-higgsfield
-    // callers are not forced into Smalltown's 3:4 frame.
+    // callers are not forced into a product's frame.
     const aspectRatio =
-      product === SMALLTOWN_PRODUCT_ID ? SMALLTOWN_ASPECT_RATIO : undefined;
+      product === SMALLTOWN_PRODUCT_ID
+        ? SMALLTOWN_ASPECT_RATIO
+        : product === CRAZY_FROG_PRODUCT_ID
+          ? CRAZY_FROG_ASPECT_RATIO
+          : undefined;
 
     if (isSeedanceFamilyProvider(target.provider) && !hasStorageInput(input)) {
       throw new Error(
@@ -408,7 +423,8 @@ async function POST({ request }: { request: Request }) {
       if (
         error instanceof HiggsfieldPreflightError ||
         error instanceof SeedancePreflightError ||
-        error instanceof SmalltownBoyDancePreflightError
+        error instanceof SmalltownBoyDancePreflightError ||
+        error instanceof CrazyFrogPreflightError
       ) {
         await refundGenjutsuGeneration({
           generationId,

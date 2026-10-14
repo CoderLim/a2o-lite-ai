@@ -164,6 +164,11 @@ export const envConfigs: Record<string, string> = {
     procEnv.SMALLTOWN_BOY_DANCE_TEMPLATE_VIDEO_KEY ??
     'genjutsu/templates/smalltown-boy-dance-v1.mp4',
 
+  // Crazy Frog (server-only). Fixed R2 template; client uploads images only.
+  crazy_frog_template_video_key:
+    procEnv.CRAZY_FROG_TEMPLATE_VIDEO_KEY ??
+    'genjutsu/templates/crazy-frog-v1.mp4',
+
   // Locale (public)
   locale: publicEnv('VITE_DEFAULT_LOCALE') ?? 'en',
 };

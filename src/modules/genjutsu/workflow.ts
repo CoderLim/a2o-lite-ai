@@ -10,6 +10,7 @@ import type {
 export type SeedanceTask = 'reference' | 'editing';
 
 export const SMALLTOWN_BOY_DANCE_PRODUCT = 'smalltown-boy-dance' as const;
+export const CRAZY_FROG_PRODUCT = 'crazy-frog' as const;
 
 /** Keep inline to avoid a cycle with seedance-higgsfield.ts → workflow. */
 const SEEDANCE_HIGGSFIELD_MODEL_ID =
@@ -17,20 +18,23 @@ const SEEDANCE_HIGGSFIELD_MODEL_ID =
 /** Dual-role swap must use video-edit — see seedance-higgsfield.ts. */
 const SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID = 'bytedance/seedance-2.5/video-edit';
 
+const SEEDANCE_HIGGSFIELD_EDIT_TARGET: GenjutsuProviderTarget = {
+  provider: 'seedance-higgsfield',
+  model: SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID,
+};
+
 const PRODUCT_PROVIDER_TARGETS: Record<
   GenjutsuProductId,
   GenjutsuProviderTarget
 > = {
-  [SMALLTOWN_BOY_DANCE_PRODUCT]: {
-    provider: 'seedance-higgsfield',
-    model: SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID,
-  },
+  [SMALLTOWN_BOY_DANCE_PRODUCT]: SEEDANCE_HIGGSFIELD_EDIT_TARGET,
+  [CRAZY_FROG_PRODUCT]: SEEDANCE_HIGGSFIELD_EDIT_TARGET,
 };
 
 export function isGenjutsuProductId(
   value: unknown
 ): value is GenjutsuProductId {
-  return value === SMALLTOWN_BOY_DANCE_PRODUCT;
+  return value === SMALLTOWN_BOY_DANCE_PRODUCT || value === CRAZY_FROG_PRODUCT;
 }
 
 export function isSeedanceFamilyProvider(

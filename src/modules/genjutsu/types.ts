@@ -9,7 +9,7 @@ export type GenjutsuProvider =
   | 'seedance-higgsfield';
 
 /** Allowlisted product ids that pin a provider target on attempt. */
-export type GenjutsuProductId = 'smalltown-boy-dance';
+export type GenjutsuProductId = 'smalltown-boy-dance' | 'crazy-frog';
 
 export type GenjutsuProviderTarget = {
   provider: GenjutsuProvider;

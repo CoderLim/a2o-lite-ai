@@ -130,7 +130,9 @@ const PRESETS = {
     allowTrim: false,
     keepAudio: true,
     aspectRatio: '4:3',
-    enabled: true,
+    // Migrated to genjutsu + seedance-higgsfield (/crazy-frog-ai). Keep preset
+    // for admin display of legacy hotel-lobby rows; do not accept new submits.
+    enabled: false,
     promptFor: buildCrazyFrogPrompt,
   },
   [RUMPELSTILTSKIN_PRESET_ID]: {
