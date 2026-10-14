@@ -1,3 +1,5 @@
+import { estimateHiggsfieldSeedanceTokenCost } from './seedance-higgsfield';
+
 export type GenjutsuBillableResolution = '480p' | '720p' | '1080p';
 
 export type GenjutsuPublicCreditPackId =
@@ -192,13 +194,29 @@ export function estimateSeedanceCredits(input: {
 
 /** Approximate browser price only; reservation always quotes the server provider. */
 export function estimateGenjutsuCreditsForProvider(input: {
-  provider: 'higgsfield' | 'seedance' | 'seedance-volcengine';
+  provider:
+    | 'higgsfield'
+    | 'seedance'
+    | 'seedance-volcengine'
+    | 'seedance-higgsfield';
   durationSeconds: number;
   resolution: GenjutsuBillableResolution;
+  /** Required for seedance-higgsfield token pricing (output pixel grid). */
+  aspectRatio?: '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9';
 }) {
-  return input.provider === 'higgsfield'
-    ? estimateGenjutsuCredits(input)
-    : estimateSeedanceCredits(input);
+  if (input.provider === 'higgsfield') {
+    return estimateGenjutsuCredits(input);
+  }
+  if (input.provider === 'seedance-higgsfield') {
+    return calculateGenjutsuCredits(
+      estimateHiggsfieldSeedanceTokenCost({
+        resolution: input.resolution,
+        aspectRatio: input.aspectRatio || '3:4',
+        sourceDurationSeconds: input.durationSeconds,
+      }).providerCostUsd
+    );
+  }
+  return estimateSeedanceCredits(input);
 }
 
 export function getCreditPack(id: GenjutsuCreditPackId) {

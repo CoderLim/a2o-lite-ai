@@ -6,13 +6,13 @@ import {
   bindGenjutsuUploadInputs,
   createGenjutsuAttempt,
   GenjutsuAttemptConflictError,
+  getGenjutsuTaskById,
   markGenjutsuAttemptFailedPreflight,
 } from '@/modules/genjutsu/billing';
 import {
   createGenjutsuE2EUploadDescriptor,
   isGenjutsuE2EMockEnabled,
 } from '@/modules/genjutsu/e2e-mock';
-import { resolveGenjutsuProviderTarget } from '@/modules/genjutsu/service';
 import {
   assertGenjutsuUploadSize,
   createGenjutsuProxyUploadDescriptor,
@@ -20,6 +20,11 @@ import {
   GENJUTSU_PROXY_UPLOAD_MAX_BYTES,
   getGenjutsuInputKey,
 } from '@/modules/genjutsu/storage';
+import type { GenjutsuProvider } from '@/modules/genjutsu/types';
+import {
+  isGenjutsuProductId,
+  resolveProductProviderTarget,
+} from '@/modules/genjutsu/workflow';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
@@ -46,6 +51,10 @@ async function POST({ request }: { request: Request }) {
     const mode = body.mode;
     const resolution = body.resolution;
     const prompt = typeof body.prompt === 'string' ? body.prompt : '';
+    const product =
+      typeof body.product === 'string' && isGenjutsuProductId(body.product)
+        ? body.product
+        : undefined;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -80,24 +89,42 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    const normalizedInputs = contentTypes.map((contentType, index) => {
-      const contentLength = contentLengths[index];
-      assertGenjutsuUploadSize(index, contentLength);
-      return getGenjutsuInputKey({
-        userId: session.user.id,
-        generationId,
-        index,
-        contentType,
-      });
-    });
+    const normalizedInputs = contentTypes.map(
+      (contentType: string, index: number) => {
+        const contentLength = contentLengths[index];
+        assertGenjutsuUploadSize(index, contentLength);
+        return getGenjutsuInputKey({
+          userId: session.user.id,
+          generationId,
+          index,
+          contentType,
+        });
+      }
+    );
 
-    const target = resolveGenjutsuProviderTarget(mode);
+    // C1: prefer the provider/model already persisted on the attempt so
+    // product-scoped pages (e.g. seedance-higgsfield) do not conflict with
+    // the global objects-swap env router.
+    const existing = await getGenjutsuTaskById({
+      generationId,
+      userId: session.user.id,
+    });
+    const resolved = resolveProductProviderTarget(product, mode);
+    const target = existing
+      ? {
+          provider: (existing.provider ||
+            resolved.provider) as GenjutsuProvider,
+          model: existing.model || resolved.model,
+        }
+      : resolved;
+
     await createGenjutsuAttempt({
       generationId,
       userId: session.user.id,
       mode,
       resolution,
       prompt,
+      product,
       ...target,
     });
     await bindGenjutsuUploadInputs({
@@ -106,10 +133,15 @@ async function POST({ request }: { request: Request }) {
       mode,
       resolution,
       prompt,
+      product,
       ...target,
       videoKey: normalizedInputs[0].key,
-      imageKeys: normalizedInputs.slice(1).map((item) => item.key),
-      contentTypes: normalizedInputs.map((item) => item.contentType),
+      imageKeys: normalizedInputs
+        .slice(1)
+        .map((item: { key: string }) => item.key),
+      contentTypes: normalizedInputs.map(
+        (item: { contentType: string }) => item.contentType
+      ),
       contentLengths,
     });
 

@@ -1528,5 +1528,18 @@
   "site.crazy.more_prompts": "Genjutsu prompt guide",
   "site.crazy.more_pricing": "Credit pricing",
   "site.crazy.example_caption": "이 생성기로 만든 Crazy Frog AI 추격 실제 결과",
-  "site.crazy.example_title": "실제 결과"
+  "site.crazy.example_title": "실제 결과",
+  "site.smalltown.page_title": "Smalltown Boy Dance AI — Put Two People in the Dance",
+  "site.smalltown.page_description": "Upload two photos for the front and back dancers, keep the viral Smalltown Boy dance staging, and generate a vertical clip with Seedance 2.5.",
+  "site.smalltown.hero_badge": "Smalltown Boy Dance · 2 photos",
+  "site.smalltown.hero_title": "Smalltown Boy Dance AI — Front and Back, Your Faces",
+  "site.smalltown.hero_description": "Map one photo to the dancer in front and one to the dancer behind. The template motion, camera, and choreography stay locked.",
+  "site.smalltown.front": "Front dancer",
+  "site.smalltown.front_note": "Required · clear face, waist-up works best",
+  "site.smalltown.back": "Back dancer",
+  "site.smalltown.back_note": "Required · clear face, waist-up works best",
+  "site.smalltown.upload_required": "Add photos for both the front and back dancers",
+  "site.smalltown.image_type": "Please upload a JPG, PNG, WebP, or GIF image",
+  "site.smalltown.image_size": "Images must be 12 MB or smaller",
+  "site.smalltown.provider_label": "Higgsfield Seedance 2.5 · dual dancer swap"
 }

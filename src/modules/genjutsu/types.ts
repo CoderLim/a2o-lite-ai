@@ -5,7 +5,11 @@ export type GenjutsuResolution = '480p' | '720p' | '1080p';
 export type GenjutsuProvider =
   | 'higgsfield'
   | 'seedance'
-  | 'seedance-volcengine';
+  | 'seedance-volcengine'
+  | 'seedance-higgsfield';
+
+/** Allowlisted product ids that pin a provider target on attempt. */
+export type GenjutsuProductId = 'smalltown-boy-dance';
 
 export type GenjutsuProviderTarget = {
   provider: GenjutsuProvider;

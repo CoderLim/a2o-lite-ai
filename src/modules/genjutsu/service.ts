@@ -4,6 +4,12 @@ import {
   createGenjutsuE2ERequestId,
   isGenjutsuE2EMockEnabled,
 } from './e2e-mock';
+import {
+  getHiggsfieldStatus,
+  HiggsfieldHttpError,
+  HiggsfieldPreflightError,
+  higgsfieldProviderFetch,
+} from './higgsfield-client';
 import { estimateGenjutsuListCost } from './pricing';
 import {
   estimateSeedanceProviderCost,
@@ -13,6 +19,11 @@ import {
   SeedancePreflightError,
   submitSeedance,
 } from './seedance';
+import {
+  estimateHiggsfieldSeedanceProviderCost,
+  submitHiggsfieldSeedance,
+  type HiggsfieldSeedanceAspectRatio,
+} from './seedance-higgsfield';
 import {
   assertVolcengineSeedanceConfigured,
   estimateVolcengineSeedanceProviderCost,
@@ -26,7 +37,11 @@ import type {
   GenjutsuResolution,
 } from './types';
 import { probeSeedanceSourceDurationSeconds } from './video-metadata';
-import { resolveGenjutsuProviderTarget } from './workflow';
+import {
+  isSeedanceFamilyProvider,
+  resolveGenjutsuProviderTarget,
+  resolveProductProviderTarget,
+} from './workflow';
 
 export type {
   GenjutsuMode,
@@ -34,11 +49,14 @@ export type {
   GenjutsuResolution,
 } from './types';
 export {
+  HiggsfieldHttpError,
+  HiggsfieldPreflightError,
   isSeedanceLikenessRejection,
   SeedanceHttpError,
   SeedancePreflightError,
   VolcengineSeedanceHttpError,
   resolveGenjutsuProviderTarget,
+  resolveProductProviderTarget,
 };
 
 const VALID_RESOLUTIONS = new Set<GenjutsuResolution>([
@@ -57,40 +75,6 @@ const ESTIMATE_TIMEOUT_MS = 8_000;
  */
 const FALLBACK_DURATION_SECONDS = 30;
 
-export class HiggsfieldPreflightError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'HiggsfieldPreflightError';
-  }
-}
-
-export class HiggsfieldHttpError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public payload?: unknown
-  ) {
-    super(message);
-    this.name = 'HiggsfieldHttpError';
-  }
-}
-
-function getApiKey() {
-  const value = envConfigs.higgsfield_api_key?.trim();
-  if (!value) {
-    throw new HiggsfieldPreflightError(
-      'Higgsfield API key is not configured. Set HF_API_KEY on the server.'
-    );
-  }
-  return value;
-}
-
-function getApiBaseUrl() {
-  return (
-    envConfigs.higgsfield_api_base_url?.trim() || 'https://api.higgsfield.ai'
-  ).replace(/\/$/, '');
-}
-
 export function getGenjutsuModel(mode: GenjutsuMode) {
   if (mode === 'motion-transfer') {
     return (
@@ -103,35 +87,6 @@ export function getGenjutsuModel(mode: GenjutsuMode) {
     envConfigs.higgsfield_genjutsu_object_swap_model?.trim() ||
     'higgsfield/genjutsu/object-swap/v1.0'
   );
-}
-
-async function readProviderJson(response: Response) {
-  const payload = await response.json().catch(() => null);
-  if (response.ok) return payload;
-
-  const message =
-    payload?.detail?.message ||
-    payload?.detail ||
-    payload?.message ||
-    payload?.error ||
-    `Higgsfield request failed with HTTP ${response.status}`;
-  throw new HiggsfieldHttpError(
-    response.status,
-    typeof message === 'string' ? message : JSON.stringify(message),
-    payload
-  );
-}
-
-async function providerFetch(path: string, init?: RequestInit) {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Key ${getApiKey()}`,
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...init?.headers,
-    },
-  });
-  return readProviderJson(response);
 }
 
 function parseEstimateUsd(payload: any): number | null {
@@ -161,7 +116,7 @@ export async function createHiggsfieldUploadUrl(contentType: string) {
     throw new Error('Only image and video uploads are supported');
   }
 
-  const payload = await providerFetch('/files/generate-upload-url', {
+  const payload = await higgsfieldProviderFetch('/files/generate-upload-url', {
     method: 'POST',
     body: JSON.stringify({ content_type: normalized }),
   });
@@ -246,7 +201,8 @@ export type GenjutsuCostEstimate = {
     | 'estimate'
     | 'list_fallback'
     | 'seedance_list_estimate'
-    | 'volcengine_seedance_estimate';
+    | 'volcengine_seedance_estimate'
+    | 'higgsfield_seedance_token_estimate';
   sourceDurationSeconds?: number;
 };
 
@@ -268,7 +224,7 @@ export async function estimateGenjutsuProviderCost(input: {
 
   try {
     // Estimate is free preflight pricing — always hit the real endpoint.
-    const payload = await providerFetch(
+    const payload = await higgsfieldProviderFetch(
       `/estimate/${model.replace(/^\/+/, '')}`,
       {
         method: 'POST',
@@ -409,7 +365,7 @@ async function submitHiggsfield(input: {
     ? `/${modelPath}?hf_webhook=${encodeURIComponent(webhookUrl)}`
     : `/${modelPath}`;
 
-  const payload = await providerFetch(path, {
+  const payload = await higgsfieldProviderFetch(path, {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -421,70 +377,6 @@ async function submitHiggsfield(input: {
   return {
     requestId: payload.request_id as string,
     status: typeof payload.status === 'string' ? payload.status : 'queued',
-  };
-}
-
-async function getHiggsfieldStatus(requestId: string) {
-  const normalized = requestId.trim();
-  if (!/^[A-Za-z0-9._:-]{6,200}$/.test(normalized)) {
-    throw new Error('Invalid request ID');
-  }
-
-  const payload = await providerFetch(
-    `/requests/${encodeURIComponent(normalized)}/status`
-  );
-
-  const providerStatus =
-    typeof payload?.status === 'string'
-      ? payload.status.toLowerCase()
-      : 'processing';
-
-  const videoUrl =
-    typeof payload?.video?.url === 'string'
-      ? payload.video.url
-      : typeof payload?.video_url === 'string'
-        ? payload.video_url
-        : typeof payload?.output?.video?.url === 'string'
-          ? payload.output.video.url
-          : null;
-
-  if (providerStatus === 'completed') {
-    if (!videoUrl) {
-      throw new Error('Higgsfield completed the request without a video URL');
-    }
-    return {
-      status: 'completed' as const,
-      providerStatus,
-      videoUrl,
-    };
-  }
-
-  if (
-    providerStatus === 'failed' ||
-    providerStatus === 'nsfw' ||
-    providerStatus === 'canceled' ||
-    providerStatus === 'cancelled'
-  ) {
-    const message =
-      payload?.error?.message ||
-      payload?.error ||
-      payload?.message ||
-      (providerStatus === 'nsfw'
-        ? 'Generation was blocked by the provider safety check'
-        : `Generation ended with status: ${providerStatus}`);
-
-    return {
-      status: 'failed' as const,
-      providerStatus,
-      videoUrl: null,
-      error: typeof message === 'string' ? message : JSON.stringify(message),
-    };
-  }
-
-  return {
-    status: 'processing' as const,
-    providerStatus,
-    videoUrl: null,
   };
 }
 
@@ -506,15 +398,13 @@ export type GenjutsuProviderCostInput = {
   videoUrl: string;
   imageUrls: string[];
   durationSeconds?: number;
+  aspectRatio?: HiggsfieldSeedanceAspectRatio;
 };
 
 export async function resolveGenjutsuProviderCost(
   input: GenjutsuProviderCostInput
 ): Promise<GenjutsuCostEstimate> {
-  if (
-    input.provider === 'seedance' ||
-    input.provider === 'seedance-volcengine'
-  ) {
+  if (isSeedanceFamilyProvider(input.provider)) {
     const sourceDurationSeconds = await probeSeedanceSourceDurationSeconds(
       input.videoUrl
     );
@@ -527,6 +417,17 @@ export async function resolveGenjutsuProviderCost(
         ...estimateVolcengineSeedanceProviderCost({
           mode: input.mode,
           resolution: input.resolution,
+          sourceDurationSeconds,
+        }),
+        sourceDurationSeconds,
+      };
+    }
+
+    if (input.provider === 'seedance-higgsfield') {
+      return {
+        ...estimateHiggsfieldSeedanceProviderCost({
+          resolution: input.resolution,
+          aspectRatio: input.aspectRatio || '3:4',
           sourceDurationSeconds,
         }),
         sourceDurationSeconds,
@@ -555,11 +456,9 @@ export async function submitGenjutsu(input: {
   imageUrls: string[];
   endUserId: string;
   sourceDurationSeconds?: number;
+  aspectRatio?: HiggsfieldSeedanceAspectRatio;
 }) {
-  if (
-    input.provider === 'seedance' ||
-    input.provider === 'seedance-volcengine'
-  ) {
+  if (isSeedanceFamilyProvider(input.provider)) {
     if (
       typeof input.sourceDurationSeconds !== 'number' ||
       !Number.isFinite(input.sourceDurationSeconds) ||
@@ -573,6 +472,14 @@ export async function submitGenjutsu(input: {
     if (input.provider === 'seedance-volcengine') {
       return submitVolcengineSeedance({
         ...input,
+        sourceDurationSeconds: input.sourceDurationSeconds,
+      });
+    }
+
+    if (input.provider === 'seedance-higgsfield') {
+      return submitHiggsfieldSeedance({
+        ...input,
+        aspectRatio: input.aspectRatio || '3:4',
         sourceDurationSeconds: input.sourceDurationSeconds,
       });
     }
@@ -609,5 +516,6 @@ export async function getGenjutsuStatus(input: {
     });
   }
 
+  // higgsfield Genjutsu + seedance-higgsfield share the same status API.
   return getHiggsfieldStatus(input.requestId);
 }

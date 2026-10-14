@@ -1,6 +1,6 @@
 # Smalltown Boy Dance（Higgsfield Seedance 2.5）
 
-Status: **proposal — revised after review**（实现未开始）
+Status: **implemented — pending paid smoke + human likeness check**
 
 Route: `/smalltown-boy-dance`  
 Product: `smalltown-boy-dance`  

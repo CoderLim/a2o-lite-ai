@@ -40,6 +40,15 @@ import {
   type GenjutsuResolution,
 } from '@/modules/genjutsu/service';
 import { resolveGenjutsuInputUrls } from '@/modules/genjutsu/storage';
+import { isSeedanceFamilyProvider } from '@/modules/genjutsu/workflow';
+import {
+  assertSmalltownBoyDanceInputs,
+  SmalltownBoyDancePreflightError,
+} from '@/modules/smalltown-boy-dance/assert';
+import {
+  SMALLTOWN_ASPECT_RATIO,
+  SMALLTOWN_PRODUCT_ID,
+} from '@/modules/smalltown-boy-dance/constants';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
@@ -242,11 +251,20 @@ async function POST({ request }: { request: Request }) {
         }
       : resolveGenjutsuProviderTarget(input.mode);
 
-    if (
-      (target.provider === 'seedance' ||
-        target.provider === 'seedance-volcengine') &&
-      !hasStorageInput(input)
-    ) {
+    const taskOptions = task?.options
+      ? (JSON.parse(task.options) as Record<string, unknown>)
+      : null;
+    const product =
+      typeof taskOptions?.product === 'string' ? taskOptions.product : null;
+    if (product === SMALLTOWN_PRODUCT_ID) {
+      assertSmalltownBoyDanceInputs(taskOptions);
+    }
+    const aspectRatio =
+      target.provider === 'seedance-higgsfield'
+        ? SMALLTOWN_ASPECT_RATIO
+        : undefined;
+
+    if (isSeedanceFamilyProvider(target.provider) && !hasStorageInput(input)) {
       throw new Error(
         'Seedance generations must use server-owned R2 storage keys'
       );
@@ -273,18 +291,14 @@ async function POST({ request }: { request: Request }) {
     // Higgsfield's public list rate can be much higher than its live
     // discounted quote. Do not reject before /estimate; reservation below
     // enforces the actual server-side credit requirement.
-    if (
-      needsReservation &&
-      (target.provider === 'seedance' ||
-        target.provider === 'seedance-volcengine')
-    ) {
-      // Seedance has no free /estimate endpoint. Probe the server-owned R2
-      // source once, build the list-rate quote, and reject an obviously
-      // insufficient wallet before submit. Provider likeness policy is
-      // enforced by Seedance after submit and surfaced on status/refund.
+    if (needsReservation && isSeedanceFamilyProvider(target.provider)) {
+      // Seedance family has no free /estimate endpoint. Probe the
+      // server-owned R2 source once, build the provider quote, and reject
+      // an obviously insufficient wallet before submit.
       const estimate = await resolveGenjutsuProviderCost({
         ...providerInput,
         ...target,
+        aspectRatio,
       });
       const credits = calculateGenjutsuCredits(
         estimate.customerPriceBasisUsd ?? estimate.providerCostUsd
@@ -366,6 +380,7 @@ async function POST({ request }: { request: Request }) {
         ...target,
         endUserId: session.user.id,
         sourceDurationSeconds,
+        aspectRatio,
       });
 
       await markGenjutsuSubmitted({
@@ -392,7 +407,8 @@ async function POST({ request }: { request: Request }) {
     } catch (error: any) {
       if (
         error instanceof HiggsfieldPreflightError ||
-        error instanceof SeedancePreflightError
+        error instanceof SeedancePreflightError ||
+        error instanceof SmalltownBoyDancePreflightError
       ) {
         await refundGenjutsuGeneration({
           generationId,

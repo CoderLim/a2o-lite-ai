@@ -98,16 +98,21 @@ function assertAttemptMetadata(
     model: string;
     resolution: GenjutsuResolution;
     prompt: string;
+    product?: string;
   }
 ) {
   const options = parseTaskOptions(task);
+  const taskProduct =
+    typeof options?.product === 'string' ? options.product : undefined;
+  const paramsProduct = params.product || undefined;
   const matches =
     task.provider === params.provider &&
     task.model === params.model &&
     (task.prompt || '') === params.prompt &&
     options?.mode === params.mode &&
     options?.resolution === params.resolution &&
-    options?.prompt === params.prompt;
+    options?.prompt === params.prompt &&
+    taskProduct === paramsProduct;
 
   if (!matches) {
     throw new GenjutsuAttemptConflictError(
@@ -126,6 +131,7 @@ function assertReusableUploadBinding(
     model: string;
     resolution: GenjutsuResolution;
     prompt: string;
+    product?: string;
     videoKey?: string;
     imageKeys: string[];
     contentTypes: string[];
@@ -206,6 +212,8 @@ export async function createGenjutsuAttempt(params: {
   model: string;
   resolution: GenjutsuResolution;
   prompt: string;
+  /** Allowlisted product id that pinned provider/model (persisted for C1). */
+  product?: string;
 }) {
   const existing = await getGenjutsuTaskById({
     generationId: params.generationId,
@@ -233,6 +241,7 @@ export async function createGenjutsuAttempt(params: {
       mode: params.mode,
       resolution: params.resolution,
       prompt: params.prompt,
+      ...(params.product ? { product: params.product } : {}),
     }),
     status: 'initiated',
     taskId: null,
@@ -278,6 +287,7 @@ export async function bindGenjutsuUploadInputs(params: {
   model: string;
   resolution: GenjutsuResolution;
   prompt: string;
+  product?: string;
   videoKey?: string;
   imageKeys: string[];
   contentTypes: string[];

@@ -647,6 +647,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
         href: '/crazy-frog-ai',
       },
       {
+        label: 'Smalltown Boy Dance',
+        href: '/smalltown-boy-dance',
+      },
+      {
         label: 'Rumpelstiltskin AI',
         href: '/ai-rumpelstiltskin',
       },

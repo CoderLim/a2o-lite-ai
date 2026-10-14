@@ -125,6 +125,10 @@ export const envConfigs: Record<string, string> = {
     'bytedance/seedance-2.5/us/reference-to-video',
   seedance_genjutsu_generate_audio:
     procEnv.SEEDANCE_GENJUTSU_GENERATE_AUDIO ?? 'true',
+  // Higgsfield-hosted Seedance 2.5 (real-people allowed vs fal Seedance).
+  seedance_higgsfield_model:
+    procEnv.SEEDANCE_HIGGSFIELD_MODEL ??
+    'bytedance/seedance-2.5/reference-to-video',
 
   // Volcengine Ark Seedance 2.5 (server-only). Keep fal Seedance as a
   // distinct provider identity so historical tasks always poll the backend

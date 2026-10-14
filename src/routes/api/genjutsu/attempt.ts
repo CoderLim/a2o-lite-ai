@@ -6,7 +6,10 @@ import {
   createGenjutsuAttempt,
   GenjutsuAttemptConflictError,
 } from '@/modules/genjutsu/billing';
-import { resolveGenjutsuProviderTarget } from '@/modules/genjutsu/service';
+import {
+  isGenjutsuProductId,
+  resolveProductProviderTarget,
+} from '@/modules/genjutsu/workflow';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
@@ -27,6 +30,10 @@ async function POST({ request }: { request: Request }) {
     const mode = body.mode;
     const resolution = body.resolution;
     const prompt = typeof body.prompt === 'string' ? body.prompt : '';
+    const product =
+      typeof body.product === 'string' && isGenjutsuProductId(body.product)
+        ? body.product
+        : undefined;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -39,19 +46,22 @@ async function POST({ request }: { request: Request }) {
       return respErr('Invalid Genjutsu resolution', { status: 400 });
     }
 
-    const target = resolveGenjutsuProviderTarget(mode);
+    const target = resolveProductProviderTarget(product, mode);
     const task = await createGenjutsuAttempt({
       generationId,
       userId: session.user.id,
       mode,
       resolution,
       prompt,
+      product,
       ...target,
     });
 
     return respData({
       generationId: task.id,
       status: task.status,
+      provider: task.provider,
+      model: task.model,
     });
   } catch (error: any) {
     if (error instanceof GenjutsuAttemptConflictError) {
@@ -65,7 +75,5 @@ async function POST({ request }: { request: Request }) {
 }
 
 export const Route = createFileRoute('/api/genjutsu/attempt')({
-  server: {
-    handlers: { POST },
-  },
+  server: { handlers: { POST } },
 });

@@ -2,15 +2,49 @@ import { envConfigs } from '@/config';
 
 import type {
   GenjutsuMode,
+  GenjutsuProductId,
   GenjutsuProvider,
   GenjutsuProviderTarget,
 } from './types';
 
 export type SeedanceTask = 'reference' | 'editing';
 
+export const SMALLTOWN_BOY_DANCE_PRODUCT = 'smalltown-boy-dance' as const;
+
+/** Keep inline to avoid a cycle with seedance-higgsfield.ts → workflow. */
+const SEEDANCE_HIGGSFIELD_MODEL_ID =
+  'bytedance/seedance-2.5/reference-to-video';
+
+const PRODUCT_PROVIDER_TARGETS: Record<
+  GenjutsuProductId,
+  GenjutsuProviderTarget
+> = {
+  [SMALLTOWN_BOY_DANCE_PRODUCT]: {
+    provider: 'seedance-higgsfield',
+    model: SEEDANCE_HIGGSFIELD_MODEL_ID,
+  },
+};
+
+export function isGenjutsuProductId(
+  value: unknown
+): value is GenjutsuProductId {
+  return value === SMALLTOWN_BOY_DANCE_PRODUCT;
+}
+
+export function isSeedanceFamilyProvider(
+  provider: string | null | undefined
+): boolean {
+  return (
+    provider === 'seedance' ||
+    provider === 'seedance-volcengine' ||
+    provider === 'seedance-higgsfield'
+  );
+}
+
 function normalizeProvider(value: string | undefined): GenjutsuProvider {
   const normalized = value?.trim().toLowerCase();
   if (normalized === 'seedance-volcengine') return 'seedance-volcengine';
+  if (normalized === 'seedance-higgsfield') return 'seedance-higgsfield';
   if (normalized === 'seedance') return 'seedance';
   return 'higgsfield';
 }
@@ -37,6 +71,15 @@ export function resolveGenjutsuProviderTarget(
     };
   }
 
+  if (provider === 'seedance-higgsfield') {
+    return {
+      provider,
+      model:
+        envConfigs.seedance_higgsfield_model?.trim() ||
+        SEEDANCE_HIGGSFIELD_MODEL_ID,
+    };
+  }
+
   if (provider === 'seedance') {
     return {
       provider,
@@ -55,6 +98,20 @@ export function resolveGenjutsuProviderTarget(
         : envConfigs.higgsfield_genjutsu_object_swap_model?.trim() ||
           'higgsfield/genjutsu/object-swap/v1.0',
   };
+}
+
+/**
+ * Product pages pin a trusted provider target. Unknown / missing product
+ * falls back to the mode-based env router (homepage / Bulin / etc.).
+ */
+export function resolveProductProviderTarget(
+  product: string | null | undefined,
+  mode: GenjutsuMode
+): GenjutsuProviderTarget {
+  if (isGenjutsuProductId(product)) {
+    return PRODUCT_PROVIDER_TARGETS[product];
+  }
+  return resolveGenjutsuProviderTarget(mode);
 }
 
 type SeedanceReferenceTokens = {

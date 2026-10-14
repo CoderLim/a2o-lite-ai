@@ -191,6 +191,14 @@ test('display estimator tracks selected server provider', () => {
     estimateSeedanceCredits(input)
   );
   assert.notEqual(
+    estimateGenjutsuCreditsForProvider({
+      ...input,
+      provider: 'seedance-higgsfield',
+      aspectRatio: '3:4',
+    }),
+    estimateSeedanceCredits(input)
+  );
+  assert.notEqual(
     estimateGenjutsuCredits(input),
     estimateSeedanceCredits(input)
   );
