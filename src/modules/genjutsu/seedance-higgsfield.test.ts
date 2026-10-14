@@ -47,12 +47,12 @@ test('provider cost estimate uses token source tag', () => {
   assert.ok(!('task' in (estimate.payload as object)));
 });
 
-test('Higgsfield Seedance payload has no Fal-only fields', () => {
+test('objects-swap uses video-edit payload shape (no duration/aspect)', () => {
   const payload = buildHiggsfieldSeedancePayload({
     mode: 'objects-swap',
     resolution: '720p',
     aspectRatio: '3:4',
-    prompt: 'Replace front with @Image1 and back with @Image2.',
+    prompt: 'Change front to @Image1 and rear to @Image2.',
     videoUrl: 'https://example.com/template.mp4',
     imageUrls: [
       'https://example.com/front.jpg',
@@ -61,15 +61,32 @@ test('Higgsfield Seedance payload has no Fal-only fields', () => {
     sourceDurationSeconds: 21.455238,
   });
 
-  assert.equal(payload.duration, 21);
-  assert.equal(payload.aspect_ratio, '3:4');
+  assert.equal(payload.video_url, 'https://example.com/template.mp4');
   assert.equal(payload.bitrate_mode, 'high');
   assert.equal(payload.generate_audio, true);
-  assert.deepEqual(payload.video_urls, ['https://example.com/template.mp4']);
   assert.equal(payload.image_urls.length, 2);
+  assert.equal((payload as { duration?: unknown }).duration, undefined);
+  assert.equal((payload as { aspect_ratio?: unknown }).aspect_ratio, undefined);
+  assert.equal((payload as { video_urls?: unknown }).video_urls, undefined);
   assert.equal((payload as { task?: unknown }).task, undefined);
-  assert.equal((payload as { codec?: unknown }).codec, undefined);
-  assert.equal((payload as { end_user_id?: unknown }).end_user_id, undefined);
+  assert.match(payload.prompt, /^Edit @Video1/);
   assert.match(payload.prompt, /@Image1/);
   assert.match(payload.prompt, /@Image2/);
+});
+
+test('motion-transfer keeps reference-to-video payload shape', () => {
+  const payload = buildHiggsfieldSeedancePayload({
+    mode: 'motion-transfer',
+    resolution: '720p',
+    aspectRatio: '3:4',
+    prompt: 'Use @Image1 for the lead dancer.',
+    videoUrl: 'https://example.com/template.mp4',
+    imageUrls: ['https://example.com/front.jpg'],
+    sourceDurationSeconds: 21.455238,
+  });
+
+  assert.equal(payload.duration, 21);
+  assert.equal(payload.aspect_ratio, '3:4');
+  assert.deepEqual(payload.video_urls, ['https://example.com/template.mp4']);
+  assert.equal((payload as { video_url?: unknown }).video_url, undefined);
 });

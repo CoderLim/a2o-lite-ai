@@ -6,29 +6,48 @@ import {
   SmalltownBoyDancePreflightError,
 } from './assert';
 import {
+  SMALLTOWN_ASPECT_RATIO,
   SMALLTOWN_DEFAULT_PROMPT,
   SMALLTOWN_PRODUCT_ID,
-  SMALLTOWN_TEMPLATE_BYTES,
 } from './constants';
 
 const validOptions = {
   product: SMALLTOWN_PRODUCT_ID,
   prompt: SMALLTOWN_DEFAULT_PROMPT,
-  imageKeys: ['genjutsu/a.jpg', 'genjutsu/b.jpg'],
-  contentTypes: ['video/mp4', 'image/jpeg', 'image/jpeg'],
-  contentLengths: [SMALLTOWN_TEMPLATE_BYTES, 1000, 1200],
+  useDefaultTemplate: true,
+  aspectRatio: SMALLTOWN_ASPECT_RATIO,
+  resolution: '720p',
+  imageKeys: ['genjutsu/u/g/reference-01.jpg', 'genjutsu/u/g/reference-02.jpg'],
+  contentTypes: ['image/jpeg', 'image/jpeg'],
+  contentLengths: [1000, 1200],
 };
 
-test('accepts valid two-image template binding', () => {
+test('accepts server-template binding with two images', () => {
   assert.doesNotThrow(() => assertSmalltownBoyDanceInputs(validOptions));
 });
 
-test('rejects wrong template byte size', () => {
+test('rejects client-uploaded video path (no useDefaultTemplate)', () => {
   assert.throws(
     () =>
       assertSmalltownBoyDanceInputs({
         ...validOptions,
-        contentLengths: [1, 1000, 1200],
+        useDefaultTemplate: false,
+        contentTypes: ['video/mp4', 'image/jpeg', 'image/jpeg'],
+        contentLengths: [3_018_016, 1000, 1200],
+      }),
+    SmalltownBoyDancePreflightError
+  );
+});
+
+test('rejects same-size spoof without server template flag', () => {
+  assert.throws(
+    () =>
+      assertSmalltownBoyDanceInputs({
+        product: SMALLTOWN_PRODUCT_ID,
+        prompt: SMALLTOWN_DEFAULT_PROMPT,
+        imageKeys: ['a', 'b'],
+        contentTypes: ['video/mp4', 'image/jpeg', 'image/jpeg'],
+        contentLengths: [3_018_016, 1, 1],
       }),
     SmalltownBoyDancePreflightError
   );
@@ -40,8 +59,8 @@ test('rejects single image', () => {
       assertSmalltownBoyDanceInputs({
         ...validOptions,
         imageKeys: ['only-one.jpg'],
-        contentTypes: ['video/mp4', 'image/jpeg'],
-        contentLengths: [SMALLTOWN_TEMPLATE_BYTES, 1000],
+        contentTypes: ['image/jpeg'],
+        contentLengths: [1000],
       }),
     SmalltownBoyDancePreflightError
   );
@@ -53,6 +72,28 @@ test('rejects prompt tampering', () => {
       assertSmalltownBoyDanceInputs({
         ...validOptions,
         prompt: 'hacked prompt',
+      }),
+    SmalltownBoyDancePreflightError
+  );
+});
+
+test('rejects wrong aspect ratio', () => {
+  assert.throws(
+    () =>
+      assertSmalltownBoyDanceInputs({
+        ...validOptions,
+        aspectRatio: '16:9',
+      }),
+    SmalltownBoyDancePreflightError
+  );
+});
+
+test('rejects 1080p', () => {
+  assert.throws(
+    () =>
+      assertSmalltownBoyDanceInputs({
+        ...validOptions,
+        resolution: '1080p',
       }),
     SmalltownBoyDancePreflightError
   );

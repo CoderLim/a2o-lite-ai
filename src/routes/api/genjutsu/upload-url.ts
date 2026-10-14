@@ -11,22 +11,32 @@ import {
 } from '@/modules/genjutsu/billing';
 import {
   createGenjutsuE2EUploadDescriptor,
+  ensureGenjutsuE2ETemplateObject,
   isGenjutsuE2EMockEnabled,
 } from '@/modules/genjutsu/e2e-mock';
 import {
   assertGenjutsuUploadSize,
   createGenjutsuProxyUploadDescriptor,
   createGenjutsuR2UploadDescriptor,
+  ensureSmalltownBoyDanceTemplateInR2,
   GENJUTSU_PROXY_UPLOAD_MAX_BYTES,
   getGenjutsuInputKey,
+  getSmalltownBoyDanceTemplateVideoKey,
 } from '@/modules/genjutsu/storage';
 import type { GenjutsuProvider } from '@/modules/genjutsu/types';
 import {
   isGenjutsuProductId,
   resolveProductProviderTarget,
 } from '@/modules/genjutsu/workflow';
+import {
+  SMALLTOWN_ASPECT_RATIO,
+  SMALLTOWN_PRODUCT_ID,
+  SMALLTOWN_RESOLUTIONS,
+} from '@/modules/smalltown-boy-dance/constants';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
+
+const SMALLTOWN_IMAGE_COUNT = 2;
 
 async function POST({ request }: { request: Request }) {
   let generationIdForFailure: string | null = null;
@@ -55,6 +65,7 @@ async function POST({ request }: { request: Request }) {
       typeof body.product === 'string' && isGenjutsuProductId(body.product)
         ? body.product
         : undefined;
+    const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -65,6 +76,16 @@ async function POST({ request }: { request: Request }) {
       resolution !== '1080p'
     ) {
       return respErr('Invalid Genjutsu resolution', { status: 400 });
+    }
+    if (
+      isSmalltown &&
+      !SMALLTOWN_RESOLUTIONS.includes(
+        resolution as (typeof SMALLTOWN_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Smalltown Boy Dance only supports 480p and 720p', {
+        status: 400,
+      });
     }
 
     const contentTypes = Array.isArray(body.contentTypes)
@@ -78,7 +99,43 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (
+    if (isSmalltown) {
+      if (
+        contentTypes.length !== SMALLTOWN_IMAGE_COUNT ||
+        contentLengths.length !== SMALLTOWN_IMAGE_COUNT
+      ) {
+        return respErr('Upload exactly two reference images (front and back)', {
+          status: 400,
+        });
+      }
+      for (const contentType of contentTypes) {
+        const mime = contentType.split(';', 1)[0]?.trim().toLowerCase() || '';
+        if (!mime.startsWith('image/')) {
+          return respErr(
+            'Both uploads must be images (JPG, PNG, WebP, or GIF)',
+            { status: 400 }
+          );
+        }
+      }
+
+      try {
+        if (isGenjutsuE2EMockEnabled()) {
+          ensureGenjutsuE2ETemplateObject(
+            getSmalltownBoyDanceTemplateVideoKey()
+          );
+        } else {
+          await ensureSmalltownBoyDanceTemplateInR2();
+        }
+      } catch (error: any) {
+        return respJson(
+          -1,
+          error?.message ||
+            'Smalltown Boy Dance template is not configured in R2.',
+          { code: 'TEMPLATE_NOT_CONFIGURED' },
+          { status: 503 }
+        );
+      }
+    } else if (
       contentTypes.length < 2 ||
       contentTypes.length > 9 ||
       contentLengths.length !== contentTypes.length
@@ -89,22 +146,28 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
+    // Smalltown: indices 1–2 are images (0 reserved for server template).
+    // Homepage: index 0 = video, 1+ = images.
     const normalizedInputs = contentTypes.map(
-      (contentType: string, index: number) => {
-        const contentLength = contentLengths[index];
-        assertGenjutsuUploadSize(index, contentLength);
-        return getGenjutsuInputKey({
-          userId: session.user.id,
-          generationId,
-          index,
-          contentType,
-        });
+      (contentType: string, fileIndex: number) => {
+        const storageIndex = isSmalltown ? fileIndex + 1 : fileIndex;
+        const contentLength = contentLengths[fileIndex];
+        assertGenjutsuUploadSize(storageIndex, contentLength);
+        return {
+          ...getGenjutsuInputKey({
+            userId: session.user.id,
+            generationId,
+            index: storageIndex,
+            contentType,
+          }),
+          storageIndex,
+          contentLength,
+        };
       }
     );
 
     // C1: prefer the provider/model already persisted on the attempt so
-    // product-scoped pages (e.g. seedance-higgsfield) do not conflict with
-    // the global objects-swap env router.
+    // product-scoped pages do not conflict with the global env router.
     const existing = await getGenjutsuTaskById({
       generationId,
       userId: session.user.id,
@@ -127,68 +190,81 @@ async function POST({ request }: { request: Request }) {
       product,
       ...target,
     });
-    await bindGenjutsuUploadInputs({
-      generationId,
-      userId: session.user.id,
-      mode,
-      resolution,
-      prompt,
-      product,
-      ...target,
-      videoKey: normalizedInputs[0].key,
-      imageKeys: normalizedInputs
-        .slice(1)
-        .map((item: { key: string }) => item.key),
-      contentTypes: normalizedInputs.map(
-        (item: { contentType: string }) => item.contentType
-      ),
-      contentLengths,
-    });
+
+    if (isSmalltown) {
+      await bindGenjutsuUploadInputs({
+        generationId,
+        userId: session.user.id,
+        mode,
+        resolution,
+        prompt,
+        product,
+        ...target,
+        useDefaultTemplate: true,
+        aspectRatio: SMALLTOWN_ASPECT_RATIO,
+        imageKeys: normalizedInputs.map((item) => item.key),
+        contentTypes: normalizedInputs.map((item) => item.contentType),
+        contentLengths,
+      });
+    } else {
+      await bindGenjutsuUploadInputs({
+        generationId,
+        userId: session.user.id,
+        mode,
+        resolution,
+        prompt,
+        product,
+        ...target,
+        videoKey: normalizedInputs[0].key,
+        imageKeys: normalizedInputs.slice(1).map((item) => item.key),
+        contentTypes: normalizedInputs.map((item) => item.contentType),
+        contentLengths,
+      });
+    }
 
     const uploads = [];
-    for (let index = 0; index < contentTypes.length; index += 1) {
-      const contentType = contentTypes[index];
-      const contentLength = contentLengths[index];
+    for (let fileIndex = 0; fileIndex < contentTypes.length; fileIndex += 1) {
+      const item = normalizedInputs[fileIndex];
+      const contentLength = item.contentLength;
 
       if (isGenjutsuE2EMockEnabled()) {
-        const normalized = getGenjutsuInputKey({
-          userId: session.user.id,
-          generationId,
-          index,
-          contentType,
-        });
         uploads.push(
           createGenjutsuE2EUploadDescriptor(request, {
-            contentType: normalized.contentType,
-            storageKey: normalized.key,
+            contentType: item.contentType,
+            storageKey: item.key,
           })
         );
       } else if (contentLength > GENJUTSU_PROXY_UPLOAD_MAX_BYTES) {
-        // Workers request body cap ~100 MiB — keep direct signed PUT for huge videos.
         uploads.push(
           await createGenjutsuR2UploadDescriptor({
             userId: session.user.id,
             generationId,
-            index,
-            contentType,
+            index: item.storageIndex,
+            contentType: item.contentType,
             contentLength,
           })
         );
       } else {
-        // Same-origin proxy — Android Chrome cannot reliably PUT to R2 S3 host.
         uploads.push(
           createGenjutsuProxyUploadDescriptor(request, {
             userId: session.user.id,
             generationId,
-            index,
-            contentType,
+            index: item.storageIndex,
+            contentType: item.contentType,
             contentLength,
           })
         );
       }
     }
 
-    return respData({ uploads });
+    return respData({
+      uploads: isSmalltown
+        ? uploads.map((upload, fileIndex) => ({
+            ...upload,
+            index: fileIndex + 1,
+          }))
+        : uploads,
+    });
   } catch (error: any) {
     if (error instanceof GenjutsuAttemptConflictError) {
       return respJson(-1, error.message, { code: error.code }, { status: 409 });

@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import { useSession } from '@/core/auth/client';
 import { estimateGenjutsuCreditsForProvider } from '@/modules/genjutsu/pricing';
 import {
-  loadSmalltownBoyDanceTemplateFile,
   SMALLTOWN_ASPECT_RATIO,
   SMALLTOWN_DEFAULT_PROMPT,
   SMALLTOWN_DEFAULT_RESOLUTION,
@@ -150,7 +149,7 @@ function FloatingPanel({ children }: { children: ReactNode }) {
 }
 
 const activeGenerationKey = (userId: string) =>
-  `bulin_47_active_generation:${userId}`;
+  `smalltown_boy_dance_active_generation:${userId}`;
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -332,6 +331,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [jobError, setJobError] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
   const creditGate = useCreditGate({
     balance: creditsQuery.data?.balance,
     email: session?.user?.email,
@@ -343,6 +343,8 @@ export function SmalltownBoyDanceGeneratorPanel() {
   const backUrlRef = useRef<string | null>(null);
   const generationRunRef = useRef(0);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const generationStartedAtRef = useRef<number | null>(null);
+  const resultPanelRef = useRef<HTMLDivElement>(null);
 
   // I3: always quote seedance-higgsfield — never follow homepage provider env.
   const estimatedCredits = useMemo(() => {
@@ -353,6 +355,48 @@ export function SmalltownBoyDanceGeneratorPanel() {
       aspectRatio: SMALLTOWN_ASPECT_RATIO,
     });
   }, [resolution]);
+
+  const busy =
+    phase === 'uploading' ||
+    phase === 'starting' ||
+    phase === 'generating' ||
+    phase === 'locked';
+
+  // Soft elapsed progress while waiting on the provider (caps below 100%).
+  useEffect(() => {
+    if (!busy) {
+      if (resultUrl) setProgressPercent(100);
+      else setProgressPercent(0);
+      generationStartedAtRef.current = null;
+      return;
+    }
+
+    if (generationStartedAtRef.current == null) {
+      generationStartedAtRef.current = Date.now();
+    }
+
+    const tick = () => {
+      const started = generationStartedAtRef.current ?? Date.now();
+      const elapsedSec = (Date.now() - started) / 1000;
+      // Asymptotic toward ~92% over ~3 minutes — Seedance jobs vary a lot.
+      const next = Math.min(
+        92,
+        Math.round(8 + 84 * (1 - Math.exp(-elapsedSec / 55)))
+      );
+      setProgressPercent(next);
+    };
+    tick();
+    const id = window.setInterval(tick, 400);
+    return () => window.clearInterval(id);
+  }, [busy, resultUrl]);
+
+  useEffect(() => {
+    if (!busy && !resultUrl) return;
+    resultPanelRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }, [busy, resultUrl, generationId]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -374,12 +418,6 @@ export function SmalltownBoyDanceGeneratorPanel() {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [settingsOpen]);
-
-  const busy =
-    phase === 'uploading' ||
-    phase === 'starting' ||
-    phase === 'generating' ||
-    phase === 'locked';
 
   useEffect(() => {
     frontUrlRef.current = frontPhoto?.url ?? null;
@@ -570,11 +608,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
       setJobError('');
       creditGate.clear();
       setGenerationId(active.generationId);
-      if (
-        active.resolution === '480p' ||
-        active.resolution === '720p' ||
-        active.resolution === '1080p'
-      ) {
+      if (active.resolution === '480p' || active.resolution === '720p') {
         setResolution(active.resolution);
       }
       setPhase('generating');
@@ -617,11 +651,9 @@ export function SmalltownBoyDanceGeneratorPanel() {
         product: SMALLTOWN_PRODUCT_ID,
       });
 
-      const templateFile = await loadSmalltownBoyDanceTemplateFile();
-      const media = [templateFile, frontPhoto.file, backPhoto.file];
-      const contentTypes = media.map(
-        (file, index) => file.type || (index === 0 ? 'video/mp4' : 'image/jpeg')
-      );
+      // Server seals the fixed R2 template; client only uploads front + back.
+      const media = [frontPhoto.file, backPhoto.file];
+      const contentTypes = media.map((file) => file.type || 'image/jpeg');
       const contentLengths = media.map((file) => file.size);
 
       const uploadBatch = await apiPost<{ uploads: SignedUpload[] }>(
@@ -740,13 +772,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
 
         creditGate.clear();
         const uiMessage = providerSubmitUiMessage(cause);
-        if (
-          apiData?.code === 'PROVIDER_LIKENESS_REJECTED' ||
-          (typeof cause.message === 'string' &&
-            isLikenessRejectionMessage(cause.message))
-        ) {
-          toast.error(uiMessage);
-        }
+        toast.error(uiMessage);
         setJobError(uiMessage);
         return;
       }
@@ -838,7 +864,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
 
         <div className="border-t border-white/8 p-4 sm:p-5">
           {jobError ? (
-            <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/60">
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {jobError}
             </div>
           ) : null}
@@ -946,41 +972,83 @@ export function SmalltownBoyDanceGeneratorPanel() {
         </div>
       </div>
 
-      {resultUrl ? (
-        <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(30,23,19,0.92)] p-3 shadow-2xl sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-3 px-1">
-            <div>
+      {busy || resultUrl ? (
+        <div
+          ref={resultPanelRef}
+          id="generation-result"
+          className="mt-5 scroll-mt-24 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-2xl"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3 sm:px-5">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-white/90">
-                {m['site.common.your_video']()}
+                {resultUrl && !busy
+                  ? m['site.common.your_video']()
+                  : m['site.generator.generating']()}
               </p>
-              <p className="mt-0.5 text-xs text-white/38">
-                {m['site.smalltown.provider_label']()}
+              <p className="mt-0.5 truncate text-xs text-white/40">
+                {resultUrl && !busy
+                  ? m['site.smalltown.provider_label']()
+                  : phase === 'uploading' || phase === 'starting'
+                    ? m['site.generator.starting']()
+                    : m['site.generator.progress']({ resolution })}
               </p>
             </div>
-            <a
-              href={
-                generationId
-                  ? `/api/genjutsu/result/${encodeURIComponent(generationId)}?download=1`
-                  : resultUrl
-              }
-              download={
-                generationId
-                  ? `bulin-47-ai-${generationId.slice(0, 8)}.mp4`
-                  : undefined
-              }
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
-            >
-              <Download className="size-3.5" />
-              {m['site.common.download']()}
-            </a>
+            {resultUrl && !busy ? (
+              <a
+                href={
+                  generationId
+                    ? `/api/genjutsu/result/${encodeURIComponent(generationId)}?download=1`
+                    : resultUrl
+                }
+                download={
+                  generationId
+                    ? `smalltown-boy-dance-${generationId.slice(0, 8)}.mp4`
+                    : undefined
+                }
+                className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <Download className="size-3.5" />
+                {m['site.common.download']()}
+              </a>
+            ) : (
+              <span className="shrink-0 text-xs font-medium text-white/45 tabular-nums">
+                {progressPercent}%
+              </span>
+            )}
           </div>
-          <video
-            src={resultUrl}
-            controls
-            autoPlay
-            playsInline
-            className="mx-auto aspect-[9/16] max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain"
-          />
+
+          {busy ? (
+            <div className="space-y-4 px-4 py-8 sm:px-5 sm:py-10">
+              <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+                <span className="size-9 animate-spin rounded-full border-2 border-[rgb(204,144,92)] border-t-transparent" />
+                <p className="text-center text-sm text-white/55">
+                  {m['site.generator.progress']({ resolution })}
+                </p>
+              </div>
+              <div
+                className="mx-auto h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="h-full rounded-full bg-[rgb(204,144,92)] transition-[width] duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          ) : resultUrl ? (
+            <div className="bg-black/35 p-3 sm:p-4">
+              <video
+                src={resultUrl}
+                controls
+                autoPlay
+                playsInline
+                className="mx-auto aspect-[3/4] max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain"
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
 

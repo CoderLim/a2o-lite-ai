@@ -259,10 +259,10 @@ async function POST({ request }: { request: Request }) {
     if (product === SMALLTOWN_PRODUCT_ID) {
       assertSmalltownBoyDanceInputs(taskOptions);
     }
+    // Aspect is product-scoped (not provider-scoped) so other seedance-higgsfield
+    // callers are not forced into Smalltown's 3:4 frame.
     const aspectRatio =
-      target.provider === 'seedance-higgsfield'
-        ? SMALLTOWN_ASPECT_RATIO
-        : undefined;
+      product === SMALLTOWN_PRODUCT_ID ? SMALLTOWN_ASPECT_RATIO : undefined;
 
     if (isSeedanceFamilyProvider(target.provider) && !hasStorageInput(input)) {
       throw new Error(

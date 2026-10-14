@@ -11,8 +11,22 @@ import {
 import type { GenjutsuMode, GenjutsuResolution } from './types';
 import { buildSeedanceWorkflowPrompt } from './workflow';
 
+/** Motion / dual-reference generation (fixed duration + aspect_ratio). */
 export const SEEDANCE_HIGGSFIELD_MODEL =
   'bytedance/seedance-2.5/reference-to-video';
+
+/**
+ * Character / object replacement. Higgsfield Seedance 2.5 video-edit derives
+ * duration + framing from the source video — do not send duration/aspect_ratio.
+ *
+ * Sending dual-role swap prompts to reference-to-video with fixed
+ * aspect_ratio/duration fails asynchronously with:
+ *   "The selected parameters are not supported for this request.
+ *    Check the model requirements and try again."
+ * (providerError logged; UI shows GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE)
+ */
+export const SEEDANCE_HIGGSFIELD_EDIT_MODEL =
+  'bytedance/seedance-2.5/video-edit';
 
 export type HiggsfieldSeedanceAspectRatio =
   | '16:9'
@@ -26,6 +40,7 @@ export type HiggsfieldSeedanceAspectRatio =
  * Higgsfield Seedance 2.5 reference-to-video token rates (USD / 1k tokens)
  * when a video reference is present. Image/audio refs do not count as video
  * input. Source: open.higgsfield.ai Seedance 2.5 pricing notes (2026-07).
+ * Video-edit uses the same video-ref token schedule for quotes.
  */
 export const HIGGSFIELD_SEEDANCE_VIDEO_REF_USD_PER_1K_TOKENS: Record<
   GenjutsuResolution,
@@ -77,9 +92,15 @@ export function clampHiggsfieldSeedanceDurationSeconds(
   return Math.min(30, Math.max(4, Math.round(sourceDurationSeconds)));
 }
 
+export function resolveHiggsfieldSeedanceModel(mode: GenjutsuMode) {
+  return mode === 'objects-swap'
+    ? SEEDANCE_HIGGSFIELD_EDIT_MODEL
+    : SEEDANCE_HIGGSFIELD_MODEL;
+}
+
 /**
  * Billable video tokens = ceil(H × W × (input + output) × 24 / 1024).
- * Both input and generated durations are billable when video_urls are set.
+ * Both input and generated durations are billable when a source video is set.
  */
 export function estimateHiggsfieldSeedanceTokenCost(input: {
   resolution: GenjutsuResolution;
@@ -182,14 +203,32 @@ export function buildHiggsfieldSeedancePayload(input: {
     );
   }
 
+  const generateAudio = envConfigs.seedance_genjutsu_generate_audio !== 'false';
+
+  // Dual-role / objects-swap → video-edit (singular video_url, no duration /
+  // aspect_ratio). See SEEDANCE_HIGGSFIELD_EDIT_MODEL comment.
+  if (input.mode === 'objects-swap') {
+    return {
+      prompt: buildSeedanceWorkflowPrompt({
+        mode: 'objects-swap',
+        userPrompt: input.prompt,
+        imageCount: input.imageUrls.length,
+      }),
+      video_url: input.videoUrl,
+      image_urls: input.imageUrls,
+      resolution: input.resolution,
+      generate_audio: generateAudio,
+      bitrate_mode: 'high' as const,
+    };
+  }
+
   const duration = clampHiggsfieldSeedanceDurationSeconds(
     input.sourceDurationSeconds
   );
-  const generateAudio = envConfigs.seedance_genjutsu_generate_audio !== 'false';
 
   return {
     prompt: buildSeedanceWorkflowPrompt({
-      mode: input.mode,
+      mode: 'motion-transfer',
       userPrompt: input.prompt,
       imageCount: input.imageUrls.length,
     }),
@@ -213,10 +252,18 @@ export async function submitHiggsfieldSeedance(input: {
   imageUrls: string[];
   sourceDurationSeconds: number;
 }) {
-  const model = (input.model?.trim() || SEEDANCE_HIGGSFIELD_MODEL).replace(
-    /^\/+/,
-    ''
-  );
+  const fallback = resolveHiggsfieldSeedanceModel(input.mode);
+  // Prefer mode-matched endpoint when callers still pass the older
+  // reference-to-video product model from a prior attempt row.
+  const requested = input.model?.trim().replace(/^\/+/, '') || '';
+  const model =
+    !requested ||
+    (input.mode === 'objects-swap' &&
+      requested === SEEDANCE_HIGGSFIELD_MODEL) ||
+    (input.mode === 'motion-transfer' &&
+      requested === SEEDANCE_HIGGSFIELD_EDIT_MODEL)
+      ? fallback
+      : requested;
   const body = buildHiggsfieldSeedancePayload(input);
 
   if (isGenjutsuE2EMockEnabled()) {

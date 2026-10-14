@@ -16,34 +16,30 @@ export const SMALLTOWN_TEMPLATE_POSTER_PATH =
 /** ffprobe duration of public/videos/smalltown-boy-dance-tpl.mp4 */
 export const SMALLTOWN_TEMPLATE_DURATION_SECONDS = 21.455238;
 
-/** Exact byte size of the public template — used for server-side identity (I1). */
-export const SMALLTOWN_TEMPLATE_BYTES = 3_018_016;
-
 export const SMALLTOWN_ASPECT_RATIO: HiggsfieldSeedanceAspectRatio = '3:4';
 
-export const SMALLTOWN_RESOLUTIONS = ['480p', '720p', '1080p'] as const;
+/** First ship: hide 1080p — credit cost exceeds the largest single pack. */
+export const SMALLTOWN_RESOLUTIONS = ['480p', '720p'] as const;
 export type SmalltownResolution = (typeof SMALLTOWN_RESOLUTIONS)[number];
 export const SMALLTOWN_DEFAULT_RESOLUTION: GenjutsuResolution = '720p';
 
+export function isSmalltownResolution(
+  value: unknown
+): value is SmalltownResolution {
+  return value === '480p' || value === '720p';
+}
+
 /**
- * Fixed dual-role prompt. @Image1 = front dancer, @Image2 = rear dancer.
- * Style mirrors Crazy Frog short imperatives for Seedance reference-to-video.
+ * Fixed dual-role prompt. Template has shot cuts where camera-depth roles swap:
+ * shot 1 = person A near + person B far; later shot = B near + A far.
+ * @Image1 / @Image2 bind to those two character identities for the whole clip,
+ * not to whatever happens to be nearest the camera in a given frame.
  */
 export const SMALLTOWN_DEFAULT_PROMPT = [
-  'Use @Video1 only for motion, timing, gestures, choreography, camera, and staging.',
-  'Change the person in the front of @Video1 to be the person or character from @Image1 — do not keep the original front dancer.',
-  'Change the person behind in @Video1 to be the person or character from @Image2 — do not keep the original rear dancer.',
-  'Match each Image for face, hair, body, clothing, and species throughout the clip.',
-  'Do not swap Image1 and Image2 or blend the two identities.',
+  'Use @Video1 only for motion, timing, gestures, choreography, camera cuts, depth, and staging.',
+  '@Video1 has two distinct dancers who keep their identities across shots even when camera depth swaps: in the opening shot one dancer is near the camera and the other is farther back; in a later shot the farther dancer moves near the camera and the opening near-camera dancer is farther back.',
+  'Map @Image1 to the dancer who is near the camera in the opening shot of @Video1. Keep that same person as @Image1 in every later shot, including when they stand farther back.',
+  'Map @Image2 to the dancer who is farther back in the opening shot of @Video1. Keep that same person as @Image2 in every later shot, including when they stand near the camera.',
+  'Always show two different people: never put @Image1 on both dancers, never put @Image2 on both dancers, and never clone or blend the two identities.',
+  'Match each Image for face, hair, body, clothing, and species on its assigned dancer only.',
 ].join(' ');
-
-export async function loadSmalltownBoyDanceTemplateFile(): Promise<File> {
-  const response = await fetch(SMALLTOWN_TEMPLATE_PATH);
-  if (!response.ok) {
-    throw new Error('Failed to load the Smalltown Boy Dance template video');
-  }
-  const blob = await response.blob();
-  return new File([blob], 'smalltown-boy-dance-tpl.mp4', {
-    type: blob.type || 'video/mp4',
-  });
-}

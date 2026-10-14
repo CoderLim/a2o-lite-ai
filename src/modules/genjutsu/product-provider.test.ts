@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { SEEDANCE_HIGGSFIELD_MODEL } from './seedance-higgsfield';
+import { SEEDANCE_HIGGSFIELD_EDIT_MODEL } from './seedance-higgsfield';
 import {
   isGenjutsuProductId,
   resolveGenjutsuProviderTarget,
@@ -9,13 +9,13 @@ import {
   SMALLTOWN_BOY_DANCE_PRODUCT,
 } from './workflow';
 
-test('smalltown-boy-dance product pins seedance-higgsfield', () => {
+test('smalltown-boy-dance product pins seedance-higgsfield video-edit', () => {
   const target = resolveProductProviderTarget(
     SMALLTOWN_BOY_DANCE_PRODUCT,
     'objects-swap'
   );
   assert.equal(target.provider, 'seedance-higgsfield');
-  assert.equal(target.model, SEEDANCE_HIGGSFIELD_MODEL);
+  assert.equal(target.model, SEEDANCE_HIGGSFIELD_EDIT_MODEL);
 });
 
 test('unknown product falls back to mode env router', () => {

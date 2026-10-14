@@ -938,6 +938,58 @@ export async function getZombieHugTemplatePreviewUrl(
   return createGenjutsuR2ReadUrl(key);
 }
 
+export function getSmalltownBoyDanceTemplateVideoKey() {
+  return (
+    envConfigs.smalltown_boy_dance_template_video_key?.trim() ||
+    'genjutsu/templates/smalltown-boy-dance-v1.mp4'
+  );
+}
+
+/**
+ * Ensure the Smalltown Boy Dance template exists in R2.
+ * On local Node, seed from public/videos/smalltown-boy-dance-tpl.mp4.
+ */
+export async function ensureSmalltownBoyDanceTemplateInR2() {
+  const key = getSmalltownBoyDanceTemplateVideoKey();
+  assertSafeObjectKey(key);
+  if (!key.startsWith('genjutsu/')) {
+    throw new Error('Smalltown Boy Dance template key must be under genjutsu/');
+  }
+
+  try {
+    await headR2Object(key);
+    return key;
+  } catch {
+    // continue to seed
+  }
+
+  const localRelative = 'public/videos/smalltown-boy-dance-tpl.mp4';
+
+  if (isCloudflareWorkersRuntime()) {
+    throw new Error(
+      `Smalltown Boy Dance template missing from R2 (${key}). Upload ${localRelative} to that key.`
+    );
+  }
+
+  const { readFile } = await import('node:fs/promises');
+  const { existsSync } = await import('node:fs');
+  const path = await import('node:path');
+  const localPath = path.join(process.cwd(), localRelative);
+  if (!existsSync(localPath)) {
+    throw new Error(
+      `Smalltown Boy Dance template missing from R2 (${key}) and local file ${localPath} was not found`
+    );
+  }
+
+  const bytes = new Uint8Array(await readFile(localPath));
+  await putGenjutsuObjectBytes({
+    key,
+    bytes,
+    contentType: 'video/mp4',
+  });
+  return key;
+}
+
 /** HEAD helper that returns false on missing objects (does not throw). */
 export async function genjutsuR2ObjectExists(key: string): Promise<boolean> {
   assertSafeObjectKey(key);
@@ -1002,12 +1054,15 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
 
   const landscapeKey = getZombieHugTemplateVideoKey('16:9');
   const portraitKey = getZombieHugTemplateVideoKey('9:16');
+  const smalltownKey = getSmalltownBoyDanceTemplateVideoKey();
   const templateVideoKey =
     params.templateVideoKey === landscapeKey
       ? await ensureZombieHugTemplateInR2('16:9')
       : params.templateVideoKey === portraitKey
         ? await ensureZombieHugTemplateInR2('9:16')
-        : params.templateVideoKey;
+        : params.templateVideoKey === smalltownKey
+          ? await ensureSmalltownBoyDanceTemplateInR2()
+          : params.templateVideoKey;
 
   assertSafeObjectKey(templateVideoKey);
   if (!templateVideoKey.startsWith('genjutsu/')) {

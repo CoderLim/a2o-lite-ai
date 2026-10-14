@@ -10,6 +10,10 @@ import {
   isGenjutsuProductId,
   resolveProductProviderTarget,
 } from '@/modules/genjutsu/workflow';
+import {
+  SMALLTOWN_PRODUCT_ID,
+  SMALLTOWN_RESOLUTIONS,
+} from '@/modules/smalltown-boy-dance/constants';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
@@ -44,6 +48,16 @@ async function POST({ request }: { request: Request }) {
       resolution !== '1080p'
     ) {
       return respErr('Invalid Genjutsu resolution', { status: 400 });
+    }
+    if (
+      product === SMALLTOWN_PRODUCT_ID &&
+      !SMALLTOWN_RESOLUTIONS.includes(
+        resolution as (typeof SMALLTOWN_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Smalltown Boy Dance only supports 480p and 720p', {
+        status: 400,
+      });
     }
 
     const target = resolveProductProviderTarget(product, mode);
