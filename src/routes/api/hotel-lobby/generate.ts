@@ -183,13 +183,8 @@ async function POST({ request }: { request: Request }) {
         status: 400,
       });
     }
-    // Fixed templates are versioned + seal-verified against the R2 source.
-    // Skip a second dimension parse on the sealed copy (it was failing spuriously
-    // under Workers/Vite even when the same object parses in isolation).
-    // Custom uploads still probe before we reserve credits.
-    if (!useDefaultTemplate) {
-      await probeHotelLobbyVideoDimensionsFromKey(sealed.videoKey);
-    }
+    // Kling O3 rejects out-of-range pixels; fail before credit reservation.
+    await probeHotelLobbyVideoDimensionsFromKey(sealed.videoKey);
 
     const prompt = preset.promptFor(imageKeys.length);
     const providerCostUsd = estimateHotelLobbyProviderCost({
