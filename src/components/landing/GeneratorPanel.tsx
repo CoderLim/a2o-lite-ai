@@ -543,6 +543,10 @@ function isProviderFailedMessage(message: string) {
   return /generation failed\. please try again later/i.test(message);
 }
 
+function isPhotoQualityFailureMessage(message: string) {
+  return /photos didn't work|front-facing shots/i.test(message);
+}
+
 function logProviderFailureDebug(
   data: Record<string, unknown> | null | undefined,
   context: string
@@ -563,6 +567,12 @@ function generationFailureUiMessage(
     (error && isLikenessRejectionMessage(error))
   ) {
     return m['genjutsu.safety.face_rejected']();
+  }
+  if (
+    errorCode === 'PROVIDER_CONTENT_SAFETY' ||
+    (error && isPhotoQualityFailureMessage(error))
+  ) {
+    return m['genjutsu.error.photo_quality']();
   }
   if (
     errorCode === 'PROVIDER_FAILED' ||
@@ -595,6 +605,12 @@ function providerSubmitUiMessage(cause: unknown): string {
     isLikenessRejectionMessage(message)
   ) {
     return m['genjutsu.safety.face_rejected']();
+  }
+  if (
+    code === 'PROVIDER_CONTENT_SAFETY' ||
+    isPhotoQualityFailureMessage(message)
+  ) {
+    return m['genjutsu.error.photo_quality']();
   }
   if (code === 'PROVIDER_FAILED' || isProviderFailedMessage(message)) {
     return m['genjutsu.error.provider_failed']();

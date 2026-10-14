@@ -51,15 +51,19 @@ function userFacingRefundError(
     typeof result?.providerError === 'string' ? result.providerError : null;
   const storedProviderCode =
     typeof result?.providerCode === 'string' ? result.providerCode : null;
-  // New records store user copy in `error` and raw dump in `providerError`.
-  // Legacy refunds only have the raw provider string in `error`.
+  // Prefer re-deriving user copy from the raw dump so copy/policy updates
+  // apply on refresh without rewriting stored tasks. Legacy refunds may only
+  // have the raw provider string in `error`.
   if (storedProviderError) {
+    const failure = splitProviderFailureError(
+      storedProviderError,
+      storedProviderCode
+    );
     return {
-      error: storedError,
-      providerError: storedProviderError,
-      providerCode: storedProviderCode,
-      errorCode:
-        typeof result?.errorCode === 'string' ? result.errorCode : undefined,
+      error: failure.error,
+      providerError: failure.providerError,
+      providerCode: failure.providerCode,
+      errorCode: failure.errorCode,
     };
   }
   const failure = splitProviderFailureError(storedError, storedProviderCode);

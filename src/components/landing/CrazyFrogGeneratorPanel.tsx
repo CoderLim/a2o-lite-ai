@@ -235,6 +235,32 @@ function isLikenessRejectionMessage(message: string) {
   return /likeness|real people|cannot be processed/i.test(message);
 }
 
+function isPhotoQualityFailureMessage(message: string) {
+  return /photos didn't work|front-facing shots/i.test(message);
+}
+
+function generationFailureUiMessage(
+  error?: string | null,
+  errorCode?: string | null
+) {
+  if (
+    errorCode === 'PROVIDER_LIKENESS_REJECTED' ||
+    (error && isLikenessRejectionMessage(error))
+  ) {
+    return m['genjutsu.safety.face_rejected']();
+  }
+  if (
+    errorCode === 'PROVIDER_CONTENT_SAFETY' ||
+    (error && isPhotoQualityFailureMessage(error))
+  ) {
+    return m['site.crazy.error.photo_quality']();
+  }
+  if (errorCode === 'PROVIDER_FAILED') {
+    return m['genjutsu.error.provider_failed']();
+  }
+  return error || '';
+}
+
 function providerSubmitUiMessage(cause: unknown): string {
   const message =
     cause instanceof Error ? cause.message : m['site.generator.failed']();
@@ -249,6 +275,12 @@ function providerSubmitUiMessage(cause: unknown): string {
     isLikenessRejectionMessage(message)
   ) {
     return m['genjutsu.safety.face_rejected']();
+  }
+  if (
+    code === 'PROVIDER_CONTENT_SAFETY' ||
+    isPhotoQualityFailureMessage(message)
+  ) {
+    return m['site.crazy.error.photo_quality']();
   }
   if (code === 'PROVIDER_FAILED') {
     return m['genjutsu.error.provider_failed']();
@@ -676,7 +708,7 @@ export function CrazyFrogGeneratorPanel() {
 
           creditGate.clear();
           setJobError(
-            polled.error ||
+            generationFailureUiMessage(polled.error, polled.errorCode) ||
               m['site.generator.failed_status']({
                 status: polled.providerStatus,
               })

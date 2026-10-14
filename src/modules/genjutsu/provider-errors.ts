@@ -17,6 +17,14 @@ export const GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE =
   'Generation failed. Please try again later.';
 
 /**
+ * User copy when the provider rejected the job under a content-safety signal.
+ * Do not mention NSFW/safety/prompt — tip photo quality (blur, resolution, pose).
+ * Raw vendor text stays in providerError for admin.
+ */
+export const GENJUTSU_CONTENT_SAFETY_USER_MESSAGE =
+  "These photos didn't work for generation. Try sharper, higher-resolution, front-facing shots with a clear face, then try again.";
+
+/**
  * HTTP statuses where the provider may have accepted the job even though the
  * client saw an error. Do not auto-refund — park as submission_unknown.
  */
@@ -25,6 +33,7 @@ export function isUncertainProviderHttpStatus(status: number) {
 }
 
 export const GENJUTSU_PROVIDER_FAILED_CODE = 'PROVIDER_FAILED';
+export const GENJUTSU_CONTENT_SAFETY_CODE = 'PROVIDER_CONTENT_SAFETY';
 
 /**
  * Official Ark Seedance privacy codes for “input may contain real person”
@@ -57,6 +66,30 @@ export function isArkSensitiveContentCode(
     normalized.includes('SensitiveContentDetected') ||
     normalized.includes('RiskDetection') ||
     normalized === 'ContentSecurityDetectionError'
+  );
+}
+
+/**
+ * Higgsfield / Ark content-safety blocks that are not real-person privacy.
+ * User-facing copy tips photo quality; admin keeps the raw dump.
+ */
+export function isProviderContentSafetyRejection(
+  raw: string,
+  providerCode?: string | null
+): boolean {
+  if (
+    isArkSensitiveContentCode(providerCode) &&
+    !isArkRealPersonPrivacyCode(providerCode)
+  ) {
+    return true;
+  }
+
+  const lower = raw.trim().toLowerCase();
+  if (!lower) return false;
+  return (
+    lower.includes('blocked by content safety') ||
+    lower.includes('provider safety check') ||
+    lower.includes('content safety checks')
   );
 }
 
@@ -96,6 +129,9 @@ export function toUserFacingProviderError(
   if (isSeedanceLikenessRejection(raw)) {
     return SEEDANCE_LIKENESS_REJECTION_MESSAGE;
   }
+  if (isProviderContentSafetyRejection(raw, providerCode)) {
+    return GENJUTSU_CONTENT_SAFETY_USER_MESSAGE;
+  }
   return GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE;
 }
 
@@ -108,6 +144,7 @@ export function splitProviderFailureError(
   providerCode: string | null;
   errorCode: string;
   likeness: boolean;
+  contentSafety: boolean;
 } {
   const providerError = (raw || '').trim() || 'Generation failed';
   const normalizedCode =
@@ -117,14 +154,20 @@ export function splitProviderFailureError(
   const likeness =
     isArkRealPersonPrivacyCode(normalizedCode) ||
     isSeedanceLikenessRejection(providerError);
+  const contentSafety =
+    !likeness &&
+    isProviderContentSafetyRejection(providerError, normalizedCode);
   return {
     error: toUserFacingProviderError(providerError, normalizedCode),
     providerError,
     providerCode: normalizedCode,
     errorCode: likeness
       ? 'PROVIDER_LIKENESS_REJECTED'
-      : GENJUTSU_PROVIDER_FAILED_CODE,
+      : contentSafety
+        ? GENJUTSU_CONTENT_SAFETY_CODE
+        : GENJUTSU_PROVIDER_FAILED_CODE,
     likeness,
+    contentSafety,
   };
 }
 

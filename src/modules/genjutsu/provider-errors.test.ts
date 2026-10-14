@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  GENJUTSU_CONTENT_SAFETY_CODE,
+  GENJUTSU_CONTENT_SAFETY_USER_MESSAGE,
   GENJUTSU_PROVIDER_FAILED_CODE,
   GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE,
   isArkRealPersonPrivacyCode,
@@ -75,6 +77,39 @@ test('always preserves raw text for admin on provider failures', () => {
   assert.equal(split.error, GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE);
   assert.equal(split.providerError, raw);
   assert.equal(split.errorCode, GENJUTSU_PROVIDER_FAILED_CODE);
+  assert.equal(split.contentSafety, false);
+});
+
+test('maps Higgsfield content-safety blocks to photo-quality user copy', () => {
+  const raw =
+    'The generated result was blocked by content safety checks. Try a different prompt or reference media.';
+  const split = splitProviderFailureError(raw);
+  assert.equal(split.contentSafety, true);
+  assert.equal(split.likeness, false);
+  assert.equal(split.error, GENJUTSU_CONTENT_SAFETY_USER_MESSAGE);
+  assert.equal(split.providerError, raw);
+  assert.equal(split.errorCode, GENJUTSU_CONTENT_SAFETY_CODE);
+  assert.equal(
+    split.error.includes('prompt'),
+    false,
+    'user copy must not mention prompt'
+  );
+  assert.equal(
+    /safety|nsfw|blocked/i.test(split.error),
+    false,
+    'user copy must not mention safety/NSFW'
+  );
+});
+
+test('maps Ark non-privacy sensitive codes to photo-quality user copy', () => {
+  const split = splitProviderFailureError(
+    'Sensitive content detected in input',
+    'InputImageSensitiveContentDetected.Sexual'
+  );
+  assert.equal(split.contentSafety, true);
+  assert.equal(split.likeness, false);
+  assert.equal(split.error, GENJUTSU_CONTENT_SAFETY_USER_MESSAGE);
+  assert.equal(split.errorCode, GENJUTSU_CONTENT_SAFETY_CODE);
 });
 
 test('treats 408 / 429 / 5xx as uncertain provider submit statuses', () => {
