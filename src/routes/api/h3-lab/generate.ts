@@ -32,10 +32,7 @@ import {
   resolveHotelLobbyInputUrls,
   sealHotelLobbyInputs,
 } from '@/modules/hotel-lobby/storage';
-import {
-  normalizeH3LabDuration,
-  probeHotelLobbyDurationSecondsRawFromKey,
-} from '@/modules/hotel-lobby/video-metadata';
+import { probeH3LabDurationSeconds } from '@/modules/hotel-lobby/video-metadata';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
@@ -191,14 +188,12 @@ async function POST({ request }: { request: Request }) {
       assertH3LabDuration(rounded);
       duration = rounded;
     } else {
-      duration = normalizeH3LabDuration(
-        await probeHotelLobbyDurationSecondsRawFromKey(sealed.videoKey, {
-          fallbackSeconds:
-            durationOverride != null && Number.isFinite(durationOverride)
-              ? durationOverride
-              : undefined,
-        })
-      );
+      duration = await probeH3LabDurationSeconds(providerInput.videoUrl, {
+        fallbackSeconds:
+          durationOverride != null && Number.isFinite(durationOverride)
+            ? durationOverride
+            : undefined,
+      });
     }
 
     const providerCostUsd = estimateH3LabProviderCost({

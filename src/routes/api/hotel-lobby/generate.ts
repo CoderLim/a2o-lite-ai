@@ -30,8 +30,8 @@ import {
   sealHotelLobbyInputs,
 } from '@/modules/hotel-lobby/storage';
 import {
-  probeHotelLobbyDurationSecondsFromKey,
-  probeHotelLobbyVideoDimensionsFromKey,
+  probeHotelLobbyDurationSeconds,
+  probeHotelLobbyVideoDimensions,
 } from '@/modules/hotel-lobby/video-metadata';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
@@ -165,10 +165,8 @@ async function POST({ request }: { request: Request }) {
         : typeof body.durationSeconds === 'string'
           ? Number(body.durationSeconds)
           : undefined;
-    // Probe sealed R2 keys with authenticated Range GETs — query-signed URL
-    // probes are flaky on Workers and can throw false "unreadable metadata".
-    const duration = await probeHotelLobbyDurationSecondsFromKey(
-      sealed.videoKey,
+    const duration = await probeHotelLobbyDurationSeconds(
+      providerInput.videoUrl,
       useDefaultTemplate
         ? undefined
         : {
@@ -184,7 +182,7 @@ async function POST({ request }: { request: Request }) {
       });
     }
     // Kling O3 rejects out-of-range pixels; fail before credit reservation.
-    await probeHotelLobbyVideoDimensionsFromKey(sealed.videoKey);
+    await probeHotelLobbyVideoDimensions(providerInput.videoUrl);
 
     const prompt = preset.promptFor(imageKeys.length);
     const providerCostUsd = estimateHotelLobbyProviderCost({

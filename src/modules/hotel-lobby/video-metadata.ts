@@ -37,73 +37,17 @@ async function fetchRange(url: string, range: string) {
     throw new Error('Reference-video URL redirected unexpectedly');
   }
 
-  // Some origins ignore Range and return 200 + full body — still usable for
-  // small templates. Prefer 206 when present.
-  if (response.status !== 206 && response.status !== 200) {
+  if (response.status !== 206) {
     response.body?.cancel().catch(() => undefined);
     throw new Error(
       'Reference-video storage must support byte-range reads for duration validation'
     );
   }
 
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  const totalFromRange = parseTotalBytes(response.headers.get('content-range'));
-  const contentLength = Number(response.headers.get('content-length') || '');
-  const totalBytes =
-    totalFromRange ??
-    (response.status === 200 &&
-    Number.isSafeInteger(contentLength) &&
-    contentLength > 0
-      ? contentLength
-      : response.status === 200
-        ? bytes.byteLength
-        : null);
-
-  return { bytes, totalBytes };
-}
-
-type ProbeChunk = { bytes: Uint8Array; totalBytes: number | null };
-
-async function loadProbeChunksFromUrl(videoUrl: string): Promise<ProbeChunk[]> {
-  const first = await fetchRange(videoUrl, `bytes=0-${HEAD_BYTES - 1}`);
-  const chunks: ProbeChunk[] = [first];
-  if (first.totalBytes && first.totalBytes > HEAD_BYTES) {
-    const start = Math.max(0, first.totalBytes - TAIL_BYTES);
-    if (start > 0 || first.bytes.byteLength < first.totalBytes) {
-      chunks.push(await fetchRange(videoUrl, `bytes=${start}-`));
-    }
-  }
-  return chunks;
-}
-
-async function loadProbeChunksFromKey(videoKey: string): Promise<ProbeChunk[]> {
-  const { readHotelLobbyObjectRange } = await import('./storage');
-  const first = await readHotelLobbyObjectRange({
-    key: videoKey,
-    start: 0,
-    end: HEAD_BYTES - 1,
-  });
-  const chunks: ProbeChunk[] = [first];
-  if (first.totalBytes && first.totalBytes > HEAD_BYTES) {
-    const start = Math.max(0, first.totalBytes - TAIL_BYTES);
-    if (start > 0 || first.bytes.byteLength < first.totalBytes) {
-      chunks.push(
-        await readHotelLobbyObjectRange({
-          key: videoKey,
-          start,
-        })
-      );
-    }
-  } else if (!first.totalBytes && first.bytes.byteLength >= HEAD_BYTES) {
-    // Missing Content-Range: also pull remaining bytes after the head window.
-    chunks.push(
-      await readHotelLobbyObjectRange({
-        key: videoKey,
-        start: HEAD_BYTES,
-      })
-    );
-  }
-  return chunks;
+  return {
+    bytes: new Uint8Array(await response.arrayBuffer()),
+    totalBytes: parseTotalBytes(response.headers.get('content-range')),
+  };
 }
 
 function readEbmlVint(
@@ -376,14 +320,17 @@ export function normalizeHotelLobbyDuration(seconds: number) {
   );
 }
 
-function durationFromProbeChunks(
-  chunks: ProbeChunk[],
+export async function probeHotelLobbyDurationSecondsRaw(
+  videoUrl: string,
   options?: { fallbackSeconds?: number }
 ) {
-  let seconds: number | null = null;
-  for (const chunk of chunks) {
-    seconds = parseReferenceDurationSeconds(chunk.bytes);
-    if (seconds != null) break;
+  const first = await fetchRange(videoUrl, `bytes=0-${HEAD_BYTES - 1}`);
+  let seconds = parseReferenceDurationSeconds(first.bytes);
+
+  if (seconds == null && first.totalBytes && first.totalBytes > HEAD_BYTES) {
+    const start = Math.max(0, first.totalBytes - TAIL_BYTES);
+    const tail = await fetchRange(videoUrl, `bytes=${start}-`);
+    seconds = parseReferenceDurationSeconds(tail.bytes);
   }
 
   if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) {
@@ -402,59 +349,12 @@ function durationFromProbeChunks(
   return seconds;
 }
 
-function dimensionsFromProbeChunks(chunks: ProbeChunk[]) {
-  let dims: { width: number; height: number } | null = null;
-  for (const chunk of chunks) {
-    dims = parseIsoBmffVideoDimensions(chunk.bytes);
-    if (dims) break;
-  }
-
-  if (!dims) {
-    throw new Error(
-      'Could not read the reference video resolution. Use an MP4 or MOV with readable metadata.'
-    );
-  }
-
-  assertHotelLobbyVideoDimensions(dims);
-  return dims;
-}
-
-export async function probeHotelLobbyDurationSecondsRaw(
-  videoUrl: string,
-  options?: { fallbackSeconds?: number }
-) {
-  return durationFromProbeChunks(
-    await loadProbeChunksFromUrl(videoUrl),
-    options
-  );
-}
-
-/** Prefer authenticated R2 range reads for sealed hotel-lobby keys. */
-export async function probeHotelLobbyDurationSecondsRawFromKey(
-  videoKey: string,
-  options?: { fallbackSeconds?: number }
-) {
-  return durationFromProbeChunks(
-    await loadProbeChunksFromKey(videoKey),
-    options
-  );
-}
-
 export async function probeHotelLobbyDurationSeconds(
   videoUrl: string,
   options?: { fallbackSeconds?: number }
 ) {
   return normalizeHotelLobbyDuration(
     await probeHotelLobbyDurationSecondsRaw(videoUrl, options)
-  );
-}
-
-export async function probeHotelLobbyDurationSecondsFromKey(
-  videoKey: string,
-  options?: { fallbackSeconds?: number }
-) {
-  return normalizeHotelLobbyDuration(
-    await probeHotelLobbyDurationSecondsRawFromKey(videoKey, options)
   );
 }
 
@@ -486,9 +386,21 @@ export async function probeH3LabDurationSeconds(
 }
 
 export async function probeHotelLobbyVideoDimensions(videoUrl: string) {
-  return dimensionsFromProbeChunks(await loadProbeChunksFromUrl(videoUrl));
-}
+  const first = await fetchRange(videoUrl, `bytes=0-${HEAD_BYTES - 1}`);
+  let dims = parseIsoBmffVideoDimensions(first.bytes);
 
-export async function probeHotelLobbyVideoDimensionsFromKey(videoKey: string) {
-  return dimensionsFromProbeChunks(await loadProbeChunksFromKey(videoKey));
+  if (!dims && first.totalBytes && first.totalBytes > HEAD_BYTES) {
+    const start = Math.max(0, first.totalBytes - TAIL_BYTES);
+    const tail = await fetchRange(videoUrl, `bytes=${start}-`);
+    dims = parseIsoBmffVideoDimensions(tail.bytes);
+  }
+
+  if (!dims) {
+    throw new Error(
+      'Could not read the reference video resolution. Use an MP4 or MOV with readable metadata.'
+    );
+  }
+
+  assertHotelLobbyVideoDimensions(dims);
+  return dims;
 }
