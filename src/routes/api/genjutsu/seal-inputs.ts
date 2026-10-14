@@ -18,10 +18,12 @@ import {
   findExistingSealedGenjutsuTemplateInputs,
   genjutsuR2ObjectExists,
   getGenjutsuSealedInputKey,
+  getSmalltownBoyDanceTemplateVideoKey,
   getZombieHugTemplateVideoKey,
   sealGenjutsuR2Inputs,
   sealGenjutsuTemplateR2Inputs,
 } from '@/modules/genjutsu/storage';
+import { SMALLTOWN_PRODUCT_ID } from '@/modules/smalltown-boy-dance/constants';
 import {
   isZombieHugAspectRatio,
   ZOMBIE_HUG_DEFAULT_ASPECT_RATIO,
@@ -90,12 +92,21 @@ async function POST({ request }: { request: Request }) {
     }
 
     const useDefaultTemplate = currentOptions?.useDefaultTemplate === true;
+    const product =
+      typeof currentOptions?.product === 'string'
+        ? currentOptions.product
+        : null;
     const templateAspectRatio = isZombieHugAspectRatio(
       currentOptions?.aspectRatio
     )
       ? currentOptions.aspectRatio
       : ZOMBIE_HUG_DEFAULT_ASPECT_RATIO;
-    const zombieTemplateKey = getZombieHugTemplateVideoKey(templateAspectRatio);
+    // Product-scoped templates first; zombie-hug remains the legacy default
+    // for useDefaultTemplate without a smalltown product binding.
+    const sharedTemplateKey =
+      product === SMALLTOWN_PRODUCT_ID
+        ? getSmalltownBoyDanceTemplateVideoKey()
+        : getZombieHugTemplateVideoKey(templateAspectRatio);
     const videoKey =
       typeof currentOptions?.videoKey === 'string'
         ? currentOptions.videoKey
@@ -231,7 +242,7 @@ async function POST({ request }: { request: Request }) {
           const sealedVideoKey = sealedImageKeys[0]
             .replace(/reference-\d+\./, 'source.')
             .replace(/\.(jpg|png|webp|gif|avif|heic|heif)$/i, '.mp4');
-          sealGenjutsuE2EStorageObject(zombieTemplateKey, sealedVideoKey);
+          sealGenjutsuE2EStorageObject(sharedTemplateKey, sealedVideoKey);
           imageKeys.forEach((sourceKey: string, index: number) =>
             sealGenjutsuE2EStorageObject(sourceKey, sealedImageKeys[index])
           );
@@ -260,7 +271,7 @@ async function POST({ request }: { request: Request }) {
         sealed = await sealGenjutsuTemplateR2Inputs({
           userId: uid,
           generationId: gid,
-          templateVideoKey: zombieTemplateKey,
+          templateVideoKey: sharedTemplateKey,
           imageKeys,
           expectedContentTypes: contentTypes,
           expectedContentLengths: contentLengths,

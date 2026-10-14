@@ -159,6 +159,11 @@ export const envConfigs: Record<string, string> = {
     procEnv.ZOMBIE_HUG_TEMPLATE_VIDEO_KEY_9X16 ??
     'genjutsu/templates/zombie-hug-9x16.mp4',
 
+  // Smalltown Boy Dance (server-only). Fixed R2 template; client uploads images only.
+  smalltown_boy_dance_template_video_key:
+    procEnv.SMALLTOWN_BOY_DANCE_TEMPLATE_VIDEO_KEY ??
+    'genjutsu/templates/smalltown-boy-dance-v1.mp4',
+
   // Locale (public)
   locale: publicEnv('VITE_DEFAULT_LOCALE') ?? 'en',
 };

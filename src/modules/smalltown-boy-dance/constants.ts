@@ -16,14 +16,18 @@ export const SMALLTOWN_TEMPLATE_POSTER_PATH =
 /** ffprobe duration of public/videos/smalltown-boy-dance-tpl.mp4 */
 export const SMALLTOWN_TEMPLATE_DURATION_SECONDS = 21.455238;
 
-/** Exact byte size of the public template — used for server-side identity (I1). */
-export const SMALLTOWN_TEMPLATE_BYTES = 3_018_016;
-
 export const SMALLTOWN_ASPECT_RATIO: HiggsfieldSeedanceAspectRatio = '3:4';
 
-export const SMALLTOWN_RESOLUTIONS = ['480p', '720p', '1080p'] as const;
+/** First ship: hide 1080p — credit cost exceeds the largest single pack. */
+export const SMALLTOWN_RESOLUTIONS = ['480p', '720p'] as const;
 export type SmalltownResolution = (typeof SMALLTOWN_RESOLUTIONS)[number];
 export const SMALLTOWN_DEFAULT_RESOLUTION: GenjutsuResolution = '720p';
+
+export function isSmalltownResolution(
+  value: unknown
+): value is SmalltownResolution {
+  return value === '480p' || value === '720p';
+}
 
 /**
  * Fixed dual-role prompt. @Image1 = front dancer, @Image2 = rear dancer.
@@ -36,14 +40,3 @@ export const SMALLTOWN_DEFAULT_PROMPT = [
   'Match each Image for face, hair, body, clothing, and species throughout the clip.',
   'Do not swap Image1 and Image2 or blend the two identities.',
 ].join(' ');
-
-export async function loadSmalltownBoyDanceTemplateFile(): Promise<File> {
-  const response = await fetch(SMALLTOWN_TEMPLATE_PATH);
-  if (!response.ok) {
-    throw new Error('Failed to load the Smalltown Boy Dance template video');
-  }
-  const blob = await response.blob();
-  return new File([blob], 'smalltown-boy-dance-tpl.mp4', {
-    type: blob.type || 'video/mp4',
-  });
-}

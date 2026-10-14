@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import { useSession } from '@/core/auth/client';
 import { estimateGenjutsuCreditsForProvider } from '@/modules/genjutsu/pricing';
 import {
-  loadSmalltownBoyDanceTemplateFile,
   SMALLTOWN_ASPECT_RATIO,
   SMALLTOWN_DEFAULT_PROMPT,
   SMALLTOWN_DEFAULT_RESOLUTION,
@@ -150,7 +149,7 @@ function FloatingPanel({ children }: { children: ReactNode }) {
 }
 
 const activeGenerationKey = (userId: string) =>
-  `bulin_47_active_generation:${userId}`;
+  `smalltown_boy_dance_active_generation:${userId}`;
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -570,11 +569,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
       setJobError('');
       creditGate.clear();
       setGenerationId(active.generationId);
-      if (
-        active.resolution === '480p' ||
-        active.resolution === '720p' ||
-        active.resolution === '1080p'
-      ) {
+      if (active.resolution === '480p' || active.resolution === '720p') {
         setResolution(active.resolution);
       }
       setPhase('generating');
@@ -617,11 +612,9 @@ export function SmalltownBoyDanceGeneratorPanel() {
         product: SMALLTOWN_PRODUCT_ID,
       });
 
-      const templateFile = await loadSmalltownBoyDanceTemplateFile();
-      const media = [templateFile, frontPhoto.file, backPhoto.file];
-      const contentTypes = media.map(
-        (file, index) => file.type || (index === 0 ? 'video/mp4' : 'image/jpeg')
-      );
+      // Server seals the fixed R2 template; client only uploads front + back.
+      const media = [frontPhoto.file, backPhoto.file];
+      const contentTypes = media.map((file) => file.type || 'image/jpeg');
       const contentLengths = media.map((file) => file.size);
 
       const uploadBatch = await apiPost<{ uploads: SignedUpload[] }>(
@@ -965,7 +958,7 @@ export function SmalltownBoyDanceGeneratorPanel() {
               }
               download={
                 generationId
-                  ? `bulin-47-ai-${generationId.slice(0, 8)}.mp4`
+                  ? `smalltown-boy-dance-${generationId.slice(0, 8)}.mp4`
                   : undefined
               }
               className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
