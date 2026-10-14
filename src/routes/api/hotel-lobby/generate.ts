@@ -237,7 +237,9 @@ async function POST({ request }: { request: Request }) {
       requestId = result.requestId;
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : 'Kling O3 submission failed';
+        error instanceof Error
+          ? error.message
+          : 'Video generation submission failed';
 
       // Only definite 4xx rejections are safe to refund. 5xx/429/network
       // uncertainty keeps credits reserved for manual recovery.
@@ -250,7 +252,7 @@ async function POST({ request }: { request: Request }) {
         });
         return respJson(
           -1,
-          'Kling O3 could not start this generation. Credits were refunded.',
+          'Generation could not start. Credits were refunded.',
           { code: 'PROVIDER_SUBMIT_FAILED', generationId },
           { status: 502 }
         );

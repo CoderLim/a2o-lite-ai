@@ -41,6 +41,10 @@ function hotelLobbyTemplateVideoKey() {
 /**
  * Crazy Frog chase — Element1 = foreground lead (facing camera),
  * Element2 = chaser on the red vehicle behind.
+ *
+ * Same Kling O3 lesson as Hotel Lobby: short imperatives; "Use @Video1 only
+ * for motion…"; explicit "do not keep the original …" on each role. Long
+ * preserve-everything wording leaves original performers in place.
  */
 export function buildCrazyFrogPrompt(imageCount: number) {
   if (imageCount !== 2) {
@@ -49,14 +53,11 @@ export function buildCrazyFrogPrompt(imageCount: number) {
     );
   }
   return [
-    'In @Video1, replace the foreground rider who faces the camera and points',
-    'forward with the person or character from @Element1.',
-    'Replace the person chasing behind on the red vehicle with the person or',
-    'character from @Element2.',
-    'Preserve the original timing, body movements, gestures, camera motion,',
-    'road, vehicle, and chase staging from @Video1.',
-    'Match each Element for face, hair, body, clothing, and species throughout',
-    'the clip. Do not swap Element1 and Element2 or blend the two identities.',
+    'Use @Video1 only for motion, timing, gestures, camera, road, vehicle, and chase staging.',
+    'Change the large foreground rider who faces the camera and points forward in @Video1 to be the person or character from @Element1 — do not keep the original foreground rider.',
+    'Change the smaller person chasing behind on the red vehicle in @Video1 to be the person or character from @Element2 — do not keep the original chaser.',
+    'Match each Element for face, hair, body, clothing, and species throughout the clip.',
+    'Do not swap Element1 and Element2 or blend the two identities.',
   ].join(' ');
 }
 
@@ -88,11 +89,7 @@ const PRESETS: Record<HotelLobbyPresetId, HotelLobbyPreset> = {
     allowTrim: false,
     keepAudio: true,
     aspectRatio: '4:3',
-    /**
-     * Enable after uploading the Kling-safe 960×720 template to
-     * `hotel-lobby/templates/crazy-frog-v1.mp4` (see docs/assets + enablement).
-     */
-    enabled: false,
+    enabled: true,
     promptFor: buildCrazyFrogPrompt,
   },
 };

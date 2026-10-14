@@ -4,6 +4,7 @@ import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
 
 import {
+  CRAZY_FROG_PRESET_ID,
   HOTEL_LOBBY_PRESET_ID,
   resolveHotelLobbyPreset,
   type HotelLobbyPresetId,
@@ -80,6 +81,11 @@ function assertSafeObjectKey(key: string) {
   ) {
     throw new Error('Invalid Hotel Lobby storage key');
   }
+}
+
+function isCloudflareWorkersRuntime() {
+  const env = (globalThis as any).__CF_ENV__ ?? (globalThis as any).__env__;
+  return Boolean(env);
 }
 
 function encodePath(value: string) {
@@ -407,6 +413,11 @@ async function copyR2Object(params: {
   }
 }
 
+/** Local public files used to seed missing preset templates on Node. */
+const LOCAL_TEMPLATE_BY_PRESET: Partial<Record<HotelLobbyPresetId, string>> = {
+  [CRAZY_FROG_PRESET_ID]: 'public/videos/crazy-frog-tpl.mp4',
+};
+
 export function getHotelLobbyTemplateVideoKey(
   presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
 ) {
@@ -419,10 +430,93 @@ export function getHotelLobbyTemplateVideoKey(
   return key;
 }
 
-export async function getHotelLobbyTemplatePreviewUrl(
+async function putHotelLobbyObjectBytes(params: {
+  key: string;
+  bytes: Uint8Array;
+  contentType: string;
+}) {
+  assertSafeObjectKey(params.key);
+  if (!params.key.startsWith('hotel-lobby/')) {
+    throw new Error('Invalid Hotel Lobby object key');
+  }
+
+  const config = await getR2SigningConfig();
+  const headers = new Headers({
+    'Content-Type': params.contentType,
+    'Content-Length': String(params.bytes.byteLength),
+    'x-amz-content-sha256': 'UNSIGNED-PAYLOAD',
+  });
+  const response = await createR2Client(config).fetch(
+    new Request(buildR2ObjectUrl(config, params.key), {
+      method: 'PUT',
+      headers,
+      body: params.bytes.buffer.slice(
+        params.bytes.byteOffset,
+        params.bytes.byteOffset + params.bytes.byteLength
+      ) as ArrayBuffer,
+    })
+  );
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(
+      `Failed to upload Hotel Lobby object: HTTP ${response.status}${
+        detail ? ` - ${detail.slice(0, 300)}` : ''
+      }`
+    );
+  }
+}
+
+/**
+ * Ensure the preset template exists in R2. On local Node, seed Crazy Frog
+ * from `public/videos/crazy-frog-tpl.mp4` when missing.
+ */
+export async function ensureHotelLobbyTemplateInR2(
   presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
 ) {
   const key = getHotelLobbyTemplateVideoKey(presetId);
+  try {
+    await headR2Object(key);
+    return key;
+  } catch {
+    // continue to seed when a local source is configured
+  }
+
+  const localRelative = LOCAL_TEMPLATE_BY_PRESET[presetId];
+  if (!localRelative) {
+    throw new Error(
+      `Hotel Lobby template missing from R2 (${key}). Upload the template to that key.`
+    );
+  }
+
+  if (isCloudflareWorkersRuntime()) {
+    throw new Error(
+      `Hotel Lobby template missing from R2 (${key}). Upload ${localRelative} to that key.`
+    );
+  }
+
+  const { readFile } = await import('node:fs/promises');
+  const { existsSync } = await import('node:fs');
+  const path = await import('node:path');
+  const localPath = path.join(process.cwd(), localRelative);
+  if (!existsSync(localPath)) {
+    throw new Error(
+      `Hotel Lobby template missing from R2 (${key}) and local file ${localPath} was not found`
+    );
+  }
+
+  const bytes = new Uint8Array(await readFile(localPath));
+  await putHotelLobbyObjectBytes({
+    key,
+    bytes,
+    contentType: 'video/mp4',
+  });
+  return key;
+}
+
+export async function getHotelLobbyTemplatePreviewUrl(
+  presetId: HotelLobbyPresetId = HOTEL_LOBBY_PRESET_ID
+) {
+  const key = await ensureHotelLobbyTemplateInR2(presetId);
   const metadata = await headR2Object(key);
   assertHotelLobbyUploadSize(0, metadata.contentLength);
   if (!VIDEO_CONTENT_TYPES[metadata.contentType]) {
@@ -557,6 +651,12 @@ export async function sealHotelLobbyInputs(params: {
       throw new Error(
         'Hotel Lobby template must use the hotel-lobby/ R2 prefix'
       );
+    }
+    // Seed fixed-template presets (e.g. Crazy Frog) from public/ on local Node.
+    if (
+      sourceVideoKey === getHotelLobbyTemplateVideoKey(CRAZY_FROG_PRESET_ID)
+    ) {
+      await ensureHotelLobbyTemplateInR2(CRAZY_FROG_PRESET_ID);
     }
     sourceVideoMetadata = await headR2Object(sourceVideoKey);
     assertHotelLobbyUploadSize(0, sourceVideoMetadata.contentLength);

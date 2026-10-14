@@ -2,24 +2,26 @@
 
 Route: `/crazy-frog-ai`  
 Preset: `crazy-frog` in [`src/modules/hotel-lobby/presets.ts`](../../src/modules/hotel-lobby/presets.ts)  
-Default: `enabled: false` until the template is on R2.
+Default: `enabled: true`. Missing R2 template is seeded from `public/videos/crazy-frog-tpl.mp4` on local Node.
 
-## Template asset
+## Template / demo asset
 
-| Item                 | Value                                                                            |
-| -------------------- | -------------------------------------------------------------------------------- |
-| Source (user)        | `/Users/coderlim/Downloads/genjutsu-ai/crazy-frog-tpl.mp4`                       |
-| Kling-safe re-encode | [`docs/assets/crazy-frog-tpl-960x720.mp4`](../assets/crazy-frog-tpl-960x720.mp4) |
-| Why re-encode        | Original was 956×718 (height &lt; 720). Kling O3 requires each edge 720–3840.    |
-| Duration             | ~11.4s (bills as 11s → about **236 credits**)                                    |
-| Aspect (metadata)    | `4:3`                                                                            |
-| R2 key               | `hotel-lobby/templates/crazy-frog-v1.mp4`                                        |
+| Item                      | Value                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| Public demo + VideoObject | `/videos/crazy-frog-tpl.mp4`, `/videos/crazy-frog-tpl-poster.jpg`                     |
+| Full chase backup         | `/videos/crazy-frog-tpl-full.mp4` (+ `-full-poster.jpg`) — same as live clip          |
+| Why re-encode             | Source was 956×718 (height &lt; 720). Kling O3 requires each edge 720–3840 → 960×720. |
+| Duration                  | ~11.4s (bills as 11s → about **236 credits**)                                         |
+| Aspect (metadata)         | `4:3`                                                                                 |
+| R2 key (generation)       | `hotel-lobby/templates/crazy-frog-v1.mp4`                                             |
+
+Page demo and SEO `VideoObject` use the public files above — no env vars.
 
 ## Upload + smoke
 
-1. Upload `docs/assets/crazy-frog-tpl-960x720.mp4` to R2 at the key above.
-2. Staging: set `enabled: true`, open `/crazy-frog-ai`.
-3. Confirm template-meta: `templateAvailable`, duration ~11.4, two image slots.
+1. Local: open `/crazy-frog-ai` — first template-meta/seal seeds R2 from public if missing.
+2. Workers/prod: upload `public/videos/crazy-frog-tpl.mp4` to `hotel-lobby/templates/crazy-frog-v1.mp4` (no local seed).
+3. Confirm template-meta: `enabled`, `templateAvailable`, duration matches current public clip, two image slots.
 4. Generate with two authorized photos (foreground lead + chaser).
 5. Confirm Fal payload: `keep_audio: true`, `@Element1` + `@Element2`, sealed video key = crazy-frog template.
 6. Confirm Creations / admin show **Crazy Frog**.

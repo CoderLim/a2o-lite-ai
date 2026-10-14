@@ -29,17 +29,14 @@ test('crazy-frog preset is fixed template, two images, keep audio', () => {
   assert.equal(preset.allowTrim, false);
   assert.equal(preset.keepAudio, true);
   assert.equal(preset.aspectRatio, '4:3');
-  assert.equal(preset.enabled, false);
+  assert.equal(preset.enabled, true);
   assert.match(preset.templateVideoKey, /^hotel-lobby\/templates\//);
 });
 
-test('disabled crazy-frog rejects when requireEnabled', () => {
-  assert.throws(
-    () => resolveHotelLobbyPreset(CRAZY_FROG_PRESET_ID),
-    (error: unknown) =>
-      error instanceof HotelLobbyPreflightError &&
-      /not available/i.test(error.message)
-  );
+test('enabled crazy-frog resolves when requireEnabled', () => {
+  const preset = resolveHotelLobbyPreset(CRAZY_FROG_PRESET_ID);
+  assert.equal(preset.id, CRAZY_FROG_PRESET_ID);
+  assert.equal(preset.enabled, true);
 });
 
 test('unknown preset rejects', () => {
@@ -54,8 +51,11 @@ test('crazy frog prompt names both Elements and chase roles', () => {
   assert.match(prompt, /@Video1/);
   assert.match(prompt, /@Element1/);
   assert.match(prompt, /@Element2/);
+  assert.match(prompt, /Use @Video1 only for/i);
   assert.match(prompt, /foreground/i);
-  assert.match(prompt, /chasing|chase/i);
+  assert.match(prompt, /chasing|chase|chaser/i);
+  assert.match(prompt, /do not keep the original foreground rider/i);
+  assert.match(prompt, /do not keep the original chaser/i);
   assert.match(prompt, /Do not swap Element1 and Element2/i);
   assert.throws(() => buildCrazyFrogPrompt(1), HotelLobbyPreflightError);
 });

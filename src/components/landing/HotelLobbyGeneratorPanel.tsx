@@ -90,10 +90,12 @@ type PresetUiMeta = {
   estimatedCredits: number | null;
 };
 
+/** Fixed-template presets ship a public preview; R2 is only required to generate. */
+const CRAZY_FROG_PUBLIC_TEMPLATE = '/videos/crazy-frog-tpl.mp4';
+
 function templateUrlFor(presetId: HotelLobbyPanelPresetId) {
-  return presetId === 'hotel-lobby'
-    ? TEMPLATE_API
-    : `${TEMPLATE_API}?presetId=${encodeURIComponent(presetId)}`;
+  if (presetId === 'crazy-frog') return CRAZY_FROG_PUBLIC_TEMPLATE;
+  return TEMPLATE_API;
 }
 
 function templateMetaUrlFor(presetId: HotelLobbyPanelPresetId) {
@@ -364,10 +366,12 @@ export function HotelLobbyGeneratorPanel({
     }>(templateMetaUrlFor(presetId))
       .then((data) => {
         if (cancelled) return;
+        // R2 availability gates generation only; Crazy Frog preview is public.
+        const r2Ready = data.templateAvailable !== false;
         setPresetMeta({
           presetId: data.presetId || presetId,
           enabled: data.enabled !== false,
-          templateAvailable: data.templateAvailable !== false,
+          templateAvailable: r2Ready,
           allowCustomVideo: data.allowCustomVideo !== false,
           allowTrim: data.allowTrim !== false,
           aspectRatio: data.aspectRatio || (isCrazyFrog ? '4:3' : '16:9'),
@@ -377,19 +381,21 @@ export function HotelLobbyGeneratorPanel({
           },
           estimatedCredits: data.estimatedCredits,
         });
-        setTemplateAvailable(data.templateAvailable !== false);
-        const seconds = data.durationSeconds;
-        if (
-          typeof seconds === 'number' &&
-          Number.isFinite(seconds) &&
-          seconds > 0
-        ) {
-          setVideo((current) =>
-            current?.kind === 'template'
-              ? { ...current, url: templateUrl, durationSeconds: seconds }
-              : current
-          );
-        }
+        setTemplateAvailable(r2Ready);
+        setVideo((current) =>
+          current?.kind === 'template'
+            ? {
+                ...current,
+                url: templateUrl,
+                durationSeconds:
+                  typeof data.durationSeconds === 'number' &&
+                  Number.isFinite(data.durationSeconds) &&
+                  data.durationSeconds > 0
+                    ? data.durationSeconds
+                    : current.durationSeconds,
+              }
+            : current
+        );
       })
       .catch(() => {
         if (cancelled) return;
@@ -403,7 +409,11 @@ export function HotelLobbyGeneratorPanel({
           imageCount: { min: isCrazyFrog ? 2 : 1, max: 2 },
           estimatedCredits: null,
         });
-        if (isCrazyFrog) setTemplateAvailable(false);
+        setTemplateAvailable(false);
+        // Keep the public preview mounted even when R2 meta fails.
+        if (isCrazyFrog) {
+          setVideo({ kind: 'template', url: templateUrl });
+        }
       });
 
     return () => {
@@ -837,11 +847,12 @@ export function HotelLobbyGeneratorPanel({
     }
   };
 
-  const phaseLabel =
-    phase === 'uploading'
+  const phaseLabel = isCrazyFrog
+    ? m['site.common.generating']()
+    : phase === 'uploading'
       ? 'Preparing clip…'
       : phase === 'starting'
-        ? 'Starting Kling O3…'
+        ? 'Starting…'
         : phase === 'generating'
           ? providerStatus
             ? `Generating · ${providerStatus}`
@@ -897,6 +908,11 @@ export function HotelLobbyGeneratorPanel({
                     ref={previewVideoRef}
                     key={video.url}
                     src={video.url}
+                    poster={
+                      isCrazyFrog
+                        ? '/videos/crazy-frog-tpl-poster.jpg'
+                        : undefined
+                    }
                     controls
                     muted
                     playsInline
@@ -914,10 +930,11 @@ export function HotelLobbyGeneratorPanel({
                       }
                     }}
                     onError={() => {
-                      if (video.kind === 'template') {
-                        setTemplateAvailable(false);
-                        if (allowCustomVideo) setVideo(null);
-                      }
+                      if (video.kind !== 'template') return;
+                      // Public Crazy Frog preview failure is not an R2 gate signal.
+                      if (isCrazyFrog) return;
+                      setTemplateAvailable(false);
+                      if (allowCustomVideo) setVideo(null);
                     }}
                   />
                   {allowCustomVideo ? (
@@ -1104,7 +1121,9 @@ export function HotelLobbyGeneratorPanel({
               <p className="text-sm font-semibold text-white/90">
                 {m['site.common.your_video']()}
               </p>
-              <p className="mt-0.5 text-xs text-white/38">Kling O3</p>
+              {isCrazyFrog ? null : (
+                <p className="mt-0.5 text-xs text-white/38">Hotel Lobby</p>
+              )}
             </div>
             <a
               href={
