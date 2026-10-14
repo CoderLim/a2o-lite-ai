@@ -21,7 +21,9 @@ Page demo and SEO `VideoObject` use the public files above — no env vars.
 ## Upload + smoke
 
 1. Local: open `/crazy-frog-ai` — first upload-url seeds R2 from public if missing.
-2. Workers/prod: upload `public/videos/crazy-frog-tpl.mp4` to `genjutsu/templates/crazy-frog-v1.mp4` (no local seed).
+2. Workers/prod: upload via wrangler to the **storage upload-path prefix** (admin default `uploads/`):
+   `wrangler r2 object put genjutsu-ai/uploads/genjutsu/templates/crazy-frog-v1.mp4 --file=public/videos/crazy-frog-tpl.mp4 --content-type=video/mp4 --remote`
+   App logical key stays `genjutsu/templates/crazy-frog-v1.mp4` (S3 client prepends `r2_upload_path`).
 3. Confirm client flow: `attempt` → `upload-url` → upload 2 photos → `seal-inputs` → `generate` → poll `status`.
 4. Confirm attempt row: `provider=seedance-higgsfield`, `model=bytedance/seedance-2.5/video-edit`, `product=crazy-frog`.
 5. Confirm Creations / admin show Genjutsu scene with Crazy Frog product options.
@@ -29,7 +31,8 @@ Page demo and SEO `VideoObject` use the public files above — no env vars.
 
 ## Product rules
 
-- Exactly **2** photos; fixed server template (no custom video / trim).
+- Exactly **2** photos; full run uses fixed server template (no custom video / trim).
+- **Preview** (homepage semantics): client trims template to first 4s @ 480p, uploads clip + 2 photos (`preview: true` on `/api/genjutsu/upload-url`).
 - Image1 = foreground rider facing camera; Image2 = chaser on red vehicle.
-- Resolutions: 480p / 720p only (1080p hidden for credit pack size).
+- Resolutions: 480p / 720p only (1080p hidden for credit pack size). Default: **480p**.
 - Independent inspired page — not an official Crazy Frog partnership.

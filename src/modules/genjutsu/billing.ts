@@ -293,6 +293,8 @@ export async function bindGenjutsuUploadInputs(params: {
   contentTypes: string[];
   contentLengths: number[];
   useDefaultTemplate?: boolean;
+  /** Paid short preview (trimmed clip); product pages may set this. */
+  preview?: boolean;
   preset?: string;
   aspectRatio?: string;
 }) {
@@ -327,6 +329,7 @@ export async function bindGenjutsuUploadInputs(params: {
     const nextOptions = JSON.stringify({
       ...currentOptions,
       useDefaultTemplate: Boolean(params.useDefaultTemplate),
+      ...(params.preview ? { preview: true } : {}),
       ...(params.preset ? { preset: params.preset } : {}),
       ...(params.aspectRatio ? { aspectRatio: params.aspectRatio } : {}),
       ...(params.videoKey ? { videoKey: params.videoKey } : {}),

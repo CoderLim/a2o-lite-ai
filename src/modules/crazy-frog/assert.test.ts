@@ -13,17 +13,34 @@ const validOptions = {
   prompt: CRAZY_FROG_DEFAULT_PROMPT,
   useDefaultTemplate: true,
   aspectRatio: CRAZY_FROG_ASPECT_RATIO,
-  resolution: '720p',
+  resolution: '480p',
   imageKeys: ['genjutsu/u/g/reference-01.jpg', 'genjutsu/u/g/reference-02.jpg'],
   contentTypes: ['image/jpeg', 'image/jpeg'],
   contentLengths: [1000, 1200],
+};
+
+const validPreviewOptions = {
+  product: CRAZY_FROG_PRODUCT_ID,
+  prompt: CRAZY_FROG_DEFAULT_PROMPT,
+  useDefaultTemplate: false,
+  preview: true,
+  aspectRatio: CRAZY_FROG_ASPECT_RATIO,
+  resolution: '480p',
+  videoKey: 'genjutsu/u/g/source.mp4',
+  imageKeys: ['genjutsu/u/g/reference-01.jpg', 'genjutsu/u/g/reference-02.jpg'],
+  contentTypes: ['video/mp4', 'image/jpeg', 'image/jpeg'],
+  contentLengths: [500_000, 1000, 1200],
 };
 
 test('accepts server-template binding with two images', () => {
   assert.doesNotThrow(() => assertCrazyFrogInputs(validOptions));
 });
 
-test('rejects client-uploaded video path (no useDefaultTemplate)', () => {
+test('accepts preview with trimmed video plus two images at 480p', () => {
+  assert.doesNotThrow(() => assertCrazyFrogInputs(validPreviewOptions));
+});
+
+test('rejects client-uploaded video path without preview flag', () => {
   assert.throws(
     () =>
       assertCrazyFrogInputs({
@@ -31,6 +48,39 @@ test('rejects client-uploaded video path (no useDefaultTemplate)', () => {
         useDefaultTemplate: false,
         contentTypes: ['video/mp4', 'image/jpeg', 'image/jpeg'],
         contentLengths: [3_620_755, 1000, 1200],
+      }),
+    CrazyFrogPreflightError
+  );
+});
+
+test('rejects preview that still uses the default template', () => {
+  assert.throws(
+    () =>
+      assertCrazyFrogInputs({
+        ...validPreviewOptions,
+        useDefaultTemplate: true,
+      }),
+    CrazyFrogPreflightError
+  );
+});
+
+test('rejects preview at 720p', () => {
+  assert.throws(
+    () =>
+      assertCrazyFrogInputs({
+        ...validPreviewOptions,
+        resolution: '720p',
+      }),
+    CrazyFrogPreflightError
+  );
+});
+
+test('rejects preview missing video key', () => {
+  assert.throws(
+    () =>
+      assertCrazyFrogInputs({
+        ...validPreviewOptions,
+        videoKey: undefined,
       }),
     CrazyFrogPreflightError
   );

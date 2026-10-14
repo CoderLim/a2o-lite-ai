@@ -21,7 +21,7 @@ export const CRAZY_FROG_ASPECT_RATIO: HiggsfieldSeedanceAspectRatio = '4:3';
 /** First ship: hide 1080p — credit cost exceeds the largest single pack. */
 export const CRAZY_FROG_RESOLUTIONS = ['480p', '720p'] as const;
 export type CrazyFrogResolution = (typeof CRAZY_FROG_RESOLUTIONS)[number];
-export const CRAZY_FROG_DEFAULT_RESOLUTION: GenjutsuResolution = '720p';
+export const CRAZY_FROG_DEFAULT_RESOLUTION: GenjutsuResolution = '480p';
 
 export function isCrazyFrogResolution(
   value: unknown

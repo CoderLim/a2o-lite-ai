@@ -74,7 +74,11 @@ async function POST({ request }: { request: Request }) {
         : undefined;
     const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
     const isCrazyFrog = product === CRAZY_FROG_PRODUCT_ID;
-    const isFixedTemplateProduct = isSmalltown || isCrazyFrog;
+    const isCrazyFrogPreview = isCrazyFrog && body.preview === true;
+    // Full Crazy Frog / Smalltown: server template + image-only uploads.
+    // Crazy Frog preview: client uploads trimmed ≤4s clip + two images.
+    const isFixedTemplateProduct =
+      (isSmalltown || isCrazyFrog) && !isCrazyFrogPreview;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -106,6 +110,9 @@ async function POST({ request }: { request: Request }) {
         status: 400,
       });
     }
+    if (isCrazyFrogPreview && resolution !== '480p') {
+      return respErr('Crazy Frog preview must use 480p', { status: 400 });
+    }
 
     const contentTypes = Array.isArray(body.contentTypes)
       ? body.contentTypes.filter(
@@ -118,7 +125,31 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (isFixedTemplateProduct) {
+    if (isCrazyFrogPreview) {
+      if (contentTypes.length !== 3 || contentLengths.length !== 3) {
+        return respErr(
+          'Crazy Frog preview requires one trimmed video plus two reference images',
+          { status: 400 }
+        );
+      }
+      const videoMime =
+        contentTypes[0]?.split(';', 1)[0]?.trim().toLowerCase() || '';
+      if (!videoMime.startsWith('video/')) {
+        return respErr('Crazy Frog preview first upload must be a video', {
+          status: 400,
+        });
+      }
+      for (let i = 1; i < 3; i += 1) {
+        const mime =
+          contentTypes[i]?.split(';', 1)[0]?.trim().toLowerCase() || '';
+        if (!mime.startsWith('image/')) {
+          return respErr(
+            'Crazy Frog preview references must be images (JPG, PNG, WebP, or GIF)',
+            { status: 400 }
+          );
+        }
+      }
+    } else if (isFixedTemplateProduct) {
       if (
         contentTypes.length !== FIXED_TEMPLATE_IMAGE_COUNT ||
         contentLengths.length !== FIXED_TEMPLATE_IMAGE_COUNT
@@ -175,7 +206,7 @@ async function POST({ request }: { request: Request }) {
     }
 
     // Fixed-template products: indices 1–2 are images (0 reserved for server template).
-    // Homepage: index 0 = video, 1+ = images.
+    // Homepage / Crazy Frog preview: index 0 = video, 1+ = images.
     const normalizedInputs = contentTypes.map(
       (contentType: string, fileIndex: number) => {
         const storageIndex = isFixedTemplateProduct ? fileIndex + 1 : fileIndex;
@@ -245,6 +276,8 @@ async function POST({ request }: { request: Request }) {
         prompt,
         product,
         ...target,
+        preview: isCrazyFrogPreview || undefined,
+        aspectRatio: isCrazyFrogPreview ? CRAZY_FROG_ASPECT_RATIO : undefined,
         videoKey: normalizedInputs[0].key,
         imageKeys: normalizedInputs.slice(1).map((item) => item.key),
         contentTypes: normalizedInputs.map((item) => item.contentType),
