@@ -20,6 +20,23 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
       'What the Bulin 47 freestyle AI video trend is and how to make your own from one photo',
   },
   {
+    path: '/crazy-frog-ai',
+    title: 'Crazy Frog AI Video',
+    description:
+      'Two-photo Crazy Frog chase AI video generator on the Hotel Lobby Kling pipeline',
+  },
+  {
+    path: '/smalltown-boy-dance',
+    title: 'Smalltown Boy Dance',
+    description:
+      '2026 guide to the Smalltown Boy TikTok dance trend, step-by-step moves, CapCut and AI dual-dancer video',
+  },
+  {
+    path: '/ai-zombie-hug',
+    title: 'AI Zombie Hug',
+    description: 'Motion-transfer Zombie Hug AI video generator',
+  },
+  {
     path: '/ai-rumpelstiltskin',
     title: 'Rumpelstiltskin AI Video',
     description:
