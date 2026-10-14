@@ -6,9 +6,12 @@ import {
   HOTEL_LOBBY_MAX_VIDEO_EDGE_PX,
   HOTEL_LOBBY_MIN_VIDEO_EDGE_PX,
 } from './pricing';
+import { readHotelLobbyObjectRange } from './r2-range';
 
 const HEAD_BYTES = 2 * 1024 * 1024;
-const TAIL_BYTES = 4 * 1024 * 1024;
+const TAIL_BYTES = 8 * 1024 * 1024;
+/** Full-object fallback when head/tail ISO-BMFF parse fails (custom uploads). */
+const FULL_PROBE_MAX_BYTES = 32 * 1024 * 1024;
 
 export const HOTEL_LOBBY_MIN_SOURCE_SECONDS = 3;
 export const HOTEL_LOBBY_MAX_SOURCE_SECONDS = 15;
@@ -77,14 +80,13 @@ async function loadProbeChunksFromUrl(videoUrl: string): Promise<ProbeChunk[]> {
 }
 
 async function loadProbeChunksFromKey(videoKey: string): Promise<ProbeChunk[]> {
-  const { readHotelLobbyObjectRange } = await import('./storage');
   const first = await readHotelLobbyObjectRange({
     key: videoKey,
     start: 0,
     end: HEAD_BYTES - 1,
   });
   const chunks: ProbeChunk[] = [first];
-  if (first.totalBytes && first.totalBytes > HEAD_BYTES) {
+  if (first.totalBytes && first.totalBytes > first.bytes.byteLength) {
     const start = Math.max(0, first.totalBytes - TAIL_BYTES);
     if (start > 0 || first.bytes.byteLength < first.totalBytes) {
       chunks.push(
@@ -104,6 +106,10 @@ async function loadProbeChunksFromKey(videoKey: string): Promise<ProbeChunk[]> {
     );
   }
   return chunks;
+}
+
+async function loadFullObjectChunk(videoKey: string): Promise<ProbeChunk> {
+  return readHotelLobbyObjectRange({ key: videoKey, start: 0 });
 }
 
 function readEbmlVint(
@@ -490,5 +496,21 @@ export async function probeHotelLobbyVideoDimensions(videoUrl: string) {
 }
 
 export async function probeHotelLobbyVideoDimensionsFromKey(videoKey: string) {
-  return dimensionsFromProbeChunks(await loadProbeChunksFromKey(videoKey));
+  const chunks = await loadProbeChunksFromKey(videoKey);
+  try {
+    return dimensionsFromProbeChunks(chunks);
+  } catch (error) {
+    const total =
+      chunks.find((chunk) => chunk.totalBytes != null)?.totalBytes ??
+      chunks.reduce((max, chunk) => Math.max(max, chunk.bytes.byteLength), 0);
+    if (total > 0 && total <= FULL_PROBE_MAX_BYTES) {
+      return dimensionsFromProbeChunks([await loadFullObjectChunk(videoKey)]);
+    }
+    const readSizes = chunks.map((chunk) => chunk.bytes.byteLength).join('+');
+    throw new Error(
+      error instanceof Error
+        ? `${error.message} (read ${readSizes || '0'} bytes)`
+        : 'Could not read the reference video resolution. Use an MP4 or MOV with readable metadata.'
+    );
+  }
 }
