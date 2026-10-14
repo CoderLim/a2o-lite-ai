@@ -493,7 +493,9 @@ const GenerationsTable = memo(function GenerationsTable({
             </div>
             <div className="text-muted-foreground mt-1 text-[11px]">
               {g.scene === 'hotel-lobby'
-                ? m['admin.generations.scene.hotel_lobby']()
+                ? g.mode === 'Crazy Frog'
+                  ? m['admin.generations.scene.crazy_frog']()
+                  : m['admin.generations.scene.hotel_lobby']()
                 : m['admin.generations.scene.genjutsu']()}
             </div>
           </div>
@@ -793,7 +795,9 @@ function GenerationsPage() {
                   </div>
                   <div className="text-muted-foreground mt-1 text-xs">
                     {detail.scene === 'hotel-lobby'
-                      ? m['admin.generations.scene.hotel_lobby']()
+                      ? detail.mode === 'Crazy Frog'
+                        ? m['admin.generations.scene.crazy_frog']()
+                        : m['admin.generations.scene.hotel_lobby']()
                       : m['admin.generations.scene.genjutsu']()}
                   </div>
                 </div>

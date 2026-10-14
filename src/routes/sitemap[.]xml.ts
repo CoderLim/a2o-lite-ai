@@ -13,6 +13,7 @@ const STATIC_PATHS = [
   '/pricing',
   '/genjutsu-prompts',
   '/hotel-lobby-ai',
+  '/crazy-frog-ai',
   '/ai-zombie-hug',
   '/ai-rumpelstiltskin',
   '/bulin-47-ai',

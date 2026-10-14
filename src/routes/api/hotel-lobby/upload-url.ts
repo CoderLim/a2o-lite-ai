@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import { assertHotelLobbyGenerationId } from '@/modules/hotel-lobby/billing';
+import { resolveHotelLobbyPreset } from '@/modules/hotel-lobby/presets';
+import { HotelLobbyPreflightError } from '@/modules/hotel-lobby/service';
 import {
   assertHotelLobbyUploadSize,
   createHotelLobbyUploadDescriptor,
@@ -24,6 +26,7 @@ async function POST({ request }: { request: Request }) {
 
     const body = await request.json().catch(() => ({}));
     const generationId = assertHotelLobbyGenerationId(body.generationId);
+    const preset = resolveHotelLobbyPreset(body.presetId);
     const useDefaultTemplate = body.useDefaultTemplate === true;
     const contentTypes = Array.isArray(body.contentTypes)
       ? body.contentTypes.filter(
@@ -34,8 +37,17 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    const minFiles = useDefaultTemplate ? 1 : 2;
-    const maxFiles = useDefaultTemplate ? 2 : 3;
+    if (!preset.allowCustomVideo && !useDefaultTemplate) {
+      return respErr(
+        `${preset.displayName} only supports the fixed reference template`,
+        { status: 400 }
+      );
+    }
+
+    const minImages = preset.imageCount.min;
+    const maxImages = preset.imageCount.max;
+    const minFiles = useDefaultTemplate ? minImages : minImages + 1;
+    const maxFiles = useDefaultTemplate ? maxImages : maxImages + 1;
 
     if (
       contentTypes.length < minFiles ||
@@ -44,8 +56,18 @@ async function POST({ request }: { request: Request }) {
     ) {
       return respErr(
         useDefaultTemplate
-          ? 'Provide one or two reference images'
-          : 'Provide one 3–15s reference video plus one or two reference images',
+          ? minImages === maxImages
+            ? `Provide exactly ${minImages} reference image${
+                minImages === 1 ? '' : 's'
+              }`
+            : `Provide between ${minImages} and ${maxImages} reference images`
+          : `Provide one 3–15s reference video plus ${
+              minImages === maxImages
+                ? `exactly ${minImages} reference image${
+                    minImages === 1 ? '' : 's'
+                  }`
+                : `${minImages}–${maxImages} reference images`
+            }`,
         { status: 400 }
       );
     }
@@ -71,9 +93,12 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    return respData({ uploads });
+    return respData({ uploads, presetId: preset.id });
   } catch (error: any) {
     console.error('hotel-lobby upload-url failed:', error);
+    if (error instanceof HotelLobbyPreflightError) {
+      return respErr(error.message, { status: 400 });
+    }
     return respErr(error?.message || 'Failed to create upload URLs', {
       status: 400,
     });

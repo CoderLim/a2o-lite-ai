@@ -10,6 +10,11 @@ import {
 } from '@/lib/fal-query-error-cas';
 import { getUuid } from '@/lib/hash';
 
+import {
+  HOTEL_LOBBY_PRESET_ID,
+  normalizeStoredPresetId,
+  type HotelLobbyPresetId,
+} from './presets';
 import type { HotelLobbyAspectRatio, HotelLobbyResolution } from './pricing';
 import type { HotelLobbyPromptExpansionMode } from './service';
 
@@ -125,10 +130,22 @@ function assertTaskMatches(
     promptExpansionMode: HotelLobbyPromptExpansionMode;
     videoKey: string;
     imageKeys: string[];
+    presetId: HotelLobbyPresetId;
+    presetVersion: number;
+    keepAudio: boolean;
   }
 ) {
   const options = parseJson(task.options);
   const imageKeys = Array.isArray(options?.imageKeys) ? options.imageKeys : [];
+  const storedPresetId = normalizeStoredPresetId(options?.presetId);
+  // Legacy tasks omit preset fields — treat as hotel-lobby defaults.
+  const storedPresetVersion =
+    typeof options?.presetVersion === 'number' ? options.presetVersion : 1;
+  const storedKeepAudio =
+    typeof options?.keepAudio === 'boolean'
+      ? options.keepAudio
+      : storedPresetId === HOTEL_LOBBY_PRESET_ID;
+
   const matches =
     (task.prompt || '') === params.prompt &&
     options?.duration === params.duration &&
@@ -136,6 +153,9 @@ function assertTaskMatches(
     options?.aspectRatio === params.aspectRatio &&
     options?.promptExpansionMode === params.promptExpansionMode &&
     options?.videoKey === params.videoKey &&
+    storedPresetId === params.presetId &&
+    storedPresetVersion === params.presetVersion &&
+    storedKeepAudio === params.keepAudio &&
     imageKeys.length === params.imageKeys.length &&
     imageKeys.every(
       (value: unknown, index: number) => value === params.imageKeys[index]
@@ -146,6 +166,25 @@ function assertTaskMatches(
       'This generation ID is already bound to different inputs'
     );
   }
+}
+
+/** Public conflict check for generate idempotency (after inputs are known). */
+export function assertHotelLobbyTaskMatches(
+  task: any,
+  params: {
+    prompt: string;
+    duration: number;
+    resolution: HotelLobbyResolution;
+    aspectRatio: HotelLobbyAspectRatio;
+    promptExpansionMode: HotelLobbyPromptExpansionMode;
+    videoKey: string;
+    imageKeys: string[];
+    presetId: HotelLobbyPresetId;
+    presetVersion: number;
+    keepAudio: boolean;
+  }
+) {
+  assertTaskMatches(task, params);
 }
 
 export async function reserveHotelLobbyGeneration(params: {
@@ -162,13 +201,30 @@ export async function reserveHotelLobbyGeneration(params: {
   imageKeys: string[];
   providerCostUsd: number;
   credits: number;
+  presetId: HotelLobbyPresetId;
+  presetVersion: number;
+  keepAudio: boolean;
+  creditDescription?: string;
 }) {
+  const matchParams = {
+    prompt: params.prompt,
+    duration: params.duration,
+    resolution: params.resolution,
+    aspectRatio: params.aspectRatio,
+    promptExpansionMode: params.promptExpansionMode,
+    videoKey: params.videoKey,
+    imageKeys: params.imageKeys,
+    presetId: params.presetId,
+    presetVersion: params.presetVersion,
+    keepAudio: params.keepAudio,
+  };
+
   const existing = await getHotelLobbyTaskById({
     generationId: params.generationId,
     userId: params.userId,
   });
   if (existing) {
-    assertTaskMatches(existing, params);
+    assertTaskMatches(existing, matchParams);
     return existing;
   }
 
@@ -186,7 +242,7 @@ export async function reserveHotelLobbyGeneration(params: {
       .limit(1);
 
     if (insideExisting) {
-      assertTaskMatches(insideExisting, params);
+      assertTaskMatches(insideExisting, matchParams);
       return { task: insideExisting, insufficient: false };
     }
 
@@ -195,13 +251,17 @@ export async function reserveHotelLobbyGeneration(params: {
       userEmail: params.userEmail,
       credits: params.credits,
       scene: HOTEL_LOBBY_SCENE,
-      description: 'Reserve credits for Hotel Lobby AI generation',
+      description:
+        params.creditDescription ||
+        'Reserve credits for Hotel Lobby AI generation',
       metadata: JSON.stringify({
         generationId: params.generationId,
         model: params.model,
         resolution: params.resolution,
         duration: params.duration,
         providerCostUsd: params.providerCostUsd,
+        presetId: params.presetId,
+        presetVersion: params.presetVersion,
       }),
       tx,
     });
@@ -224,6 +284,9 @@ export async function reserveHotelLobbyGeneration(params: {
         promptExpansionMode: params.promptExpansionMode,
         videoKey: params.videoKey,
         imageKeys: params.imageKeys,
+        presetId: params.presetId,
+        presetVersion: params.presetVersion,
+        keepAudio: params.keepAudio,
       }),
       status: 'reserved',
       taskId: null,
@@ -300,12 +363,18 @@ export async function markHotelLobbySubmissionUnknown(params: {
   generationId: string;
   userId: string;
   error: string;
+  /** When Fal already returned an id, persist it for reconcile/recovery. */
+  requestId?: string;
 }) {
   await db()
     .update(aiTask)
     .set({
       status: 'submission_unknown',
-      taskResult: JSON.stringify({ error: params.error }),
+      ...(params.requestId ? { taskId: params.requestId } : {}),
+      taskResult: JSON.stringify({
+        error: params.error,
+        ...(params.requestId ? { requestId: params.requestId } : {}),
+      }),
     })
     .where(
       and(
