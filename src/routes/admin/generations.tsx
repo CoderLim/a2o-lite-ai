@@ -494,7 +494,9 @@ const GenerationsTable = memo(function GenerationsTable({
             <div className="text-muted-foreground mt-1 text-[11px]">
               {g.scene === 'hotel-lobby'
                 ? g.mode || m['admin.generations.scene.hotel_lobby']()
-                : m['admin.generations.scene.genjutsu']()}
+                : g.scene === 'kairo-bad-times'
+                  ? m['admin.generations.scene.kairo_bad_times']()
+                  : m['admin.generations.scene.genjutsu']()}
             </div>
           </div>
         ),
@@ -657,6 +659,9 @@ const GenerationsTable = memo(function GenerationsTable({
                   <SelectItem value="hotel-lobby">
                     {m['admin.generations.scene.hotel_lobby']()}
                   </SelectItem>
+                  <SelectItem value="kairo-bad-times">
+                    {m['admin.generations.scene.kairo_bad_times']()}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -795,7 +800,9 @@ function GenerationsPage() {
                     {detail.scene === 'hotel-lobby'
                       ? detail.mode ||
                         m['admin.generations.scene.hotel_lobby']()
-                      : m['admin.generations.scene.genjutsu']()}
+                      : detail.scene === 'kairo-bad-times'
+                        ? m['admin.generations.scene.kairo_bad_times']()
+                        : m['admin.generations.scene.genjutsu']()}
                   </div>
                 </div>
                 <div>

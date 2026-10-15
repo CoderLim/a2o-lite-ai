@@ -77,9 +77,23 @@ function isProcessingStatus(status: string) {
 }
 
 function statusPathFor(generation: Pick<Generation, 'id' | 'scene'>) {
-  return generation.scene === 'hotel-lobby'
-    ? `/api/hotel-lobby/status?generationId=${encodeURIComponent(generation.id)}`
-    : `/api/genjutsu/status?generationId=${encodeURIComponent(generation.id)}`;
+  if (generation.scene === 'hotel-lobby') {
+    return `/api/hotel-lobby/status?generationId=${encodeURIComponent(generation.id)}`;
+  }
+  if (generation.scene === 'kairo-bad-times') {
+    return `/api/kairo-bad-times/status?generationId=${encodeURIComponent(generation.id)}`;
+  }
+  return `/api/genjutsu/status?generationId=${encodeURIComponent(generation.id)}`;
+}
+
+function sceneLabel(generation: Pick<Generation, 'scene' | 'mode'>) {
+  if (generation.scene === 'hotel-lobby') {
+    return generation.mode || m['creations.scene.hotel_lobby']();
+  }
+  if (generation.scene === 'kairo-bad-times') {
+    return m['creations.scene.kairo_bad_times']();
+  }
+  return m['creations.scene.genjutsu']();
 }
 
 function statusLabel(status: string) {
@@ -245,12 +259,10 @@ function GenerationCard({
             {generation.prompt || m['creations.untitled']()}
           </h2>
           <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-            <span>
-              {generation.scene === 'hotel-lobby'
-                ? generation.mode || m['creations.scene.hotel_lobby']()
-                : m['creations.scene.genjutsu']()}
-            </span>
-            {generation.mode && generation.scene !== 'hotel-lobby' ? (
+            <span>{sceneLabel(generation)}</span>
+            {generation.mode &&
+            generation.scene !== 'hotel-lobby' &&
+            generation.scene !== 'kairo-bad-times' ? (
               <span>{generation.mode}</span>
             ) : null}
             {generation.resolution ? (

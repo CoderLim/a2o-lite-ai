@@ -23,6 +23,11 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description: 'Two-photo Crazy Frog chase AI video generator',
   },
   {
+    path: '/kairo-bad-times',
+    title: 'Kairo Bad Times AI Video',
+    description: 'One-photo Kairo Bad Times motion-template AI video generator',
+  },
+  {
     path: '/smalltown-boy-dance',
     title: 'Smalltown Boy Dance',
     description:

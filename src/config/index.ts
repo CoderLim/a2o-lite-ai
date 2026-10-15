@@ -168,6 +168,11 @@ export const envConfigs: Record<string, string> = {
     procEnv.HOTEL_LOBBY_TEMPLATE_VIDEO_KEY ??
     'hotel-lobby/templates/default.mp4',
 
+  // Kairo Bad Times preset (server-only). Fixed motion template in R2.
+  kairo_bad_times_template_video_key:
+    procEnv.KAIRO_BAD_TIMES_TEMPLATE_VIDEO_KEY ??
+    'kairo-bad-times/templates/v2.mp4',
+
   // AI Zombie Hug preset (server-only). Motion-transfer source clips in R2.
   zombie_hug_template_video_key:
     procEnv.ZOMBIE_HUG_TEMPLATE_VIDEO_KEY ??

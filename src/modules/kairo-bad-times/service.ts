@@ -1,0 +1,166 @@
+import {
+  AIMediaType,
+  AITaskStatus,
+  FalProvider,
+  isFalPermanentQueryFailure,
+} from '@/core/ai';
+import { envConfigs } from '@/config';
+import { getConfig } from '@/modules/config/service';
+
+import {
+  KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
+  KAIRO_BAD_TIMES_FIXED_PROMPT,
+  KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
+  KAIRO_BAD_TIMES_MODEL,
+} from './constants';
+import { assertKairoBadTimesDuration } from './pricing';
+
+export class KairoBadTimesPreflightError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'KairoBadTimesPreflightError';
+  }
+}
+
+function getKairoBadTimesWebhookUrl() {
+  const appUrl = envConfigs.app_url?.trim();
+  if (!appUrl || !appUrl.startsWith('https://')) return null;
+  try {
+    return new URL('/api/kairo-bad-times/webhook', appUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+async function getFalProvider() {
+  const apiKey = (await getConfig('fal_api_key'))?.trim();
+  if (!apiKey) {
+    throw new KairoBadTimesPreflightError(
+      'Fal API key is not configured. Set it in Admin → Settings → AI → Fal.'
+    );
+  }
+  return new FalProvider({ apiKey });
+}
+
+function assertHttpUrl(value: string, label: string) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      throw new Error();
+    }
+  } catch {
+    throw new KairoBadTimesPreflightError(`${label} is not a valid URL`);
+  }
+}
+
+export function validateKairoBadTimesInput(input: {
+  duration: number;
+  imageUrl: string;
+  videoUrl: string;
+}) {
+  assertKairoBadTimesDuration(input.duration);
+  assertHttpUrl(input.imageUrl, 'Reference image URL');
+  assertHttpUrl(input.videoUrl, 'Template video URL');
+
+  return input;
+}
+
+export async function submitKairoBadTimes(input: {
+  duration: number;
+  imageUrl: string;
+  videoUrl: string;
+}) {
+  validateKairoBadTimesInput(input);
+  const provider = await getFalProvider();
+  const callbackUrl = getKairoBadTimesWebhookUrl() ?? undefined;
+
+  const result = await provider.generate({
+    params: {
+      mediaType: AIMediaType.VIDEO,
+      model: KAIRO_BAD_TIMES_MODEL,
+      prompt: KAIRO_BAD_TIMES_FIXED_PROMPT,
+      callbackUrl,
+      options: {
+        image_url: input.imageUrl,
+        video_url: input.videoUrl,
+        character_orientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
+        keep_original_sound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
+      },
+    },
+  });
+
+  return {
+    requestId: result.taskId,
+    status: result.taskStatus,
+  };
+}
+
+export async function getKairoBadTimesProviderStatus(
+  requestId: string,
+  model: string = KAIRO_BAD_TIMES_MODEL
+) {
+  if (!/^[A-Za-z0-9._:-]{6,200}$/.test(requestId.trim())) {
+    throw new KairoBadTimesPreflightError('Invalid request ID');
+  }
+
+  const provider = await getFalProvider();
+  const result = await provider.query?.({
+    taskId: requestId,
+    model,
+    mediaType: AIMediaType.VIDEO,
+  });
+
+  if (!result) throw new Error('Fal status lookup is unavailable');
+
+  if (result.taskStatus === AITaskStatus.SUCCESS) {
+    const videoUrl = result.taskInfo?.videos?.[0]?.videoUrl;
+    if (!videoUrl) {
+      return {
+        status: 'failed' as const,
+        providerStatus: 'completed',
+        videoUrl: null,
+        error: 'Fal completed the request without a video URL',
+      };
+    }
+    return {
+      status: 'completed' as const,
+      providerStatus: 'completed',
+      videoUrl,
+    };
+  }
+
+  if (
+    result.taskStatus === AITaskStatus.FAILED ||
+    result.taskStatus === AITaskStatus.CANCELED
+  ) {
+    const payload = result.taskResult as Record<string, unknown> | undefined;
+    const error =
+      (typeof payload?.error === 'string' && payload.error) ||
+      (typeof result.taskInfo?.errorMessage === 'string' &&
+        result.taskInfo.errorMessage) ||
+      (typeof payload?.message === 'string' && payload.message) ||
+      'Video generation failed';
+
+    if (isFalPermanentQueryFailure(result.taskInfo)) {
+      return {
+        status: 'unresolved' as const,
+        providerStatus: result.taskInfo?.status || 'QUERY_PERMANENT_ERROR',
+        videoUrl: null,
+        error,
+      };
+    }
+
+    return {
+      status: 'failed' as const,
+      providerStatus: result.taskStatus,
+      videoUrl: null,
+      error,
+    };
+  }
+
+  return {
+    status: 'processing' as const,
+    providerStatus: result.taskStatus,
+    videoUrl: null,
+  };
+}
