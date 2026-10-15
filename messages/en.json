@@ -1677,5 +1677,8 @@
   "site.kairo.faq4_a": "Yes. The generator keeps the template audio in the export.",
   "site.kairo.faq5_q": "Is it free?",
   "site.kairo.faq5_a": "You can preview the template without uploading. Generation uses Genjutsu AI credits; the estimate appears before you start.",
-  "site.kairo.faq_title": "FAQ"
+  "site.kairo.faq_title": "FAQ",
+  "site.kairo.result_label": "Kairo Bad Times · motion template · 1 photo",
+  "site.kairo.estimate_tooltip": "Approximate credits from the template length. The server calculates the final charge when you generate.",
+  "site.kairo.inspired_note": "Independent tool — not an official partnership. For posting, use a licensed track from the platform music library when required."
 }

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Film, Images, Sparkles, WandSparkles } from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
@@ -16,6 +17,14 @@ const FAQ_ITEMS = [
   { question: m['site.kairo.faq3_q'], answer: m['site.kairo.faq3_a'] },
   { question: m['site.kairo.faq4_q'], answer: m['site.kairo.faq4_a'] },
   { question: m['site.kairo.faq5_q'], answer: m['site.kairo.faq5_a'] },
+] as const;
+
+const EXPLORE_LINKS = [
+  [m['site.crazy.more_hotel'], '/hotel-lobby-ai'],
+  [m['site.crazy.more_zombie'], '/ai-zombie-hug'],
+  [m['site.crazy.more_bulin'], '/bulin-47-ai'],
+  [m['site.crazy.more_genjutsu'], '/'],
+  [m['site.crazy.more_pricing'], '/pricing'],
 ] as const;
 
 function faqJsonLd() {
@@ -61,14 +70,14 @@ function howToJsonLd() {
 
 function KairoBadTimesPage() {
   return (
-    <div className="min-h-screen bg-[hsl(220_18%_8%)] text-[rgb(232,236,242)]">
+    <div className="min-h-screen bg-[hsl(28_25%_9%)] text-[rgb(237,234,222)]">
       <SeoJsonLd value={faqJsonLd()} />
       <SeoJsonLd value={howToJsonLd()} />
 
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(88,120,180,0.18),transparent_42%),linear-gradient(to_bottom,rgba(10,14,22,0.55),hsl(220_18%_8%)_80%)]" />
-          <div className="absolute top-20 left-1/2 h-[380px] w-[820px] -translate-x-1/2 rounded-full bg-[rgba(96,140,210,0.06)] blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(154,91,55,0.22),transparent_38%),linear-gradient(to_bottom,rgba(13,10,9,0.5),hsl(28_25%_9%)_78%)]" />
+          <div className="absolute top-24 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[rgba(204,144,92,0.055)] blur-3xl" />
         </div>
 
         <div className="relative z-20">
@@ -76,20 +85,23 @@ function KairoBadTimesPage() {
         </div>
 
         <main className="relative z-10">
-          <section className="mx-auto max-w-5xl px-4 pt-8 pb-10 text-center sm:pt-12 md:px-5 md:pb-12">
-            <div className="mx-auto mb-3 flex w-fit items-center gap-2 rounded-full border border-[rgba(120,160,220,0.22)] bg-[rgba(120,160,220,0.08)] px-3 py-1.5 text-xs font-medium text-[rgb(170,200,240)]">
+          <section className="mx-auto max-w-7xl px-4 pt-14 pb-12 text-center sm:pt-20 md:px-5 md:pb-16">
+            <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-[rgba(204,144,92,0.2)] bg-[rgba(204,144,92,0.07)] px-3 py-1.5 text-xs font-medium text-[rgb(220,155,99)]">
               <WandSparkles className="size-3.5" />
               {m['site.kairo.hero_badge']()}
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-[28px] leading-[1.08] font-bold tracking-[-1.2px] sm:text-[36px] md:text-[44px]">
+            <h1 className="mx-auto max-w-4xl text-[34px] leading-[1.08] font-bold tracking-[-1.4px] sm:text-[44px] md:text-[56px]">
               {m['site.kairo.hero_title']()}
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/58 sm:text-base">
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-white/58 sm:text-lg">
               {m['site.kairo.hero_description']()}
             </p>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/40">
+              {m['site.kairo.inspired_note']()}
+            </p>
 
-            <div id="generator" className="mt-6 text-left">
+            <div id="generator" className="mt-8 text-left sm:mt-10">
               <KairoBadTimesGeneratorPanel />
             </div>
           </section>
@@ -124,7 +136,7 @@ function KairoBadTimesPage() {
                     key={step.title()}
                     className="rounded-[22px] border border-white/8 bg-white/[0.03] p-5 text-left"
                   >
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-[rgba(120,160,220,0.12)] text-[rgb(170,200,240)]">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-[rgba(204,144,92,0.1)] text-[rgb(220,155,99)]">
                       <Icon className="size-5" />
                     </span>
                     <h3 className="mt-5 text-lg font-semibold text-white/90">
@@ -140,20 +152,39 @@ function KairoBadTimesPage() {
           </section>
 
           <section className="border-y border-white/7 bg-white/[0.018]">
-            <div className="mx-auto max-w-3xl px-4 py-14 md:px-5 md:py-20">
+            <div className="mx-auto max-w-5xl px-4 py-14 md:px-5 md:py-20">
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 {m['site.kairo.faq_title']()}
               </h2>
-              <div className="mt-8 space-y-5">
+              <div className="mt-7 divide-y divide-white/7 rounded-2xl border border-white/8 bg-white/[0.02] px-5 sm:px-7">
                 {FAQ_ITEMS.map((item) => (
-                  <div key={item.question()}>
-                    <h3 className="text-base font-semibold text-white/88">
+                  <details key={item.question()} className="group py-5">
+                    <summary className="cursor-pointer list-none pr-6 text-sm font-semibold text-white/82 sm:text-base">
                       {item.question()}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-white/48">
+                    </summary>
+                    <p className="mt-3 max-w-3xl text-sm leading-7 text-white/45">
                       {item.answer()}
                     </p>
-                  </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="mx-auto max-w-6xl px-4 pb-16 md:px-5">
+            <div className="rounded-[26px] border border-white/8 bg-white/[0.02] p-6 sm:p-8">
+              <h2 className="text-2xl font-semibold tracking-tight">
+                {m['site.crazy.explore_title']()}
+              </h2>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {EXPLORE_LINKS.map(([label, href]) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/70 transition hover:border-[rgba(204,144,92,0.35)] hover:text-[rgb(220,155,99)]"
+                  >
+                    {label()}
+                  </Link>
                 ))}
               </div>
             </div>

@@ -1,12 +1,11 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
 } from 'react';
-import { Download, LoaderCircle } from 'lucide-react';
+import { CircleHelp, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
@@ -21,6 +20,12 @@ import { useCreditGate } from '@/hooks/use-credit-gate';
 import { useUserCredits } from '@/hooks/use-user-credits';
 import { InsufficientCreditsModal } from '@/components/credits/insufficient-credits-modal';
 import { CloseIcon, ImageModeIcon } from '@/components/icons';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type MediaItem = {
   id: string;
@@ -122,7 +127,6 @@ export function KairoBadTimesGeneratorPanel({
   const busy = phase !== 'idle' && phase !== 'locked';
   const templateAvailable = templateMeta?.templateAvailable === true;
   const estimatedCredits = templateMeta?.estimatedCredits ?? null;
-  const billedDuration = templateMeta?.billedDurationSeconds ?? null;
 
   useEffect(() => {
     apiGet<TemplateMeta>('/api/kairo-bad-times/template-meta')
@@ -275,14 +279,6 @@ export function KairoBadTimesGeneratorPanel({
     photo && templateAvailable && !busy && !sessionPending
   );
 
-  const creditHint = useMemo(() => {
-    if (estimatedCredits == null || billedDuration == null) return null;
-    return m['site.kairo.credit_hint']({
-      credits: estimatedCredits,
-      seconds: billedDuration,
-    });
-  }, [billedDuration, estimatedCredits]);
-
   const setPhotoFile = (file: File | null) => {
     if (!file) return;
     const mime = file.type.split(';', 1)[0]?.trim().toLowerCase() || '';
@@ -430,56 +426,58 @@ export function KairoBadTimesGeneratorPanel({
   const posterUrl = templateMeta?.posterUrl || KAIRO_BAD_TIMES_POSTER_PATH;
 
   return (
-    <div className={cn('space-y-5', className)}>
-      <div className="grid items-start gap-5 md:grid-cols-[auto_minmax(0,1fr)]">
-        <div className="mx-auto w-full max-w-[240px] space-y-2 sm:max-w-[260px]">
-          <p className="text-foreground/80 text-sm font-medium">
-            {m['site.kairo.template_label']()}
-          </p>
-          <div className="border-border/60 overflow-hidden rounded-2xl border bg-black/40">
-            <video
-              key={previewUrl}
-              className="mx-auto aspect-[9/16] max-h-[min(48vh,420px)] w-full object-contain"
-              src={previewUrl}
-              poster={posterUrl}
-              controls
-              playsInline
-              preload="metadata"
-            />
-          </div>
-          <p className="text-muted-foreground text-xs">
-            {m['site.kairo.template_note']()}
-          </p>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-4">
-          <div className="space-y-2">
-            <p className="text-foreground/80 text-sm font-medium">
-              {m['site.kairo.photo_label']()}
+    <div className={cn('mx-auto w-full max-w-[1120px]', className)}>
+      <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-[0_30px_90px_-30px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+        <div className="grid gap-0 lg:grid-cols-2 lg:items-stretch">
+          <div className="flex flex-col border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0">
+            <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
+              {m['site.kairo.template_label']()}
             </p>
-            <p className="text-muted-foreground text-xs">
-              {m['site.kairo.photo_note']()}
+            {/*
+              Cap width so 9:16 stays within one viewport (240 * 16/9 ≈ 427px).
+            */}
+            <div className="relative mx-auto aspect-[9/16] w-full max-w-[min(100%,240px)] overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <video
+                key={previewUrl}
+                src={previewUrl}
+                poster={posterUrl}
+                controls
+                playsInline
+                preload="metadata"
+                className="size-full object-cover"
+              />
+            </div>
+            <p className="mt-2 text-center text-xs text-white/38">
+              {m['site.kairo.template_note']()}
+            </p>
+          </div>
+
+          <div className="flex min-h-0 flex-col p-4 sm:p-5 lg:h-full">
+            <p className="mb-2 shrink-0 text-xs font-medium tracking-wide text-white/45 uppercase">
+              {m['site.kairo.photo_label']()}
             </p>
             <input
               ref={photoInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
               className="hidden"
               onChange={onPickPhoto}
             />
             {photo ? (
-              <div className="border-border/60 relative mx-auto max-h-[min(36vh,280px)] max-w-[200px] overflow-hidden rounded-2xl border">
+              <div className="relative aspect-[3/4] min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black lg:aspect-auto">
                 <img
                   src={photo.url}
-                  alt=""
-                  className="aspect-[3/4] max-h-[min(36vh,280px)] w-full object-cover"
+                  alt={m['site.kairo.photo_label']()}
+                  className="size-full object-cover"
                 />
                 <button
                   type="button"
-                  className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-black/55 text-white"
                   onClick={clearPhoto}
                   disabled={busy}
-                  aria-label={m['site.generator.image_remove']()}
+                  aria-label={m['site.common.remove_item']({
+                    name: m['site.kairo.photo_label'](),
+                  })}
+                  className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur transition hover:bg-black/90 disabled:opacity-40"
                 >
                   <CloseIcon className="size-4" />
                 </button>
@@ -487,93 +485,175 @@ export function KairoBadTimesGeneratorPanel({
             ) : (
               <button
                 type="button"
-                onClick={() => photoInputRef.current?.click()}
                 disabled={busy}
-                className="border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/35 mx-auto flex aspect-[3/4] max-h-[min(36vh,280px)] w-full max-w-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-sm transition"
+                onClick={() => photoInputRef.current?.click()}
+                className="flex aspect-[3/4] w-full flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50 lg:aspect-auto lg:min-h-[280px]"
               >
-                <ImageModeIcon className="size-6 opacity-70" />
-                {m['site.kairo.upload_photo']()}
+                <span className="flex size-11 items-center justify-center rounded-full bg-white/8 text-white/70">
+                  <ImageModeIcon className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-medium text-white/78">
+                    {m['site.kairo.upload_photo']()}
+                  </span>
+                  <span className="mt-1 block text-xs text-white/38">
+                    {m['site.kairo.photo_note']()}
+                  </span>
+                </span>
               </button>
             )}
           </div>
+        </div>
 
-          {creditHint ? (
-            <p className="text-muted-foreground text-xs">{creditHint}</p>
-          ) : null}
+        <div className="border-t border-white/8 p-4 sm:p-5">
           {templateMetaError ? (
-            <p className="text-destructive text-sm">{templateMetaError}</p>
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {templateMetaError}
+            </div>
           ) : null}
           {jobError ? (
-            <p className="text-destructive text-sm">{jobError}</p>
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {jobError}
+            </div>
           ) : null}
 
-          <button
-            type="button"
-            disabled={!canGenerate}
-            onClick={() => void startGeneration()}
-            className={cn(
-              'bg-foreground text-background inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition',
-              !canGenerate && 'opacity-50'
-            )}
-          >
-            {busy ? (
-              <>
-                <LoaderCircle className="size-4 animate-spin" />
-                {phase === 'uploading' || phase === 'starting'
-                  ? m['site.generator.starting']()
-                  : m['site.generator.generating']()}
-              </>
-            ) : (
-              m['site.kairo.generate']()
-            )}
-          </button>
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
+                  {m['site.generator.full_video']()}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  {estimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: estimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                  <TooltipProvider delay={200}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="inline-flex size-4 cursor-pointer items-center justify-center rounded-full text-current/70 transition-colors hover:text-current"
+                        aria-label={m['genjutsu.estimate.help_aria']()}
+                      >
+                        <CircleHelp className="size-3.5" aria-hidden />
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="end"
+                        className="max-w-[240px] text-left leading-snug"
+                      >
+                        {m['site.kairo.estimate_tooltip']()}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={!canGenerate}
+                onClick={() => void startGeneration()}
+                className={cn(
+                  'relative inline-flex h-8 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
+                  canGenerate
+                    ? 'cursor-pointer text-[rgb(247,246,243)] hover:brightness-105'
+                    : 'cursor-not-allowed bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
+                )}
+              >
+                {busy
+                  ? m['site.common.generating']()
+                  : m['site.generator.generate']()}
+              </button>
+            </div>
+          </div>
+
+          {!session?.user && !sessionPending ? (
+            <p className="mt-3 text-xs text-white/40">
+              {m['site.common.signin_generate']()}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <div ref={resultPanelRef} className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-foreground/80 text-sm font-medium">
-            {m['site.generator.preview_result']()}
-          </p>
-          {resultUrl ? (
-            <a
-              href={resultUrl}
-              download="kairo-bad-times.mp4"
-              className="text-foreground/80 inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
-            >
-              <Download className="size-4" />
-              {m['site.common.download']()}
-            </a>
-          ) : null}
-        </div>
-        <div className="border-border/60 mx-auto max-w-[240px] overflow-hidden rounded-2xl border bg-black/30 sm:max-w-[280px]">
-          {resultUrl ? (
-            <video
-              className="mx-auto aspect-[9/16] max-h-[min(48vh,420px)] w-full object-contain"
-              src={resultUrl}
-              controls
-              playsInline
-            />
-          ) : busy ? (
-            <div className="flex aspect-[9/16] max-h-[min(48vh,420px)] flex-col items-center justify-center gap-3 px-6 text-center">
-              <LoaderCircle className="text-foreground/70 size-8 animate-spin" />
-              <p className="text-muted-foreground text-sm">
-                {m['site.kairo.generating_hint']()}
+      {busy || resultUrl ? (
+        <div
+          ref={resultPanelRef}
+          id="generation-result"
+          className="mt-5 scroll-mt-24 overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-2xl"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3 sm:px-5">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white/90">
+                {resultUrl && !busy
+                  ? m['site.common.your_video']()
+                  : m['site.generator.generating']()}
               </p>
-              <div className="bg-muted h-1.5 w-full max-w-xs overflow-hidden rounded-full">
+              <p className="mt-0.5 truncate text-xs text-white/40">
+                {resultUrl && !busy
+                  ? m['site.kairo.result_label']()
+                  : phase === 'uploading' || phase === 'starting'
+                    ? m['site.generator.starting']()
+                    : m['site.kairo.generating_hint']()}
+              </p>
+            </div>
+            {resultUrl && !busy ? (
+              <a
+                href={
+                  generationId
+                    ? `/api/kairo-bad-times/result/${encodeURIComponent(generationId)}?download=1`
+                    : resultUrl
+                }
+                download={
+                  generationId
+                    ? `kairo-bad-times-${generationId.slice(0, 8)}.mp4`
+                    : undefined
+                }
+                className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <Download className="size-3.5" />
+                {m['site.common.download']()}
+              </a>
+            ) : (
+              <span className="shrink-0 text-xs font-medium text-white/45 tabular-nums">
+                {progressPercent}%
+              </span>
+            )}
+          </div>
+
+          {busy ? (
+            <div className="space-y-4 px-4 py-8 sm:px-5 sm:py-10">
+              <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+                <span className="size-9 animate-spin rounded-full border-2 border-[rgb(204,144,92)] border-t-transparent" />
+                <p className="text-center text-sm text-white/55">
+                  {m['site.kairo.generating_hint']()}
+                </p>
+              </div>
+              <div
+                className="mx-auto h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <div
-                  className="bg-foreground/80 h-full rounded-full transition-[width]"
+                  className="h-full rounded-full bg-[rgb(204,144,92)] transition-[width] duration-500 ease-out"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
             </div>
-          ) : (
-            <div className="text-muted-foreground flex aspect-[9/16] max-h-[min(36vh,240px)] items-center justify-center px-6 text-center text-sm">
-              {m['site.kairo.result_empty']()}
+          ) : resultUrl ? (
+            <div className="bg-black/35 p-3 sm:p-4">
+              <video
+                src={resultUrl}
+                controls
+                autoPlay
+                playsInline
+                className="mx-auto aspect-[9/16] max-h-[min(70vh,720px)] w-full max-w-[min(100%,420px)] rounded-2xl bg-black object-contain"
+              />
             </div>
-          )}
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       <InsufficientCreditsModal
         gate={creditGate.gate}

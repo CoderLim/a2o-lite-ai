@@ -1677,5 +1677,8 @@
   "site.kairo.faq4_a": "네. 템플릿 오디오가 내보내기에 포함됩니다.",
   "site.kairo.faq5_q": "무료인가요?",
   "site.kairo.faq5_a": "템플릿 미리보기는 업로드 없이 가능합니다. 생성에는 Genjutsu AI 크레딧이 사용되며, 시작 전 예상치가 표시됩니다.",
-  "site.kairo.faq_title": "FAQ"
+  "site.kairo.faq_title": "FAQ",
+  "site.kairo.result_label": "Kairo Bad Times · 모션 템플릿 · 사진 1장",
+  "site.kairo.estimate_tooltip": "템플릿 길이에 따른 예상 크레딧입니다. 최종 청구액은 생성 시 서버에서 계산합니다.",
+  "site.kairo.inspired_note": "독립 도구입니다. 공식 파트너십이 아닙니다. 게시 시 필요하면 플랫폼의 라이선스 음원을 사용하세요."
 }

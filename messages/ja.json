@@ -1677,5 +1677,8 @@
   "site.kairo.faq4_a": "はい。テンプレートの音声が書き出しに含まれます。",
   "site.kairo.faq5_q": "無料ですか？",
   "site.kairo.faq5_a": "テンプレートのプレビューはアップロードなしでできます。生成にはGenjutsu AIクレジットが必要で、開始前に見積もりが表示されます。",
-  "site.kairo.faq_title": "よくある質問"
+  "site.kairo.faq_title": "よくある質問",
+  "site.kairo.result_label": "Kairo Bad Times · モーショテンプレ · 写真1枚",
+  "site.kairo.estimate_tooltip": "テンプレート尺に基づく概算クレジットです。最終請求は生成時にサーバーが計算します。",
+  "site.kairo.inspired_note": "独立ツールです。公式提携ではありません。投稿時は必要に応じてプラットフォームのライセンス音源を使用してください。"
 }
