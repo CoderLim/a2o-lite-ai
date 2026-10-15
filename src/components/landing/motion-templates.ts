@@ -211,6 +211,17 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     resolution: DEFAULT_OBJECTS_RESOLUTION,
     aspect: 'portrait',
   },
+  {
+    id: 'dog-kick-bottle',
+    titleKey: 'site.templates.dog_kick_bottle',
+    poster: '/videos/dog-kick-bottle-tpl-poster.jpg',
+    sourceVideo: '/videos/dog-kick-bottle-tpl.mp4',
+    prompt:
+      'Replace the dog in @Video1 with the subject in @Image1. Keep the bottle-kick motion, camera path, lighting, and timing. Use only this authorized likeness.',
+    mode: 'objects-swap',
+    resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'landscape',
+  },
 ];
 
 /** Optional preview URL when it differs from the downloadable source. */
