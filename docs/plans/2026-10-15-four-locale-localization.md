@@ -52,3 +52,16 @@ This script checkpoints each successful batch. It validates message keys and `{c
 ## Why locales are not enabled yet
 
 Paraglide falls back to English for missing messages. Enabling the four locales while catalogs are incomplete would create misleading localized URLs and `hreflang` annotations, potentially hurting SEO. The branch intentionally introduces real content and repeatable verification without deploying unfinished variants.
+
+
+## Progress audit (2026-10-15, follow-up)
+
+- All four `messages/*.json` catalogs now contain 1,751/1,751 source message keys. This indicates key presence, **not certified translation quality**. A token scan found no missing interpolation placeholders in those catalogs.
+- The four localized privacy policy and refund policy MDX files are present.
+- All four `terms-of-service.<locale>.mdx` files are **still missing**. Do not enable locale URLs for the legal terms until translated and checked for legal equivalence.
+- Three bundled English blog articles have no translated `es`, `pt-BR`, `fr`, or `de` MDX equivalents (12 files missing).
+- `scripts/i18n/check-content.mjs --strict` now tests these non-JSON gaps; keep it in the release gate, alongside `check-coverage.mjs --strict`.
+- Further audit hardcoded English in `src/routes/text-to-image.tsx` and verify public trend pages. Locale registration in `project.inlang/settings.json` remains disabled intentionally.
+- Inherited English messaging may be inaccurate: `site.seo.faq2_a` claims human faces are always rejected even though some trend routes offer real-person substitutions; reconcile this against current provider and moderation policy before publishing translations.
+
+**Do not merge this PR as a complete localization without resolving these points and running build + browser checks.**
