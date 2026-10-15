@@ -65,3 +65,12 @@ Paraglide falls back to English for missing messages. Enabling the four locales 
 - Inherited English messaging may be inaccurate: `site.seo.faq2_a` claims human faces are always rejected even though some trend routes offer real-person substitutions; reconcile this against current provider and moderation policy before publishing translations.
 
 **Do not merge this PR as a complete localization without resolving these points and running build + browser checks.**
+
+
+## Update: content translations and editorial SEO (2026-10-16)
+
+- All **4 translated Terms of Service** MDX files are now included. These are translations of the existing English policy; they still require human legal review. In particular, the original restrictions on real-human reference photos may not match some currently supported trend generators.
+- All **12 translated blog MDX articles** are included (Higgsfield Alternative, Bulin 47, Rumpelstiltskin × ES/PT-BR/FR/DE). Video source paths, metadata dates, supported prompt references and heading counts have been checked against the English originals.
+- The Rumpelstiltskin editorial page now has per-language long-form copy, translated FAQ and HowTo schema metadata in `src/components/landing/rumpel-seo-i18n.ts`. The published English original remains the fallback for languages without a complete editorial translation.
+- Sitemap restricts `/text-to-image` to English because its interface, SEO metadata and supporting sections remain hardcoded in English; the Rumpelstiltskin route emits alternates only after those languages are activated. Blog sitemap entries are restricted to enabled locales, even when translated MDX drafts exist.
+- **Do not enable ES/PT-BR/FR/DE yet** without verifying hardcoded landing-page UI, correcting contradictory legal/FAQ statements, and passing a full build + visual/browser test.
