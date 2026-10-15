@@ -13,8 +13,73 @@ const DEFAULT_SEEAPI_API_BASE_URL = 'https://api.seeapi.com';
 const DEFAULT_SEEAPI_MODEL = 'seedance-2-5';
 const DEFAULT_SEEAPI_ENDPOINT = 'reference-to-video';
 const DEFAULT_SEEAPI_UPSTREAM_PROVIDER = 'seeapi';
+/**
+ * Objects Swap needs explicit edit mode. BytePlus exposes
+ * `omni_reference_task_type=edit`; the default SeeAPI upstream only has the
+ * soft `duration_seconds=-1` signal and often only applies the primary subject.
+ */
+const DEFAULT_SEEAPI_EDIT_UPSTREAM_PROVIDER = 'byteplus';
 /** SeeAPI public USD estimate per credit (docs, not an extra charge). */
 const DEFAULT_SEEAPI_USD_PER_CREDIT = 0.0037;
+
+type SeeapiUpstreamProvider = 'seeapi' | 'byteplus';
+
+function normalizeUpstreamProvider(
+  value: string | undefined,
+  fallback: SeeapiUpstreamProvider
+): SeeapiUpstreamProvider {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === 'byteplus') return 'byteplus';
+  if (normalized === 'seeapi') return 'seeapi';
+  return fallback;
+}
+
+function resolveSeeapiUpstreamProvider(
+  mode: GenjutsuMode,
+  override?: string
+): SeeapiUpstreamProvider {
+  if (override?.trim()) {
+    return normalizeUpstreamProvider(
+      override,
+      DEFAULT_SEEAPI_UPSTREAM_PROVIDER
+    );
+  }
+  if (mode === 'objects-swap') {
+    return normalizeUpstreamProvider(
+      envConfigs.seedance_seeapi_edit_upstream_provider,
+      DEFAULT_SEEAPI_EDIT_UPSTREAM_PROVIDER
+    );
+  }
+  return normalizeUpstreamProvider(
+    envConfigs.seedance_seeapi_upstream_provider,
+    DEFAULT_SEEAPI_UPSTREAM_PROVIDER
+  );
+}
+
+function buildSeeapiWorkflowPrompt(input: {
+  mode: GenjutsuMode;
+  prompt?: string;
+  imageCount: number;
+}) {
+  const workflowPrompt = buildSeedanceWorkflowPrompt({
+    mode: input.mode,
+    userPrompt: input.prompt,
+    imageCount: input.imageCount,
+  });
+
+  if (input.mode !== 'objects-swap') return workflowPrompt;
+
+  // Mirror Volcengine: prefix edit intent so the job cannot be classified as
+  // plain reference generation. For multi-image swaps, restate that every
+  // @ImageN mapping must be applied (secondary subjects were commonly skipped).
+  const parts = [`编辑视频：${workflowPrompt}`];
+  if (input.imageCount > 1) {
+    parts.push(
+      'Apply every @ImageN→subject mapping completely. Replace each mapped person or object with the matching reference identity (face, hair, body, clothing). Do not leave any mapped subject as the original identity from the source video.'
+    );
+  }
+  return parts.join('\n');
+}
 
 /**
  * Seedance 2.5 reference-to-video rates when a video reference is present
@@ -260,40 +325,48 @@ export function buildSeeapiSeedancePayload(input: {
   }
 
   const isEdit = input.mode === 'objects-swap';
-  const prompt = buildSeedanceWorkflowPrompt({
+  const prompt = buildSeeapiWorkflowPrompt({
     mode: input.mode,
-    userPrompt: input.prompt,
+    prompt: input.prompt,
     imageCount: input.imageUrls.length,
   });
 
-  // Video editing on SeeAPI requires adaptive + duration_seconds=-1.
+  // Video editing requires adaptive + duration_seconds=-1.
   // Ordinary reference generation uses a clamped source-length duration.
   const durationSeconds = isEdit
     ? -1
     : Math.min(30, Math.max(4, Math.round(input.sourceDurationSeconds)));
 
-  const nsfwChecker = envConfigs.seedance_seeapi_nsfw_checker !== 'false';
-  const upstream =
-    input.upstreamProvider?.trim() ||
-    envConfigs.seedance_seeapi_upstream_provider?.trim() ||
-    DEFAULT_SEEAPI_UPSTREAM_PROVIDER;
+  const upstream = resolveSeeapiUpstreamProvider(
+    input.mode,
+    input.upstreamProvider
+  );
+
+  const providerInput: Record<string, unknown> = {
+    prompt,
+    reference_images: input.imageUrls,
+    reference_video: [input.videoUrl],
+    aspect_ratio: 'adaptive' as const,
+    duration_seconds: durationSeconds,
+    resolution: input.resolution,
+    generate_audio: envConfigs.seedance_genjutsu_generate_audio !== 'false',
+    output_format: 'mp4' as const,
+    return_last_frame: false,
+  };
+
+  if (upstream === 'byteplus') {
+    // Explicit task type is BytePlus-only; critical for multi-subject Object Swap.
+    providerInput.omni_reference_task_type = isEdit ? 'edit' : 'reference';
+  } else {
+    providerInput.nsfw_checker =
+      envConfigs.seedance_seeapi_nsfw_checker !== 'false';
+  }
 
   return {
     model: normalizeModel(input.model || DEFAULT_SEEAPI_MODEL),
     endpoint: DEFAULT_SEEAPI_ENDPOINT,
     provider: upstream,
-    input: {
-      prompt,
-      reference_images: input.imageUrls,
-      reference_video: [input.videoUrl],
-      aspect_ratio: 'adaptive' as const,
-      duration_seconds: durationSeconds,
-      resolution: input.resolution,
-      generate_audio: envConfigs.seedance_genjutsu_generate_audio !== 'false',
-      output_format: 'mp4' as const,
-      return_last_frame: false,
-      nsfw_checker: nsfwChecker,
-    },
+    input: providerInput,
     ...(input.callbackUrl ? { callback_url: input.callbackUrl } : {}),
   };
 }

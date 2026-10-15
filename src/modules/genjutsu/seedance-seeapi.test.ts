@@ -39,7 +39,7 @@ test('SeeAPI motion transfer uses adaptive duration from source length', () => {
   );
 });
 
-test('SeeAPI objects swap locks adaptive/-1 for video editing', () => {
+test('SeeAPI objects swap uses BytePlus edit mode with adaptive/-1', () => {
   const payload = buildSeeapiSeedancePayload({
     model: 'seedance-2-5',
     mode: 'objects-swap',
@@ -51,11 +51,39 @@ test('SeeAPI objects swap locks adaptive/-1 for video editing', () => {
     callbackUrl: null,
   });
 
+  assert.equal(payload.provider, 'byteplus');
   assert.equal(payload.input.duration_seconds, -1);
   assert.equal(payload.input.aspect_ratio, 'adaptive');
-  assert.match(payload.input.prompt, /Edit @Video1/);
-  assert.match(payload.input.prompt, /Replace the bottle/);
+  assert.equal(payload.input.omni_reference_task_type, 'edit');
+  assert.equal(payload.input.nsfw_checker, undefined);
+  assert.match(String(payload.input.prompt), /编辑视频/);
+  assert.match(String(payload.input.prompt), /Edit @Video1/);
+  assert.match(String(payload.input.prompt), /Replace the bottle/);
   assert.equal(payload.callback_url, undefined);
+});
+
+test('SeeAPI multi-image objects swap restates every ImageN mapping', () => {
+  const payload = buildSeeapiSeedancePayload({
+    model: 'seedance-2-5',
+    mode: 'objects-swap',
+    resolution: '480p',
+    prompt: 'Change foreground to @Image1 and chaser to @Image2',
+    videoUrl: 'https://example.com/source.mp4',
+    imageUrls: ['https://example.com/ref1.png', 'https://example.com/ref2.png'],
+    sourceDurationSeconds: 4,
+    callbackUrl: null,
+  });
+
+  assert.equal(payload.provider, 'byteplus');
+  assert.equal(payload.input.omni_reference_task_type, 'edit');
+  assert.deepEqual(payload.input.reference_images, [
+    'https://example.com/ref1.png',
+    'https://example.com/ref2.png',
+  ]);
+  assert.match(String(payload.input.prompt), /@Image1/);
+  assert.match(String(payload.input.prompt), /@Image2/);
+  assert.match(String(payload.input.prompt), /every @ImageN/);
+  assert.match(String(payload.input.prompt), /Do not leave any mapped subject/);
 });
 
 test('SeeAPI quote tracks gateway credits while preserving Seedance customer price', () => {

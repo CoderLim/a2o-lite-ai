@@ -150,6 +150,9 @@ export const envConfigs: Record<string, string> = {
   seedance_seeapi_model: procEnv.SEEDANCE_SEEAPI_MODEL ?? 'seedance-2-5',
   seedance_seeapi_upstream_provider:
     procEnv.SEEDANCE_SEEAPI_UPSTREAM_PROVIDER ?? 'seeapi',
+  // Objects Swap defaults to BytePlus so omni_reference_task_type=edit is sent.
+  seedance_seeapi_edit_upstream_provider:
+    procEnv.SEEDANCE_SEEAPI_EDIT_UPSTREAM_PROVIDER ?? 'byteplus',
   seedance_seeapi_nsfw_checker: procEnv.SEEDANCE_SEEAPI_NSFW_CHECKER ?? 'true',
   seedance_seeapi_usd_per_credit:
     procEnv.SEEDANCE_SEEAPI_USD_PER_CREDIT ?? '0.0037',
