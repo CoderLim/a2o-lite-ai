@@ -17,13 +17,14 @@ import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGenerat
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
+import { getRumpelSeoCopy, RUMPEL_SEO_LOCALES } from '@/components/landing/rumpel-seo-i18n';
 
 const DATE_PUBLISHED = '2026-10-11';
 const DATE_MODIFIED = '2026-10-11';
 const GENERATOR_HREF = '#generator';
 const PAGE_PATH = '/ai-rumpelstiltskin';
-/** English SEO body only — do not advertise ja/ko as translated alternates. */
-const SEO_LOCALES = ['en'] as const;
+/** Only locales with translated article bodies are advertised. */
+const SEO_LOCALES = RUMPEL_SEO_LOCALES;
 const COVER_PATH = '/imgs/blog/how-to-make-rumpelstiltskin-ai-video-cover.jpg';
 const APP_NAME = 'Genjutsu AI';
 
@@ -117,10 +118,42 @@ const RULES = [
   },
 ] as const;
 
+function translatedFaqItems() {
+  const translations = getRumpelSeoCopy(getLocale())?.faq;
+  return FAQ_ITEMS.map((item, i) => ({
+    question: translations?.[i]?.[0] ?? item.question,
+    answer: translations?.[i]?.[1] ?? item.answer,
+  }));
+}
+
+function translatedHowSteps() {
+  const translations = getRumpelSeoCopy(getLocale())?.steps;
+  return HOW_STEPS.map((step, i) => ({
+    name: translations?.[i]?.[0] ?? step.name,
+    text: translations?.[i]?.[1] ?? step.text,
+  }));
+}
+
+function translatedHandLocks() {
+  const translations = getRumpelSeoCopy(getLocale())?.locks;
+  return HAND_LOCKS.map((lock, i) => ({
+    title: translations?.[i]?.[0] ?? lock.title,
+    text: translations?.[i]?.[1] ?? lock.text,
+  }));
+}
+
+function translatedRules() {
+  const translations = getRumpelSeoCopy(getLocale())?.rules;
+  return RULES.map((rule, i) => ({
+    ...rule,
+    text: translations?.[i] ?? rule.text,
+  }));
+}
+
 function faqJsonLd() {
   return {
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: translatedFaqItems().map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -134,8 +167,8 @@ function faqJsonLd() {
 function howToJsonLd() {
   return {
     '@type': 'HowTo',
-    name: 'How to make a Rumpelstiltskin AI video',
-    step: HOW_STEPS.map((step) => ({
+    name: getRumpelSeoCopy(getLocale())?.sections.howToName ?? 'How to make a Rumpelstiltskin AI video',
+    step: translatedHowSteps().map((step) => ({
       '@type': 'HowToStep',
       name: step.name,
       text: step.text,
@@ -148,11 +181,11 @@ function articleJsonLd() {
   const coverUrl = absoluteUrl(COVER_PATH);
   return {
     '@type': 'Article',
-    headline:
-      'AI Rumpelstiltskin: The Tip-Toe Barn Video, and How to Make Your Own',
+    headline: m['site.rumpel.hero_title'](),
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_MODIFIED,
-    about: 'Rumpelstiltskin 1987 tip-toe AI video trend',
+    about: getRumpelSeoCopy(getLocale())?.sections.articleAbout ?? 'Rumpelstiltskin 1987 tip-toe AI video trend',
+    inLanguage: getLocale(),
     image: coverUrl,
     author: {
       '@type': 'Organization',
@@ -181,6 +214,7 @@ function graphJsonLd() {
 }
 
 function AiRumpelstiltskinPage() {
+  const copy = getRumpelSeoCopy(getLocale());
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
       <SeoJsonLd value={graphJsonLd()} />
@@ -213,23 +247,38 @@ function AiRumpelstiltskinPage() {
         <section id="what-is" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              What the Rumpelstiltskin 1987 clip actually is
+              {copy?.sections.whatTitle ?? "What the Rumpelstiltskin 1987 clip actually is"}
             </h2>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-7 sm:text-base">
               <p>
+                {copy?.sections.whatP1 ?? (
+                  <>
+
                 A child-sized man with frizzy ginger hair, painted-on wrinkles,
                 a black velvet tuxedo and a bow tie peeks from behind a hay
                 bale, tiptoes toward the camera, raises a finger to his lips,
                 dances in the straw, and turns it into a pile of gold coins.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.whatP2 ?? (
+                  <>
+
                 The caption says 1987. There is no such scene. The real{' '}
                 <em>Rumpelstiltskin</em> (1987) was a Cannon Movie Tales musical
                 shot in Israel, with Billy Barty in his only lead role — a
                 feathered cap, a brown tunic, and a spinning wheel in a castle
                 room. No barn. No tuxedo.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.whatP3 ?? (
+                  <>
+
                 The clip is AI-generated. Know Your Meme traces it to an August
                 27, 2026 Instagram reel by @stroinaya, whose caption was Russian
                 ad copy for an AI course and named no tool. It sat mostly
@@ -241,12 +290,15 @@ function AiRumpelstiltskinPage() {
                 #tiptoeinginmyjordans. Remixes swapping the imp for other faces
                 arrived within three days, and half the internet went looking
                 for a movie that doesn&apos;t exist.
+              
+                  </>
+                )}
               </p>
             </div>
             <figure className="mt-8 overflow-hidden rounded-2xl border border-white/10">
               <img
                 src={COVER_PATH}
-                alt="Rumpelstiltskin AI tip-toe barn video trend — AI-generated 1987-style clip"
+                alt={copy?.sections.imageAlt ?? 'Rumpelstiltskin AI tip-toe barn video trend — AI-generated 1987-style clip'}
                 className="h-auto w-full object-cover"
                 loading="lazy"
                 decoding="async"
@@ -258,20 +310,32 @@ function AiRumpelstiltskinPage() {
         <section id="lost-film" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              Why people think it&apos;s a lost film
+              {copy?.sections.lostTitle ?? "Why people think it's a lost film"}
             </h2>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-7 sm:text-base">
               <p>
+                {copy?.sections.lostP1 ?? (
+                  <>
+
                 Three things sell the illusion: the grain, the grade and the
                 caption. Soft focus, warm saturated Technicolor, a slight gate
                 weave, and a period-serif title card reading
                 &quot;Rumpelstiltskin (1987)&quot; — on a clip that has no title
                 card, no watermark and no credits in its source version.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.lostP2 ?? (
+                  <>
+
                 The tells are the usual AI ones: the imp&apos;s face geometry
                 shifts between the shush and the grin, the gold arrives as an
                 instant pile, and no spinning wheel ever appears.
+              
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -280,15 +344,15 @@ function AiRumpelstiltskinPage() {
         <section id="how-to" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
-              Three steps
+              {copy?.sections.three ?? "Three steps"}
             </p>
             <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              How to make your own Rumpelstiltskin AI video
+              {copy?.sections.howTitle ?? "How to make your own Rumpelstiltskin AI video"}
             </h2>
           </div>
 
           <div className="mt-9 grid gap-4 md:grid-cols-3">
-            {HOW_STEPS.map((step, index) => {
+            {translatedHowSteps().map((step, index) => {
               const icons = [ImageIcon, Film, Download] as const;
               const Icon = icons[index] ?? Sparkles;
               return (
@@ -323,14 +387,20 @@ function AiRumpelstiltskinPage() {
         <section id="by-hand" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              Doing it by hand: the three locks
+              {copy?.sections.handTitle ?? "Doing it by hand: the three locks"}
             </h2>
             <p className="text-muted-foreground mt-5 text-sm leading-7 sm:text-base">
+                {copy?.sections.handIntro ?? (
+                  <>
+
               If you&apos;d rather build the look yourself in any image-to-video
               model, the reconstructed method is three locks and short beats:
-            </p>
+            
+                  </>
+                )}
+              </p>
             <div className="mt-8 space-y-5">
-              {HAND_LOCKS.map((lock) => (
+              {translatedHandLocks().map((lock) => (
                 <div key={lock.title}>
                   <h3 className="text-foreground text-lg font-semibold">
                     {lock.title}
@@ -342,13 +412,12 @@ function AiRumpelstiltskinPage() {
               ))}
             </div>
             <p className="text-muted-foreground mt-8 text-sm leading-7 sm:text-base">
-              Prefer the homepage Genjutsu flow with your own template upload?
-              See the step-by-step guide:{' '}
+              {copy?.sections.handLinkBefore ?? 'Prefer the homepage Genjutsu flow with your own template upload? See the step-by-step guide:'}{' '}
               <Link
                 href="/blog/how-to-make-rumpelstiltskin-ai-video"
                 className="text-primary underline-offset-2 hover:underline"
               >
-                How to make a Rumpelstiltskin AI video on Genjutsu AI
+                {copy?.sections.handLink ?? 'How to make a Rumpelstiltskin AI video on Genjutsu AI'}
               </Link>
               .
             </p>
@@ -358,10 +427,10 @@ function AiRumpelstiltskinPage() {
         <section id="rules" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              What you can and can&apos;t do with this trend
+              {copy?.sections.rulesTitle ?? "What you can and can't do with this trend"}
             </h2>
             <ul className="mt-7 space-y-4">
-              {RULES.map((rule) => (
+              {translatedRules().map((rule) => (
                 <li
                   key={rule.text.slice(0, 40)}
                   className="text-muted-foreground flex gap-3 text-sm leading-7 sm:text-base"
@@ -376,12 +445,12 @@ function AiRumpelstiltskinPage() {
               ))}
             </ul>
             <p className="text-muted-foreground mt-6 text-sm leading-7">
-              Full rules are in our{' '}
+              {copy?.sections.rulesBefore ?? 'Full rules are in our'}{' '}
               <Link
                 href="/terms-of-service"
                 className="text-primary underline-offset-2 hover:underline"
               >
-                Acceptable Use Policy
+                {copy?.sections.rulesLink ?? 'Acceptable Use Policy'}
               </Link>
               .
             </p>
@@ -390,10 +459,10 @@ function AiRumpelstiltskinPage() {
 
         <section id="faq" className="scroll-mt-24 py-14 md:py-20">
           <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            Rumpelstiltskin AI FAQ
+            {copy?.sections.faqTitle ?? "Rumpelstiltskin AI FAQ"}
           </h2>
           <div className="border-border/70 bg-card/60 divide-border/60 mt-7 divide-y rounded-2xl border px-5 sm:px-7">
-            {FAQ_ITEMS.map((item) => (
+            {translatedFaqItems().map((item) => (
               <details key={item.question} className="group py-5">
                 <summary className="text-foreground/85 cursor-pointer list-none pr-6 text-sm font-semibold sm:text-base">
                   {item.question}
