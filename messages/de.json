@@ -580,5 +580,22 @@
   "site.hotel.footer_privacy": "Datenschutz",
   "site.hotel.footer_terms": "Bedingungen",
   "site.hotel.footer_refunds": "Rückerstattungen",
-  "site.hotel.footer_support": "Support"
+  "site.hotel.footer_support": "Support",
+  "site.hotel.cast1_title": "Du und dein bester Freund",
+  "site.hotel.cast1_desc": "Der Klassiker – und immer noch der einfachste Gag.",
+  "site.hotel.cast2_title": "Ein Paar",
+  "site.hotel.cast2_desc": "Ein gemeinsames Foto von euch beiden kann ausreichen.",
+  "site.hotel.cast3_title": "Zwei Kollegen",
+  "site.hotel.cast3_desc": "Die Freitags-Version für den Teamchat ergibt sich praktisch von selbst.",
+  "site.hotel.cast4_title": "Deine Eltern",
+  "site.hotel.cast4_desc": "Schicke Kleidung funktioniert im orangen Studio überraschend gut.",
+  "site.hotel.cast5_title": "Deine Haustiere",
+  "site.hotel.cast5_desc": "Verwende pro Haustier ein klares Foto, möglichst frontal.",
+  "site.hotel.cast6_title": "Figuren oder Maskottchen",
+  "site.hotel.cast6_desc": "Illustrierte und fiktive Figuren können funktionieren, wenn das Gesicht klar erkennbar ist.",
+  "site.hotel.tip1": "Möglichst eine Person pro Foto. Schneide bei Gruppenfotos das gewünschte Motiv frei.",
+  "site.hotel.tip2": "Zeige die Kleidung. Halb- oder Ganzkörperfotos übertragen Outfits besser als Nahaufnahmen des Gesichts.",
+  "site.hotel.tip3": "Schau bei gutem Licht in die Kamera. Starke Schatten, Unschärfe und extreme Profile verringern die Ähnlichkeit.",
+  "site.hotel.tip4": "Verwende das erste Feld für den Performer links und das zweite für den Performer rechts.",
+  "site.hotel.tip5": "Versuche einen zweiten Durchlauf, wenn Identität oder Handgesten abweichen. Die Videoerstellung ist zufallsabhängig."
 }
