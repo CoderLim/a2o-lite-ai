@@ -725,5 +725,19 @@
   "site.zombie.loved_note": "Infectado y después recuperado. La misma persona aparece como zombi al principio y humana al final.",
   "site.zombie.upload_photo": "Subir foto",
   "site.zombie.photo_hint": "JPG, PNG o WebP · hasta 12 MB",
-  "site.zombie.provider_label": "Genjutsu · transferencia de movimiento"
+  "site.zombie.provider_label": "Genjutsu · transferencia de movimiento",
+  "site.smalltown.page_title": "Baile Smalltown Boy: cómo hacer la tendencia (guía de 2026)",
+  "site.smalltown.page_description": "Aprende el baile Smalltown Boy de la tendencia ochentera de TikTok: movimientos paso a paso, origen del reto y cómo grabar tu versión con CapCut o IA.",
+  "site.smalltown.hero_badge": "Baile Smalltown Boy · tendencia ochentera de TikTok",
+  "site.smalltown.updated": "Actualizado en octubre de 2026",
+  "site.smalltown.hero_title": "Baile Smalltown Boy",
+  "site.smalltown.hero_description": "El baile Smalltown Boy es una tendencia de TikTok en la que la gente, especialmente padres de la generación X, baila el tema synth-pop «Smalltown Boy» de Bronski Beat (1984) como si aún fueran los años 80. La tendencia regresó a finales de septiembre de 2026 y sigue creciendo. Esta guía explica los movimientos, su historia y cómo grabar tu versión.",
+  "site.smalltown.front": "Bailarín A (primero cerca de la cámara)",
+  "site.smalltown.front_note": "Obligatoria · persona más cercana a la cámara en el plano inicial",
+  "site.smalltown.back": "Bailarín B (primero más atrás)",
+  "site.smalltown.back_note": "Obligatoria · persona más alejada en el plano inicial (después avanza)",
+  "site.smalltown.upload_required": "Añade fotos de ambos bailarines",
+  "site.smalltown.image_type": "Sube una imagen JPG, PNG, WebP o GIF",
+  "site.smalltown.image_size": "Las imágenes deben tener 12 MB como máximo",
+  "site.smalltown.provider_label": "Sustitución de dos bailarines"
 }
