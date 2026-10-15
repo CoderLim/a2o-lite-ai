@@ -1477,6 +1477,7 @@ export function GeneratorPanel({
     rawProvider === 'seedance' ||
     rawProvider === 'seedance-volcengine' ||
     rawProvider === 'seedance-seeapi' ||
+    rawProvider === 'seedance-wavespeed' ||
     rawProvider === 'seedance-higgsfield'
       ? rawProvider
       : null;

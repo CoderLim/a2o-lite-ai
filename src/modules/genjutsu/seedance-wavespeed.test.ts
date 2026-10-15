@@ -1,0 +1,149 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  buildWavespeedSeedancePayload,
+  estimateWavespeedSeedanceProviderCost,
+  normalizeWavespeedSeedanceTask,
+  resolveWavespeedSeedanceModel,
+} from './seedance-wavespeed';
+
+test('WaveSpeed motion transfer uses motion-control with spaced asset tags', () => {
+  const { model, body } = buildWavespeedSeedancePayload({
+    mode: 'motion-transfer',
+    resolution: '720p',
+    prompt: '',
+    videoUrl: 'https://example.com/source.mp4',
+    imageUrls: ['https://example.com/reference.png'],
+    sourceDurationSeconds: 8,
+  });
+
+  assert.equal(model, 'bytedance/seedance-2.5/motion-control');
+  assert.equal(body.video, 'https://example.com/source.mp4');
+  assert.deepEqual(body.reference_images, [
+    'https://example.com/reference.png',
+  ]);
+  assert.equal(body.resolution, '720p');
+  assert.match(String(body.prompt), /@Video 1/);
+  assert.match(String(body.prompt), /@Image 1/);
+  assert.doesNotMatch(String(body.prompt), /@Image1\b/);
+});
+
+test('WaveSpeed objects swap uses video-edit endpoint', () => {
+  const { model, body } = buildWavespeedSeedancePayload({
+    mode: 'objects-swap',
+    resolution: '720p',
+    prompt: 'Replace the bottle with Reference 1',
+    videoUrl: 'https://example.com/source.mp4',
+    imageUrls: ['https://example.com/reference.png'],
+    sourceDurationSeconds: 8,
+  });
+
+  assert.equal(model, 'bytedance/seedance-2.5/video-edit');
+  assert.equal(body.video, 'https://example.com/source.mp4');
+  assert.deepEqual(body.reference_images, [
+    'https://example.com/reference.png',
+  ]);
+  assert.match(String(body.prompt), /Edit @Video 1/);
+  assert.match(String(body.prompt), /Replace the bottle/);
+});
+
+test('WaveSpeed multi-image objects swap restates Image N mappings', () => {
+  const { body } = buildWavespeedSeedancePayload({
+    mode: 'objects-swap',
+    resolution: '480p',
+    prompt: 'Change foreground to @Image 1 and chaser to @Image 2',
+    videoUrl: 'https://example.com/source.mp4',
+    imageUrls: ['https://example.com/ref1.png', 'https://example.com/ref2.png'],
+    sourceDurationSeconds: 4,
+  });
+
+  assert.deepEqual(body.reference_images, [
+    'https://example.com/ref1.png',
+    'https://example.com/ref2.png',
+  ]);
+  assert.match(String(body.prompt), /@Image 1/);
+  assert.match(String(body.prompt), /@Image 2/);
+  assert.match(String(body.prompt), /every @Image N/);
+});
+
+test('WaveSpeed motion quote bills reference duration only', () => {
+  const quote = estimateWavespeedSeedanceProviderCost({
+    mode: 'motion-transfer',
+    resolution: '720p',
+    sourceDurationSeconds: 8.1,
+  });
+
+  assert.equal(quote.payload.billedSourceSeconds, 9);
+  assert.equal(quote.payload.billedSeconds, 9);
+  assert.equal(quote.payload.rateUsdPerSecond, 0.44);
+  assert.equal(quote.providerCostUsd, 9 * 0.44);
+  assert.equal(quote.customerPriceBasisUsd, 16.2 * 0.34056);
+  assert.equal(quote.source, 'wavespeed_seedance_estimate');
+  assert.equal(quote.payload.endpoint, 'motion-control');
+});
+
+test('WaveSpeed edit quote bills input plus output duration', () => {
+  const quote = estimateWavespeedSeedanceProviderCost({
+    mode: 'objects-swap',
+    resolution: '720p',
+    sourceDurationSeconds: 8,
+  });
+
+  assert.equal(quote.payload.billedSourceSeconds, 8);
+  assert.equal(quote.payload.estimatedOutputDurationSeconds, 8);
+  assert.equal(quote.payload.billedSeconds, 16);
+  assert.equal(quote.payload.rateUsdPerSecond, 0.22);
+  assert.equal(quote.providerCostUsd, 16 * 0.22);
+  assert.equal(quote.customerPriceBasisUsd, 16 * 0.34056);
+  assert.equal(quote.payload.endpoint, 'video-edit');
+});
+
+test('WaveSpeed completed task exposes output video URL', () => {
+  const task = normalizeWavespeedSeedanceTask({
+    code: 200,
+    data: {
+      id: 'pred_abc',
+      status: 'completed',
+      outputs: ['https://example.com/result.mp4'],
+      price: 2.2,
+    },
+  });
+
+  assert.equal(task.status, 'completed');
+  assert.equal(task.providerStatus, 'completed');
+  assert.equal(task.videoUrl, 'https://example.com/result.mp4');
+  assert.equal(task.providerUsage?.actualProviderCostUsd, 2.2);
+});
+
+test('WaveSpeed terminal failures normalize to failed', () => {
+  const task = normalizeWavespeedSeedanceTask({
+    data: {
+      id: 'pred_abc',
+      status: 'failed',
+      error: 'blocked by content safety',
+    },
+  });
+
+  assert.equal(task.status, 'failed');
+  assert.equal(task.providerStatus, 'failed');
+  assert.match(task.error || '', /content safety/i);
+});
+
+test('WaveSpeed model resolver picks mode endpoints', () => {
+  assert.equal(
+    resolveWavespeedSeedanceModel('motion-transfer'),
+    'bytedance/seedance-2.5/motion-control'
+  );
+  assert.equal(
+    resolveWavespeedSeedanceModel('objects-swap'),
+    'bytedance/seedance-2.5/video-edit'
+  );
+  assert.equal(
+    resolveWavespeedSeedanceModel(
+      'motion-transfer',
+      'bytedance/seedance-2.5/video-edit'
+    ),
+    'bytedance/seedance-2.5/video-edit'
+  );
+});

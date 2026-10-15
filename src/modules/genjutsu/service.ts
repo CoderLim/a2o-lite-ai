@@ -38,6 +38,13 @@ import {
   submitVolcengineSeedance,
   VolcengineSeedanceHttpError,
 } from './seedance-volcengine';
+import {
+  assertWavespeedSeedanceConfigured,
+  estimateWavespeedSeedanceProviderCost,
+  getWavespeedSeedanceStatus,
+  submitWavespeedSeedance,
+  WavespeedSeedanceHttpError,
+} from './seedance-wavespeed';
 import type {
   GenjutsuMode,
   GenjutsuProvider,
@@ -63,6 +70,7 @@ export {
   SeedancePreflightError,
   SeeapiSeedanceHttpError,
   VolcengineSeedanceHttpError,
+  WavespeedSeedanceHttpError,
   resolveGenjutsuProviderTarget,
   resolveProductProviderTarget,
 };
@@ -211,6 +219,7 @@ export type GenjutsuCostEstimate = {
     | 'seedance_list_estimate'
     | 'volcengine_seedance_estimate'
     | 'seeapi_seedance_estimate'
+    | 'wavespeed_seedance_estimate'
     | 'higgsfield_seedance_token_estimate';
   sourceDurationSeconds?: number;
 };
@@ -444,6 +453,18 @@ export async function resolveGenjutsuProviderCost(
       };
     }
 
+    if (input.provider === 'seedance-wavespeed') {
+      await assertWavespeedSeedanceConfigured(input.mode, input.model);
+      return {
+        ...estimateWavespeedSeedanceProviderCost({
+          mode: input.mode,
+          resolution: input.resolution,
+          sourceDurationSeconds,
+        }),
+        sourceDurationSeconds,
+      };
+    }
+
     if (input.provider === 'seedance-higgsfield') {
       return {
         ...estimateHiggsfieldSeedanceProviderCost({
@@ -504,6 +525,13 @@ export async function submitGenjutsu(input: {
       });
     }
 
+    if (input.provider === 'seedance-wavespeed') {
+      return submitWavespeedSeedance({
+        ...input,
+        sourceDurationSeconds: input.sourceDurationSeconds,
+      });
+    }
+
     if (input.provider === 'seedance-higgsfield') {
       return submitHiggsfieldSeedance({
         ...input,
@@ -534,6 +562,12 @@ export async function getGenjutsuStatus(input: {
 
   if (input.provider === 'seedance-seeapi') {
     return getSeeapiSeedanceStatus({
+      requestId: input.requestId,
+    });
+  }
+
+  if (input.provider === 'seedance-wavespeed') {
+    return getWavespeedSeedanceStatus({
       requestId: input.requestId,
     });
   }

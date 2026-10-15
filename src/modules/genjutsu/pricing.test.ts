@@ -197,6 +197,13 @@ test('display estimator tracks selected server provider', () => {
     }),
     estimateSeedanceCredits(input)
   );
+  assert.equal(
+    estimateGenjutsuCreditsForProvider({
+      ...input,
+      provider: 'seedance-wavespeed',
+    }),
+    estimateSeedanceCredits(input)
+  );
   assert.notEqual(
     estimateGenjutsuCreditsForProvider({
       ...input,

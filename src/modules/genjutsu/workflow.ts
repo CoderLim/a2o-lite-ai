@@ -18,19 +18,6 @@ const SEEDANCE_HIGGSFIELD_MODEL_ID =
 /** Dual-role swap must use video-edit — see seedance-higgsfield.ts. */
 const SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID = 'bytedance/seedance-2.5/video-edit';
 
-const SEEDANCE_HIGGSFIELD_EDIT_TARGET: GenjutsuProviderTarget = {
-  provider: 'seedance-higgsfield',
-  model: SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID,
-};
-
-const PRODUCT_PROVIDER_TARGETS: Record<
-  GenjutsuProductId,
-  GenjutsuProviderTarget
-> = {
-  [SMALLTOWN_BOY_DANCE_PRODUCT]: SEEDANCE_HIGGSFIELD_EDIT_TARGET,
-  [CRAZY_FROG_PRODUCT]: SEEDANCE_HIGGSFIELD_EDIT_TARGET,
-};
-
 export function isGenjutsuProductId(
   value: unknown
 ): value is GenjutsuProductId {
@@ -44,7 +31,8 @@ export function isSeedanceFamilyProvider(
     provider === 'seedance' ||
     provider === 'seedance-volcengine' ||
     provider === 'seedance-higgsfield' ||
-    provider === 'seedance-seeapi'
+    provider === 'seedance-seeapi' ||
+    provider === 'seedance-wavespeed'
   );
 }
 
@@ -53,6 +41,7 @@ function normalizeProvider(value: string | undefined): GenjutsuProvider {
   if (normalized === 'seedance-volcengine') return 'seedance-volcengine';
   if (normalized === 'seedance-higgsfield') return 'seedance-higgsfield';
   if (normalized === 'seedance-seeapi') return 'seedance-seeapi';
+  if (normalized === 'seedance-wavespeed') return 'seedance-wavespeed';
   if (normalized === 'seedance') return 'seedance';
   return 'higgsfield';
 }
@@ -83,6 +72,18 @@ export function resolveGenjutsuProviderTarget(
     return {
       provider,
       model: envConfigs.seedance_seeapi_model?.trim() || 'seedance-2-5',
+    };
+  }
+
+  if (provider === 'seedance-wavespeed') {
+    return {
+      provider,
+      model:
+        mode === 'objects-swap'
+          ? envConfigs.seedance_wavespeed_edit_model?.trim() ||
+            'bytedance/seedance-2.5/video-edit'
+          : envConfigs.seedance_wavespeed_motion_model?.trim() ||
+            'bytedance/seedance-2.5/motion-control',
     };
   }
 
@@ -119,15 +120,14 @@ export function resolveGenjutsuProviderTarget(
 }
 
 /**
- * Product pages pin a trusted provider target. Unknown / missing product
- * falls back to the mode-based env router (homepage / Bulin / etc.).
+ * Product pages (Crazy Frog / Smalltown) share the homepage mode env routers
+ * (`GENJUTSU_MOTION_PROVIDER` / `GENJUTSU_OBJECT_SWAP_PROVIDER`). Optional
+ * `GENJUTSU_PRODUCT_PROVIDER` overrides only allowlisted product pages.
  */
 export function resolveProductProviderTarget(
   product: string | null | undefined,
   mode: GenjutsuMode
 ): GenjutsuProviderTarget {
-  // Local A/B: when set, product pages (Crazy Frog / Smalltown) follow this
-  // provider instead of the hardcoded Higgsfield Seedance pin.
   const productOverride = envConfigs.genjutsu_product_provider?.trim();
   if (productOverride && isGenjutsuProductId(product)) {
     return resolveGenjutsuProviderTargetForProvider(
@@ -136,9 +136,6 @@ export function resolveProductProviderTarget(
     );
   }
 
-  if (isGenjutsuProductId(product)) {
-    return PRODUCT_PROVIDER_TARGETS[product];
-  }
   return resolveGenjutsuProviderTarget(mode);
 }
 
@@ -150,6 +147,17 @@ function resolveGenjutsuProviderTargetForProvider(
     return {
       provider,
       model: envConfigs.seedance_seeapi_model?.trim() || 'seedance-2-5',
+    };
+  }
+  if (provider === 'seedance-wavespeed') {
+    return {
+      provider,
+      model:
+        mode === 'objects-swap'
+          ? envConfigs.seedance_wavespeed_edit_model?.trim() ||
+            'bytedance/seedance-2.5/video-edit'
+          : envConfigs.seedance_wavespeed_motion_model?.trim() ||
+            'bytedance/seedance-2.5/motion-control',
     };
   }
   if (provider === 'seedance-volcengine') {

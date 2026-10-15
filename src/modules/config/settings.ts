@@ -184,6 +184,13 @@ export function getSettingGroups(): SettingGroup[] {
       description: 'SeeAPI unified gateway (Seedance 2.5 and other models)',
       tab: 'ai',
     },
+    {
+      name: 'wavespeed',
+      title: 'WaveSpeed',
+      description:
+        'WaveSpeed Seedance 2.5 (motion-control + video-edit). Route with provider=seedance-wavespeed.',
+      tab: 'ai',
+    },
 
     // Analytics
     {
@@ -914,6 +921,17 @@ export function getSettings(): Setting[] {
       placeholder: 'sk_xxx',
       tip: 'From seeapi.com API Keys. Env fallback: SEEAPI_API_KEY.',
       group: 'seeapi',
+      tab: 'ai',
+    },
+
+    // ─── AI / WaveSpeed ──────────────────────────────────────────────
+    {
+      name: 'wavespeed_api_key',
+      title: 'API Key',
+      type: 'password',
+      placeholder: 'xxx',
+      tip: 'From wavespeed.ai /accesskey. Env fallback: WAVESPEED_API_KEY.',
+      group: 'wavespeed',
       tab: 'ai',
     },
 

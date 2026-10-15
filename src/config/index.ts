@@ -156,8 +156,22 @@ export const envConfigs: Record<string, string> = {
   seedance_seeapi_nsfw_checker: procEnv.SEEDANCE_SEEAPI_NSFW_CHECKER ?? 'true',
   seedance_seeapi_usd_per_credit:
     procEnv.SEEDANCE_SEEAPI_USD_PER_CREDIT ?? '0.0037',
-  // Optional: override Crazy Frog / Smalltown product pins for local A/B
-  // (e.g. GENJUTSU_PRODUCT_PROVIDER=seedance-seeapi).
+
+  // WaveSpeed Seedance 2.5 (server-only). provider=seedance-wavespeed.
+  // Motion → motion-control; objects-swap → video-edit.
+  // Docs: https://wavespeed.ai/models/bytedance/seedance-2.5/motion-control
+  wavespeed_api_key: procEnv.WAVESPEED_API_KEY ?? '',
+  wavespeed_api_base_url:
+    procEnv.WAVESPEED_API_BASE_URL ?? 'https://api.wavespeed.ai/api/v3',
+  seedance_wavespeed_motion_model:
+    procEnv.SEEDANCE_WAVESPEED_MOTION_MODEL ??
+    'bytedance/seedance-2.5/motion-control',
+  seedance_wavespeed_edit_model:
+    procEnv.SEEDANCE_WAVESPEED_EDIT_MODEL ??
+    'bytedance/seedance-2.5/video-edit',
+
+  // Optional: override only Crazy Frog / Smalltown (homepage still uses
+  // GENJUTSU_MOTION_PROVIDER / GENJUTSU_OBJECT_SWAP_PROVIDER).
   genjutsu_product_provider: procEnv.GENJUTSU_PRODUCT_PROVIDER ?? '',
 
   genjutsu_e2e_mock: procEnv.GENJUTSU_E2E_MOCK ?? 'false',

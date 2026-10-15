@@ -44,6 +44,7 @@ import {
   SeedancePreflightError,
   submitGenjutsu,
   VolcengineSeedanceHttpError,
+  WavespeedSeedanceHttpError,
   type GenjutsuMode,
   type GenjutsuProvider,
   type GenjutsuResolution,
@@ -449,12 +450,14 @@ async function POST({ request }: { request: Request }) {
         error instanceof HiggsfieldHttpError ||
         error instanceof SeedanceHttpError ||
         error instanceof VolcengineSeedanceHttpError ||
-        error instanceof SeeapiSeedanceHttpError
+        error instanceof SeeapiSeedanceHttpError ||
+        error instanceof WavespeedSeedanceHttpError
       ) {
         const failure = splitProviderFailureError(
           error.message,
           error instanceof VolcengineSeedanceHttpError ||
-            error instanceof SeeapiSeedanceHttpError
+            error instanceof SeeapiSeedanceHttpError ||
+            error instanceof WavespeedSeedanceHttpError
             ? error.code
             : undefined
         );

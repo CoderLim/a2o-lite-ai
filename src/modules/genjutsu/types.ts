@@ -7,7 +7,8 @@ export type GenjutsuProvider =
   | 'seedance'
   | 'seedance-volcengine'
   | 'seedance-higgsfield'
-  | 'seedance-seeapi';
+  | 'seedance-seeapi'
+  | 'seedance-wavespeed';
 
 /** Allowlisted product ids that pin a provider target on attempt. */
 export type GenjutsuProductId = 'smalltown-boy-dance' | 'crazy-frog';

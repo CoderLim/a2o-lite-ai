@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { SEEDANCE_HIGGSFIELD_EDIT_MODEL } from './seedance-higgsfield';
 import {
   CRAZY_FROG_PRODUCT,
   isGenjutsuProductId,
@@ -10,22 +9,22 @@ import {
   SMALLTOWN_BOY_DANCE_PRODUCT,
 } from './workflow';
 
-test('smalltown-boy-dance product pins seedance-higgsfield video-edit', () => {
+test('smalltown-boy-dance follows the mode env router', () => {
+  const fallback = resolveGenjutsuProviderTarget('objects-swap');
   const target = resolveProductProviderTarget(
     SMALLTOWN_BOY_DANCE_PRODUCT,
     'objects-swap'
   );
-  assert.equal(target.provider, 'seedance-higgsfield');
-  assert.equal(target.model, SEEDANCE_HIGGSFIELD_EDIT_MODEL);
+  assert.deepEqual(target, fallback);
 });
 
-test('crazy-frog product pins seedance-higgsfield video-edit', () => {
+test('crazy-frog follows the mode env router', () => {
+  const fallback = resolveGenjutsuProviderTarget('objects-swap');
   const target = resolveProductProviderTarget(
     CRAZY_FROG_PRODUCT,
     'objects-swap'
   );
-  assert.equal(target.provider, 'seedance-higgsfield');
-  assert.equal(target.model, SEEDANCE_HIGGSFIELD_EDIT_MODEL);
+  assert.deepEqual(target, fallback);
 });
 
 test('unknown product falls back to mode env router', () => {

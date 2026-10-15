@@ -26,6 +26,7 @@ import {
   SeeapiSeedanceHttpError,
   SeedanceHttpError,
   VolcengineSeedanceHttpError,
+  WavespeedSeedanceHttpError,
 } from '@/modules/genjutsu/service';
 import {
   getGenjutsuResultKey,
@@ -258,13 +259,15 @@ async function GET({ request }: { request: Request }) {
         error instanceof HiggsfieldHttpError ||
         error instanceof SeedanceHttpError ||
         error instanceof VolcengineSeedanceHttpError ||
-        error instanceof SeeapiSeedanceHttpError
+        error instanceof SeeapiSeedanceHttpError ||
+        error instanceof WavespeedSeedanceHttpError
           ? `http_${error.status}`
           : 'status_error';
       const failure = splitProviderFailureError(
         error?.message || 'Provider status request failed',
         error instanceof VolcengineSeedanceHttpError ||
-          error instanceof SeeapiSeedanceHttpError
+          error instanceof SeeapiSeedanceHttpError ||
+          error instanceof WavespeedSeedanceHttpError
           ? error.code
           : undefined
       );
