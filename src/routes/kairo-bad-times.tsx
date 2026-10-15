@@ -208,15 +208,6 @@ function KairoBadTimesPage() {
             <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-white/58 sm:text-lg">
               {m['site.kairo.hero_description']()}
             </p>
-            <a
-              href="#generator"
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[rgb(204,144,92)] px-6 text-sm font-semibold text-[rgb(247,246,243)] transition hover:brightness-105"
-            >
-              {m['site.kairo.hero_cta']()}
-            </a>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/40">
-              {m['site.kairo.inspired_note']()}
-            </p>
 
             <div
               id="generator"
