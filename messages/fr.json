@@ -580,5 +580,22 @@
   "site.hotel.footer_privacy": "Confidentialité",
   "site.hotel.footer_terms": "Conditions",
   "site.hotel.footer_refunds": "Remboursements",
-  "site.hotel.footer_support": "Assistance"
+  "site.hotel.footer_support": "Assistance",
+  "site.hotel.cast1_title": "Vous et votre meilleur ami",
+  "site.hotel.cast1_desc": "Le grand classique, et la blague la plus facile à réussir.",
+  "site.hotel.cast2_title": "Un couple",
+  "site.hotel.cast2_desc": "Une photo de vous deux peut suffire.",
+  "site.hotel.cast3_title": "Deux collègues",
+  "site.hotel.cast3_desc": "Une version spéciale discussion d’équipe du vendredi s’écrit presque toute seule.",
+  "site.hotel.cast4_title": "Vos parents",
+  "site.hotel.cast4_desc": "Les tenues de soirée rendent étonnamment bien dans le studio orange.",
+  "site.hotel.cast5_title": "Vos animaux",
+  "site.hotel.cast5_desc": "Utilisez une photo nette par animal, idéalement face à la caméra.",
+  "site.hotel.cast6_title": "Personnages ou mascottes",
+  "site.hotel.cast6_desc": "Les personnages illustrés ou fictifs peuvent fonctionner si leur visage est bien visible.",
+  "site.hotel.tip1": "Dans la mesure du possible, une personne par photo. Pour une photo de groupe, recadrez sur le sujet souhaité.",
+  "site.hotel.tip2": "Montrez la tenue. Les photos en buste ou en pied reproduisent mieux les vêtements qu’un simple gros plan du visage.",
+  "site.hotel.tip3": "Regardez de face dans une bonne lumière. Les ombres prononcées, le flou et les profils extrêmes réduisent la ressemblance.",
+  "site.hotel.tip4": "Utilisez le premier emplacement pour l’artiste de gauche et le second pour celui de droite.",
+  "site.hotel.tip5": "Relancez la génération si les identités ou les gestes des mains dérivent. La génération vidéo comporte une part d’aléatoire."
 }
