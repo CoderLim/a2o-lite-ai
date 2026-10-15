@@ -26,8 +26,11 @@ const STATIC_PATHS = [
   '/refund-policy',
 ];
 
-/** English-only SEO bodies — do not emit ja/ko sitemap or hreflang rows. */
-const ENGLISH_ONLY_STATIC_PATHS = new Set(['/ai-rumpelstiltskin']);
+/** No translated SEO body or public copy yet: exclude these routes from locale sitemap/hreflang. */
+const ENGLISH_ONLY_STATIC_PATHS = new Set([
+  '/ai-rumpelstiltskin',
+  '/text-to-image',
+]);
 
 type Entry = {
   path: string;
