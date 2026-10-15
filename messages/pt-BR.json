@@ -725,5 +725,19 @@
   "site.zombie.loved_note": "Infectada e depois recuperada. A mesma pessoa em cenas de zumbi no início e humana no fim.",
   "site.zombie.upload_photo": "Enviar foto",
   "site.zombie.photo_hint": "JPG, PNG ou WebP · até 12 MB",
-  "site.zombie.provider_label": "Genjutsu · transferência de movimento"
+  "site.zombie.provider_label": "Genjutsu · transferência de movimento",
+  "site.smalltown.page_title": "Smalltown Boy Dance: como fazer a tendência (guia 2026)",
+  "site.smalltown.page_description": "Aprenda a dança Smalltown Boy da tendência oitentista do TikTok: movimentos passo a passo, origem do desafio e como gravar sua versão com CapCut ou IA.",
+  "site.smalltown.hero_badge": "Smalltown Boy Dance · tendência anos 80 do TikTok",
+  "site.smalltown.updated": "Atualizado em outubro de 2026",
+  "site.smalltown.hero_title": "Smalltown Boy Dance",
+  "site.smalltown.hero_description": "A dança Smalltown Boy é uma tendência do TikTok em que pessoas, especialmente pais da geração X, dançam o hit synth-pop “Smalltown Boy” de Bronski Beat, de 1984, como se ainda estivessem nos anos 80. A tendência voltou no fim de setembro de 2026 e continua crescendo. Este guia explica os passos, a história e como gravar sua versão.",
+  "site.smalltown.front": "Dançarino A (mais perto da câmera no início)",
+  "site.smalltown.front_note": "Obrigatória · pessoa mais próxima da câmera na cena inicial",
+  "site.smalltown.back": "Dançarino B (mais ao fundo no início)",
+  "site.smalltown.back_note": "Obrigatória · pessoa mais distante na cena inicial (avança depois)",
+  "site.smalltown.upload_required": "Adicione fotos dos dois dançarinos",
+  "site.smalltown.image_type": "Envie uma imagem JPG, PNG, WebP ou GIF",
+  "site.smalltown.image_size": "As imagens devem ter no máximo 12 MB",
+  "site.smalltown.provider_label": "Troca de dois dançarinos"
 }
