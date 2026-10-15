@@ -2,12 +2,14 @@ import { useCallback, useRef, useState } from 'react';
 
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
-import { DemoVideoGallery } from '@/components/landing/DemoVideoGallery';
 import {
   GeneratorPanel,
   type GeneratorTemplateRequest,
 } from '@/components/landing/GeneratorPanel';
-import type { MotionTemplate } from '@/components/landing/motion-templates';
+import {
+  isMotionTemplateApply,
+  type MotionTemplate,
+} from '@/components/landing/motion-templates';
 import { MotionTemplateGallery } from '@/components/landing/MotionTemplateGallery';
 
 const BADGES = [
@@ -28,6 +30,7 @@ export function Hero({ className }: { className?: string }) {
   const requestIdRef = useRef(0);
 
   const handleSelectTemplate = useCallback((template: MotionTemplate) => {
+    if (!isMotionTemplateApply(template)) return;
     const requestId = ++requestIdRef.current;
     setApplyingTemplateId(template.id);
     setTemplateRequest({
@@ -120,7 +123,6 @@ export function Hero({ className }: { className?: string }) {
             applyingTemplateId={applyingTemplateId}
             onSelect={handleSelectTemplate}
           />
-          <DemoVideoGallery />
         </div>
       </div>
     </section>

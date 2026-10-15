@@ -1,4 +1,16 @@
+import {
+  CRAZY_FROG_TEMPLATE_PATH,
+  CRAZY_FROG_TEMPLATE_POSTER_PATH,
+} from '@/modules/crazy-frog/constants';
 import { buildHotelLobbyPrompt } from '@/modules/hotel-lobby/prompt';
+import {
+  KAIRO_BAD_TIMES_POSTER_PATH,
+  KAIRO_BAD_TIMES_PREVIEW_PATH,
+} from '@/modules/kairo-bad-times/constants';
+import {
+  SMALLTOWN_TEMPLATE_PATH,
+  SMALLTOWN_TEMPLATE_POSTER_PATH,
+} from '@/modules/smalltown-boy-dance/constants';
 import {
   ZOMBIE_HUG_DEFAULT_RESOLUTION,
   ZOMBIE_HUG_MODE,
@@ -6,18 +18,36 @@ import {
   ZOMBIE_HUG_PUBLIC_TEMPLATE_PATH_9X16,
 } from '@/modules/zombie-hug/prompt';
 
-export type MotionTemplate = {
+type MotionTemplateBase = {
   id: string;
   /** Paraglide message key */
   titleKey: string;
   poster: string;
   sourceVideo: string;
-  prompt: string;
-  mode: 'motion-transfer' | 'objects-swap';
-  resolution: '480p' | '720p' | '1080p';
   /** Card preview aspect. */
   aspect: 'portrait' | 'landscape';
 };
+
+/** Fills the homepage Genjutsu generator (video + prompt + mode). */
+type MotionTemplateApply = MotionTemplateBase & {
+  href?: undefined;
+  prompt: string;
+  mode: 'motion-transfer' | 'objects-swap';
+  resolution: '480p' | '720p' | '1080p';
+};
+
+/** Opens a dedicated product page (wrong provider if applied on homepage). */
+type MotionTemplateLink = MotionTemplateBase & {
+  href: string;
+};
+
+export type MotionTemplate = MotionTemplateApply | MotionTemplateLink;
+
+export function isMotionTemplateApply(
+  template: MotionTemplate
+): template is MotionTemplateApply {
+  return !('href' in template && typeof template.href === 'string');
+}
 
 /** Served from R2 via hotel-lobby API (not a static public/ file). */
 const HOTEL_LOBBY_TEMPLATE_FILE_PATH = '/api/hotel-lobby/template-file';
@@ -28,8 +58,9 @@ const DEFAULT_OBJECTS_RESOLUTION = '720p' as const;
 /**
  * Homepage motion templates. Aspect follows the source clip
  * (portrait 9:16 / landscape 16:9) for gallery layout.
- * Kling O3 product pages (Crazy Frog, Rumpelstiltskin, Bulin 47) are not
- * listed here — Recreate would send them through Genjutsu.
+ * Dedicated product pages (Crazy Frog, Smalltown, Rumpel, Bulin, Kairo)
+ * use `href` — Recreate on the homepage Genjutsu panel would use the
+ * wrong provider/product.
  */
 export const MOTION_TEMPLATES: MotionTemplate[] = [
   {
@@ -41,6 +72,46 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     mode: ZOMBIE_HUG_MODE,
     resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
     aspect: 'portrait',
+  },
+  {
+    id: 'crazy-frog',
+    titleKey: 'site.templates.crazy_frog',
+    poster: CRAZY_FROG_TEMPLATE_POSTER_PATH,
+    sourceVideo: CRAZY_FROG_TEMPLATE_PATH,
+    href: '/crazy-frog-ai',
+    aspect: 'landscape',
+  },
+  {
+    id: 'smalltown-boy-dance',
+    titleKey: 'site.templates.smalltown_boy_dance',
+    poster: SMALLTOWN_TEMPLATE_POSTER_PATH,
+    sourceVideo: SMALLTOWN_TEMPLATE_PATH,
+    href: '/smalltown-boy-dance',
+    aspect: 'portrait',
+  },
+  {
+    id: 'kairo-bad-times',
+    titleKey: 'site.templates.kairo_bad_times',
+    poster: KAIRO_BAD_TIMES_POSTER_PATH,
+    sourceVideo: KAIRO_BAD_TIMES_PREVIEW_PATH,
+    href: '/kairo-bad-times',
+    aspect: 'portrait',
+  },
+  {
+    id: 'bulin-47',
+    titleKey: 'site.templates.bulin_47',
+    poster: '/videos/bulin47-tpl-poster.jpg',
+    sourceVideo: '/videos/bulin47-tpl.mp4',
+    href: '/bulin-47-ai',
+    aspect: 'portrait',
+  },
+  {
+    id: 'rumpelstiltskin',
+    titleKey: 'site.templates.rumpelstiltskin',
+    poster: '/videos/rumpelstiltskin-tpl-poster.jpg',
+    sourceVideo: '/videos/rumpelstiltskin-tpl.mp4',
+    href: '/ai-rumpelstiltskin',
+    aspect: 'landscape',
   },
   {
     id: 'hotel-lobby',

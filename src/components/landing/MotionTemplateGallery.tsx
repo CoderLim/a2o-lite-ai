@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { tDynamic } from '@/core/i18n/dynamic';
+import { Link } from '@/core/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import { CloseIcon } from '@/components/icons';
 import {
   getMotionTemplatePreviewSrc,
+  isMotionTemplateApply,
   MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
@@ -131,20 +133,30 @@ function TemplateCard({
           '[@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100'
         )}
       >
-        <button
-          type="button"
-          disabled={applying || !onSelect}
-          onClick={() => onSelect?.(template)}
-          aria-label={m['site.templates.use_aria']({ title })}
-          className={cn(
-            'inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105',
-            (applying || !onSelect) && 'cursor-not-allowed opacity-60'
-          )}
-        >
-          {applying
-            ? m['site.templates.applying']()
-            : m['site.templates.use']()}
-        </button>
+        {isMotionTemplateApply(template) ? (
+          <button
+            type="button"
+            disabled={applying || !onSelect}
+            onClick={() => onSelect?.(template)}
+            aria-label={m['site.templates.use_aria']({ title })}
+            className={cn(
+              'inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105',
+              (applying || !onSelect) && 'cursor-not-allowed opacity-60'
+            )}
+          >
+            {applying
+              ? m['site.templates.applying']()
+              : m['site.templates.use']()}
+          </button>
+        ) : (
+          <Link
+            href={template.href}
+            aria-label={m['site.templates.open_aria']({ title })}
+            className="inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105"
+          >
+            {m['site.templates.open']()}
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => onPreview(template)}
