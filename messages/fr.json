@@ -718,5 +718,12 @@
   "site.zombie.version2_title": "La version avec un animal",
   "site.zombie.version2_desc": "Un chien ou un chat court dans des bras ouverts plutôt qu’une personne. Gardez les détails zombies discrets (yeux voilés, pelage emmêlé) et un accessoire reconnaissable, comme une médaille.",
   "site.zombie.version3_title": "La version familiale",
-  "site.zombie.version3_desc": "Un parent sur lequel vous ne pourriez jamais tirer. Cette version touche davantage lorsqu’il s’agit d’un souvenir, avec un maquillage zombie discret autour des yeux et de la bouche."
+  "site.zombie.version3_desc": "Un parent sur lequel vous ne pourriez jamais tirer. Cette version touche davantage lorsqu’il s’agit d’un souvenir, avec un maquillage zombie discret autour des yeux et de la bouche.",
+  "site.zombie.cold_prompt": "Plan cinématographique 9:16, rue déserte et pluvieuse au crépuscule. Une jeune femme à la peau gris pâle, aux yeux voilés, avec une fine trace de sang séché sur la joue, se tient à six mètres, haletante. Au premier plan, les mains d’un homme tremblent tandis qu’il lève un pistolet puis l’abaisse lentement. Elle crie et se précipite vers lui. Étalonnage bleu-gris désaturé, faible profondeur de champ, grain cinéma, 24 fps.",
+  "site.zombie.warm_prompt": "Plan cinématographique 9:16, plage au coucher du soleil doré. La même jeune femme, vivante et en bonne santé, rit en courant vers les bras ouverts de l’homme. Il la soulève du sol. Teintes dorées chaleureuses, léger halo optique, grain cinéma, 24 fps.",
+  "site.zombie.survivor_note": "Non infecté / personne tenant l’arme. Photo nette de vous, de face.",
+  "site.zombie.loved_note": "Infecté puis guéri. Même personne, zombie dans la première scène puis humaine dans la suivante.",
+  "site.zombie.upload_photo": "Importer une photo",
+  "site.zombie.photo_hint": "JPG, PNG ou WebP · 12 Mo max.",
+  "site.zombie.provider_label": "Genjutsu · transfert de mouvement"
 }
