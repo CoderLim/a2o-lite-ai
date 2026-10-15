@@ -116,7 +116,9 @@ export const Route = createFileRoute('/text-to-image')({
     const title = `AI Text to Image Generator | ${envConfigs.app_name}`;
     const description =
       'Generate images from text with GPT Image 2, Nano Banana 2, Seedream 5, and Seedream 3.5 Pro.';
-    const { canonical, alternates } = localeLinks('/text-to-image', locale);
+    // This route still has hardcoded English UI and SEO; avoid advertising English
+    // fallbacks as translated pages until all sections are localized.
+    const { canonical, alternates } = localeLinks('/text-to-image', locale, ['en']);
     return {
       meta: [
         { title },
