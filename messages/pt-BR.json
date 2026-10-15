@@ -718,5 +718,12 @@
   "site.zombie.version2_title": "A versão com animais",
   "site.zombie.version2_desc": "Um cachorro ou gato corre para os braços abertos no lugar de uma pessoa. Use detalhes zumbis discretos (olhos embaçados, pelo bagunçado) e um item reconhecível, como uma plaquinha.",
   "site.zombie.version3_title": "A versão em família",
-  "site.zombie.version3_desc": "Um pai ou uma mãe em quem você nunca atiraria. Funciona melhor como lembrança: mantenha a maquiagem zumbi leve ao redor dos olhos e da boca."
+  "site.zombie.version3_desc": "Um pai ou uma mãe em quem você nunca atiraria. Funciona melhor como lembrança: mantenha a maquiagem zumbi leve ao redor dos olhos e da boca.",
+  "site.zombie.cold_prompt": "Cena cinematográfica 9:16 de uma rua vazia e chuvosa ao anoitecer. Uma jovem de pele cinza-pálida, olhos turvos e uma fina mancha de sangue seco na bochecha está a seis metros, ofegante. Em primeiro plano, as mãos de um homem tremem quando ele levanta uma pistola e depois a abaixa lentamente. Ela grita e corre em sua direção. Tons azul-acinzentados dessaturados, profundidade de campo rasa, granulação de filme, 24 fps.",
+  "site.zombie.warm_prompt": "Cena cinematográfica 9:16 de praia ao pôr do sol dourado. A mesma jovem, viva e saudável, ri enquanto corre para os braços abertos do homem. Ele a levanta do chão. Tons dourados quentes, reflexo suave na lente, granulação de filme, 24 fps.",
+  "site.zombie.survivor_note": "Não infectado / pessoa segurando a arma. Foto frontal nítida sua.",
+  "site.zombie.loved_note": "Infectada e depois recuperada. A mesma pessoa em cenas de zumbi no início e humana no fim.",
+  "site.zombie.upload_photo": "Enviar foto",
+  "site.zombie.photo_hint": "JPG, PNG ou WebP · até 12 MB",
+  "site.zombie.provider_label": "Genjutsu · transferência de movimento"
 }
