@@ -32,6 +32,15 @@ const validPreviewOptions = {
   contentLengths: [500_000, 1000, 1200],
 };
 
+test('default prompt uses WaveSpeed spaced asset tags', () => {
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Video 1/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Image 1/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Image 2/);
+  assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Video1\b/);
+  assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Image1\b/);
+  assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Image2\b/);
+});
+
 test('accepts server-template binding with two images', () => {
   assert.doesNotThrow(() => assertCrazyFrogInputs(validOptions));
 });

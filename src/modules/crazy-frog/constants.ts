@@ -30,13 +30,14 @@ export function isCrazyFrogResolution(
 }
 
 /**
- * Fixed dual-role chase prompt for Seedance video-edit.
- * @Image1 = foreground lead facing camera; @Image2 = chaser on red vehicle.
+ * Fixed dual-role chase prompt for Seedance video-edit (WaveSpeed).
+ * Asset tags must use a space: @Video 1 / @Image N (not @Video1 / @Image1).
+ * @Image 1 = foreground lead facing camera; @Image 2 = chaser on red vehicle.
  */
 export const CRAZY_FROG_DEFAULT_PROMPT = [
-  'Use @Video1 only for motion, timing, gestures, camera, road, vehicle, and chase staging.',
-  'Change the large foreground rider who faces the camera and points forward in @Video1 to be the person or character from @Image1 — do not keep the original foreground rider.',
-  'Change the smaller person chasing behind on the red vehicle in @Video1 to be the person or character from @Image2 — do not keep the original chaser.',
+  'Use @Video 1 only for motion, timing, gestures, camera, road, vehicle, and chase staging.',
+  'Change the large foreground rider who faces the camera and points forward in @Video 1 to be the person or character from @Image 1 — do not keep the original foreground rider.',
+  'Change the smaller person chasing behind on the red vehicle in @Video 1 to be the person or character from @Image 2 — do not keep the original chaser.',
   'Match each Image for face, hair, body, clothing, and species throughout the clip.',
-  'Do not swap Image1 and Image2 or blend the two identities.',
+  'Do not swap @Image 1 and @Image 2 or blend the two identities.',
 ].join(' ');
