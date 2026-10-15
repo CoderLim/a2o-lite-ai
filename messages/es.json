@@ -718,5 +718,12 @@
   "site.zombie.version2_title": "La versión con mascotas",
   "site.zombie.version2_desc": "Un perro o gato corre hacia los brazos abiertos. Mantén los detalles zombis discretos (ojos nublados, pelaje enmarañado) y añade algo reconocible, como la placa del collar.",
   "site.zombie.version3_title": "La versión familiar",
-  "site.zombie.version3_desc": "Un progenitor al que nunca dispararías. Funciona especialmente como recuerdo; utiliza un maquillaje zombi ligero alrededor de ojos y boca."
+  "site.zombie.version3_desc": "Un progenitor al que nunca dispararías. Funciona especialmente como recuerdo; utiliza un maquillaje zombi ligero alrededor de ojos y boca.",
+  "site.zombie.cold_prompt": "Plano cinematográfico 9:16 de una calle urbana vacía y lluviosa al atardecer. Una joven de piel gris pálida, ojos nublados y una fina mancha de sangre seca en la mejilla aparece a seis metros, respirando con dificultad. En primer plano, las manos de un hombre tiemblan cuando levanta una pistola y luego la baja lentamente. Ella grita y corre hacia él. Color azul grisáceo desaturado, poca profundidad de campo, grano de película, 24 fps.",
+  "site.zombie.warm_prompt": "Plano cinematográfico 9:16 de una playa al atardecer dorado. La misma joven, viva y sana, ríe mientras corre a los brazos abiertos del hombre. Él la levanta del suelo. Tonos dorados cálidos, destello de lente suave, grano cinematográfico, 24 fps.",
+  "site.zombie.survivor_note": "No infectado / persona que sostiene el arma. Una foto tuya clara y de frente.",
+  "site.zombie.loved_note": "Infectado y después recuperado. La misma persona aparece como zombi al principio y humana al final.",
+  "site.zombie.upload_photo": "Subir foto",
+  "site.zombie.photo_hint": "JPG, PNG o WebP · hasta 12 MB",
+  "site.zombie.provider_label": "Genjutsu · transferencia de movimiento"
 }
