@@ -18,6 +18,11 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description: 'One-photo Bulin 47 freestyle AI video generator',
   },
   {
+    path: '/kairo-bad-times',
+    title: 'Kairo Bad Times AI Video',
+    description: 'One-photo Kairo Bad Times motion-template AI video generator',
+  },
+  {
     path: '/ai-rumpelstiltskin',
     title: 'Rumpelstiltskin AI Video',
     description: 'One-photo Rumpelstiltskin tiptoe AI video generator',
