@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import {
   KAIRO_BAD_TIMES_POSTER_PATH,
   KAIRO_BAD_TIMES_PREVIEW_PATH,
+  KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
 } from '@/modules/kairo-bad-times/constants';
 import { estimateKairoBadTimesCredits } from '@/modules/kairo-bad-times/pricing';
 import { KairoBadTimesPreflightError } from '@/modules/kairo-bad-times/service';
@@ -15,6 +16,7 @@ async function GET() {
     let durationSeconds: number | null = null;
     let billedDurationSeconds: number | null = null;
     let estimatedCredits: number | null = null;
+    let previewEstimatedCredits: number | null = null;
     let templateAvailable = false;
 
     try {
@@ -22,6 +24,9 @@ async function GET() {
       billedDurationSeconds = normalizeKairoBadTimesDuration(durationSeconds);
       estimatedCredits = estimateKairoBadTimesCredits({
         duration: billedDurationSeconds,
+      });
+      previewEstimatedCredits = estimateKairoBadTimesCredits({
+        duration: KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
       });
       templateAvailable = true;
     } catch (error) {
@@ -33,6 +38,8 @@ async function GET() {
       durationSeconds,
       billedDurationSeconds,
       estimatedCredits,
+      previewDurationSeconds: KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
+      previewEstimatedCredits,
       templateAvailable,
       previewUrl: KAIRO_BAD_TIMES_PREVIEW_PATH,
       posterUrl: KAIRO_BAD_TIMES_POSTER_PATH,

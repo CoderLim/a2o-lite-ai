@@ -5,7 +5,9 @@ import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
 
 import {
+  KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY,
   KAIRO_BAD_TIMES_DEFAULT_TEMPLATE_VIDEO_KEY,
+  KAIRO_BAD_TIMES_LOCAL_PREVIEW_TEMPLATE_PATH,
   KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH,
 } from './constants';
 import { KAIRO_BAD_TIMES_MAX_IMAGE_BYTES } from './pricing';
@@ -349,6 +351,14 @@ export function resolveKairoBadTimesTemplateVideoKey() {
   return key;
 }
 
+export function resolveKairoBadTimesPreviewTemplateVideoKey() {
+  const key =
+    envConfigs.kairo_bad_times_preview_template_video_key?.trim() ||
+    KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY;
+  assertKairoBadTimesKeyPrefix(key);
+  return key;
+}
+
 async function putKairoBadTimesObjectBytes(params: {
   key: string;
   bytes: Uint8Array;
@@ -382,9 +392,12 @@ async function putKairoBadTimesObjectBytes(params: {
   }
 }
 
-export async function ensureKairoBadTimesTemplateInR2() {
-  const key = resolveKairoBadTimesTemplateVideoKey();
-  const localRelative = KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH;
+async function ensureKairoBadTimesObjectInR2(params: {
+  key: string;
+  localRelative: string;
+  label: string;
+}) {
+  const { key, localRelative, label } = params;
 
   let remoteBytes: number | null = null;
   try {
@@ -397,7 +410,7 @@ export async function ensureKairoBadTimesTemplateInR2() {
   if (isCloudflareWorkersRuntime()) {
     if (remoteBytes != null) return key;
     throw new Error(
-      `Kairo Bad Times template missing from R2 (${key}). Upload ${localRelative} to that key.`
+      `${label} missing from R2 (${key}). Upload ${localRelative} to that key.`
     );
   }
 
@@ -408,7 +421,7 @@ export async function ensureKairoBadTimesTemplateInR2() {
   if (!existsSync(localPath)) {
     if (remoteBytes != null) return key;
     throw new Error(
-      `Kairo Bad Times template missing from R2 (${key}) and local file ${localPath} was not found`
+      `${label} missing from R2 (${key}) and local file ${localPath} was not found`
     );
   }
 
@@ -424,6 +437,22 @@ export async function ensureKairoBadTimesTemplateInR2() {
     contentType: 'video/mp4',
   });
   return key;
+}
+
+export async function ensureKairoBadTimesTemplateInR2() {
+  return ensureKairoBadTimesObjectInR2({
+    key: resolveKairoBadTimesTemplateVideoKey(),
+    localRelative: KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH,
+    label: 'Kairo Bad Times template',
+  });
+}
+
+export async function ensureKairoBadTimesPreviewTemplateInR2() {
+  return ensureKairoBadTimesObjectInR2({
+    key: resolveKairoBadTimesPreviewTemplateVideoKey(),
+    localRelative: KAIRO_BAD_TIMES_LOCAL_PREVIEW_TEMPLATE_PATH,
+    label: 'Kairo Bad Times preview template',
+  });
 }
 
 export async function createKairoBadTimesR2ReadUrl(key: string) {

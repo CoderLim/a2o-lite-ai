@@ -170,6 +170,7 @@ export async function reserveKairoBadTimesGeneration(params: {
   imageKey: string;
   templateVideoKey: string;
   duration: number;
+  kind?: 'preview' | 'full';
   providerCostUsd: number;
   credits: number;
   creditDescription?: string;
@@ -242,6 +243,7 @@ export async function reserveKairoBadTimesGeneration(params: {
         imageKey: params.imageKey,
         templateVideoKey: params.templateVideoKey,
         duration: params.duration,
+        kind: params.kind || 'full',
         characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
         keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
         model: KAIRO_BAD_TIMES_MODEL,

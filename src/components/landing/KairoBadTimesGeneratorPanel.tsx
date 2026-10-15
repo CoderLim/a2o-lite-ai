@@ -49,6 +49,7 @@ type GenerationStart = {
   requestId: string | null;
   status: string;
   reservedCredits: number;
+  kind?: 'preview' | 'full';
 };
 
 type GenerationPoll = {
@@ -65,6 +66,8 @@ type TemplateMeta = {
   durationSeconds: number | null;
   billedDurationSeconds: number | null;
   estimatedCredits: number | null;
+  previewDurationSeconds?: number | null;
+  previewEstimatedCredits?: number | null;
   templateAvailable: boolean;
   previewUrl: string;
   posterUrl: string;
@@ -74,6 +77,7 @@ type PersistedGeneration = {
   userId: string;
   generationId: string;
   reservedCredits: number;
+  kind?: 'preview' | 'full';
 };
 
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
@@ -116,6 +120,7 @@ export function KairoBadTimesGeneratorPanel({
   >('idle');
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultKind, setResultKind] = useState<'preview' | 'full'>('full');
   const [jobError, setJobError] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
 
@@ -127,6 +132,7 @@ export function KairoBadTimesGeneratorPanel({
   const busy = phase !== 'idle' && phase !== 'locked';
   const templateAvailable = templateMeta?.templateAvailable === true;
   const estimatedCredits = templateMeta?.estimatedCredits ?? null;
+  const previewEstimatedCredits = templateMeta?.previewEstimatedCredits ?? null;
 
   useEffect(() => {
     apiGet<TemplateMeta>('/api/kairo-bad-times/template-meta')
@@ -141,6 +147,8 @@ export function KairoBadTimesGeneratorPanel({
           durationSeconds: null,
           billedDurationSeconds: null,
           estimatedCredits: null,
+          previewDurationSeconds: null,
+          previewEstimatedCredits: null,
           templateAvailable: false,
           previewUrl: KAIRO_BAD_TIMES_PREVIEW_PATH,
           posterUrl: KAIRO_BAD_TIMES_POSTER_PATH,
@@ -239,6 +247,7 @@ export function KairoBadTimesGeneratorPanel({
         return;
       }
       setGenerationId(persisted.generationId);
+      setResultKind(persisted.kind === 'preview' ? 'preview' : 'full');
       setPhase('generating');
       void pollUntilComplete(
         persisted.generationId,
@@ -311,7 +320,7 @@ export function KairoBadTimesGeneratorPanel({
     });
   };
 
-  const startGeneration = async () => {
+  const startGeneration = async (kind: 'preview' | 'full' = 'full') => {
     if (!photo) {
       toast.error(m['site.kairo.need_photo']());
       return;
@@ -330,6 +339,7 @@ export function KairoBadTimesGeneratorPanel({
 
     setJobError('');
     setResultUrl(null);
+    setResultKind(kind);
     setPhase('uploading');
     const id = crypto.randomUUID();
     setGenerationId(id);
@@ -366,6 +376,7 @@ export function KairoBadTimesGeneratorPanel({
           imageKey: upload.storageKey,
           contentTypes,
           contentLengths,
+          preview: kind === 'preview' || undefined,
         }
       );
 
@@ -388,6 +399,7 @@ export function KairoBadTimesGeneratorPanel({
           userId,
           generationId: id,
           reservedCredits: start.reservedCredits || 0,
+          kind,
         } satisfies PersistedGeneration)
       );
 
@@ -517,7 +529,39 @@ export function KairoBadTimesGeneratorPanel({
             </div>
           ) : null}
 
-          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+          <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
+                <span className="text-[10px] whitespace-nowrap text-white/45">
+                  {m['site.kairo.preview_spec']()}
+                </span>
+                <span>
+                  {previewEstimatedCredits != null
+                    ? m['genjutsu.estimate.credits']({
+                        count: previewEstimatedCredits.toLocaleString(),
+                      })
+                    : '—'}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={!canGenerate}
+                onClick={() => void startGeneration('preview')}
+                className={cn(
+                  'inline-flex h-8 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
+                  canGenerate
+                    ? 'cursor-pointer border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
+                    : 'cursor-not-allowed border-white/10 text-[rgb(237,234,222)]/38'
+                )}
+                title={m['site.kairo.preview_help']()}
+              >
+                {m['site.generator.preview']()}
+              </button>
+            </div>
+            <div
+              className="hidden h-8 w-px shrink-0 self-end bg-white/15 sm:block"
+              aria-hidden
+            />
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
                 <span className="text-[10px] whitespace-nowrap text-white/45">
@@ -552,7 +596,7 @@ export function KairoBadTimesGeneratorPanel({
               <button
                 type="button"
                 disabled={!canGenerate}
-                onClick={() => void startGeneration()}
+                onClick={() => void startGeneration('full')}
                 className={cn(
                   'relative inline-flex h-8 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
                   canGenerate
@@ -585,7 +629,9 @@ export function KairoBadTimesGeneratorPanel({
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white/90">
                 {resultUrl && !busy
-                  ? m['site.common.your_video']()
+                  ? resultKind === 'preview'
+                    ? m['site.generator.preview_result']()
+                    : m['site.common.your_video']()
                   : m['site.generator.generating']()}
               </p>
               <p className="mt-0.5 truncate text-xs text-white/40">
@@ -597,22 +643,34 @@ export function KairoBadTimesGeneratorPanel({
               </p>
             </div>
             {resultUrl && !busy ? (
-              <a
-                href={
-                  generationId
-                    ? `/api/kairo-bad-times/result/${encodeURIComponent(generationId)}?download=1`
-                    : resultUrl
-                }
-                download={
-                  generationId
-                    ? `kairo-bad-times-${generationId.slice(0, 8)}.mp4`
-                    : undefined
-                }
-                className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
-              >
-                <Download className="size-3.5" />
-                {m['site.common.download']()}
-              </a>
+              <div className="flex shrink-0 items-center gap-2">
+                {resultKind === 'preview' ? (
+                  <button
+                    type="button"
+                    disabled={!canGenerate}
+                    onClick={() => void startGeneration('full')}
+                    className="inline-flex h-9 items-center rounded-lg border border-[rgba(204,144,92,0.6)] px-3 text-xs font-semibold text-[rgb(237,234,222)] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {m['site.generator.generate_full']()}
+                  </button>
+                ) : null}
+                <a
+                  href={
+                    generationId
+                      ? `/api/kairo-bad-times/result/${encodeURIComponent(generationId)}?download=1`
+                      : resultUrl
+                  }
+                  download={
+                    generationId
+                      ? `kairo-bad-times-${resultKind === 'preview' ? 'preview-' : ''}${generationId.slice(0, 8)}.mp4`
+                      : undefined
+                  }
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+                >
+                  <Download className="size-3.5" />
+                  {m['site.common.download']()}
+                </a>
+              </div>
             ) : (
               <span className="shrink-0 text-xs font-medium text-white/45 tabular-nums">
                 {progressPercent}%

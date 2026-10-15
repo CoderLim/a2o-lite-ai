@@ -28,6 +28,7 @@ import {
   submitKairoBadTimes,
 } from '@/modules/kairo-bad-times/service';
 import {
+  ensureKairoBadTimesPreviewTemplateInR2,
   ensureKairoBadTimesTemplateInR2,
   resolveKairoBadTimesInputUrls,
   sealKairoBadTimesInput,
@@ -37,11 +38,22 @@ import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
 function taskResponse(task: any) {
+  let kind: 'preview' | 'full' = 'full';
+  try {
+    const options =
+      typeof task.options === 'string'
+        ? (JSON.parse(task.options) as { kind?: string })
+        : task.options;
+    if (options?.kind === 'preview') kind = 'preview';
+  } catch {
+    // ignore malformed options
+  }
   return {
     generationId: task.id,
     requestId: task.taskId || null,
     status: task.status,
     reservedCredits: task.costCredits || 0,
+    kind,
   };
 }
 
@@ -86,6 +98,8 @@ async function POST({ request }: { request: Request }) {
       });
     }
 
+    const kind: 'preview' | 'full' = body.preview === true ? 'preview' : 'full';
+
     const sealed = await sealKairoBadTimesInput({
       userId,
       generationId,
@@ -94,7 +108,10 @@ async function POST({ request }: { request: Request }) {
       contentLength: contentLengths[0],
     });
 
-    const templateVideoKey = await ensureKairoBadTimesTemplateInR2();
+    const templateVideoKey =
+      kind === 'preview'
+        ? await ensureKairoBadTimesPreviewTemplateInR2()
+        : await ensureKairoBadTimesTemplateInR2();
     const providerInput = await resolveKairoBadTimesInputUrls({
       userId,
       generationId,
@@ -132,8 +149,13 @@ async function POST({ request }: { request: Request }) {
       userId,
       userEmail: session.user.email,
       ...matchSnapshot,
+      kind,
       providerCostUsd,
       credits,
+      creditDescription:
+        kind === 'preview'
+          ? 'Reserve credits for Kairo Bad Times preview'
+          : 'Reserve credits for Kairo Bad Times generation',
     });
 
     if (task.status !== 'reserved') {

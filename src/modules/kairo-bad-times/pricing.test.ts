@@ -20,6 +20,12 @@ test('v2 ~29s template credits', () => {
   assert.equal(estimateKairoBadTimesCredits({ duration: 29 }), 622);
 });
 
+test('4s paid preview credits', () => {
+  assert.equal(estimateKairoBadTimesProviderCost({ duration: 4 }), 0.504);
+  // ceil(0.504 * 100 * 1.7) = 86
+  assert.equal(estimateKairoBadTimesCredits({ duration: 4 }), 86);
+});
+
 test('3s template clip matches Fal rate plus Genjutsu credit markup', () => {
   assert.equal(estimateKairoBadTimesProviderCost({ duration: 3 }), 0.378);
   // ceil(0.378 * 100 * 1.7) = 65
