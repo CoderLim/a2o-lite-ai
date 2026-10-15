@@ -98,7 +98,10 @@ export function KairoBadTimesGeneratorPanel({
   const { data: session, isPending: sessionPending } = useSession();
   const userId = session?.user?.id ?? null;
   const creditsQuery = useUserCredits();
-  const creditGate = useCreditGate();
+  const creditGate = useCreditGate({
+    balance: creditsQuery.data?.balance,
+    email: session?.user?.email,
+  });
 
   const [photo, setPhoto] = useState<MediaItem | null>(null);
   const [templateMeta, setTemplateMeta] = useState<TemplateMeta | null>(null);
@@ -573,10 +576,11 @@ export function KairoBadTimesGeneratorPanel({
       </div>
 
       <InsufficientCreditsModal
-        open={creditGate.openState}
-        onOpenChange={creditGate.setOpenState}
-        requiredCredits={creditGate.requiredCredits}
-        balance={creditGate.balance}
+        gate={creditGate.gate}
+        pack={creditGate.recommendedPack}
+        checkoutLoading={creditGate.checkoutLoading}
+        onClose={creditGate.clear}
+        onBuy={() => void creditGate.buy()}
       />
     </div>
   );
