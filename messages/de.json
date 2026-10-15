@@ -718,5 +718,12 @@
   "site.zombie.version2_title": "Die Haustier-Version",
   "site.zombie.version2_desc": "Ein Hund oder eine Katze läuft statt eines Menschen in offene Arme. Halte die Zombie-Details dezent (trübe Augen, verfilztes Fell) und nutze ein erkennbares Detail wie eine Halsbandmarke.",
   "site.zombie.version3_title": "Die Familienversion",
-  "site.zombie.version3_desc": "Ein Elternteil, auf das du niemals schießen würdest. Als Erinnerung besonders bewegend – mit dezentem Zombie-Make-up um Augen und Mund."
+  "site.zombie.version3_desc": "Ein Elternteil, auf das du niemals schießen würdest. Als Erinnerung besonders bewegend – mit dezentem Zombie-Make-up um Augen und Mund.",
+  "site.zombie.cold_prompt": "Filmische 9:16-Aufnahme einer verregneten, leeren Stadtstraße in der Dämmerung. Eine junge Frau mit blassgrauer Haut, trüben Augen und einer schmalen Spur getrockneten Blutes auf der Wange steht sechs Meter entfernt und atmet schwer. Im Vordergrund zittern die Hände eines Mannes, als er eine Pistole hebt und langsam wieder senkt. Sie schreit und rennt auf ihn zu. Entsättigte blaugraue Farbtöne, geringe Schärfentiefe, Filmkorn, 24 fps.",
+  "site.zombie.warm_prompt": "Filmische 9:16-Aufnahme an einem Strand im goldenen Sonnenuntergang. Dieselbe junge Frau, lebendig und gesund, lacht und läuft in die offenen Arme des Mannes. Er hebt sie vom Boden. Warme Goldtöne, sanfte Lensflares, Filmkorn, 24 fps.",
+  "site.zombie.survivor_note": "Nicht infiziert / Person mit der Waffe. Klares Frontalfoto von dir.",
+  "site.zombie.loved_note": "Infiziert und später wiederhergestellt. Dieselbe Person zuerst als Zombie, dann als Mensch.",
+  "site.zombie.upload_photo": "Foto hochladen",
+  "site.zombie.photo_hint": "JPG, PNG oder WebP · bis zu 12 MB",
+  "site.zombie.provider_label": "Genjutsu · Bewegungsübertragung"
 }
