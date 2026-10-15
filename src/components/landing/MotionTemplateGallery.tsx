@@ -77,6 +77,9 @@ function TemplatePreviewLightbox({
   );
 }
 
+const primaryActionClassName =
+  'inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105';
+
 function TemplateCard({
   template,
   applying,
@@ -140,7 +143,7 @@ function TemplateCard({
             onClick={() => onSelect?.(template)}
             aria-label={m['site.templates.use_aria']({ title })}
             className={cn(
-              'inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105',
+              primaryActionClassName,
               (applying || !onSelect) && 'cursor-not-allowed opacity-60'
             )}
           >
@@ -151,10 +154,10 @@ function TemplateCard({
         ) : (
           <Link
             href={template.href}
-            aria-label={m['site.templates.open_aria']({ title })}
-            className="inline-flex h-8 w-full max-w-[9.5rem] cursor-pointer items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3 text-[11px] font-semibold text-[rgb(247,246,243)] shadow-md transition hover:brightness-105"
+            aria-label={m['site.templates.use_aria']({ title })}
+            className={primaryActionClassName}
           >
-            {m['site.templates.open']()}
+            {m['site.templates.use']()}
           </Link>
         )}
         <button
