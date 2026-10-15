@@ -574,11 +574,12 @@ function generationFailureUiMessage(
   ) {
     return m['genjutsu.error.photo_quality']();
   }
-  if (
-    errorCode === 'PROVIDER_FAILED' ||
-    (error && isProviderFailedMessage(error))
-  ) {
+  // Localize only the generic fallback; passthrough specific provider copy.
+  if (error && isProviderFailedMessage(error)) {
     return m['genjutsu.error.provider_failed']();
+  }
+  if (errorCode === 'PROVIDER_FAILED') {
+    return error || m['genjutsu.error.provider_failed']();
   }
   return error || '';
 }
@@ -612,8 +613,11 @@ function providerSubmitUiMessage(cause: unknown): string {
   ) {
     return m['genjutsu.error.photo_quality']();
   }
-  if (code === 'PROVIDER_FAILED' || isProviderFailedMessage(message)) {
+  if (isProviderFailedMessage(message)) {
     return m['genjutsu.error.provider_failed']();
+  }
+  if (code === 'PROVIDER_FAILED') {
+    return message || m['genjutsu.error.provider_failed']();
   }
   return message;
 }

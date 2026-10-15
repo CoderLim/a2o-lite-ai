@@ -6,12 +6,10 @@ import {
 } from './seedance';
 
 /**
- * Stable English copy returned to end users for provider/infra failures.
- * Raw dumps (e.g. Higgsfield "The selected parameters are not supported for
- * this request…") stay in server logs / providerError — never in this string.
- * That Higgsfield message often means dual-role swap was sent to
- * reference-to-video with fixed aspect/duration; Smalltown uses video-edit
- * instead (see SEEDANCE_HIGGSFIELD_EDIT_MODEL).
+ * Fallback English copy when a provider failure has no specific mapping and
+ * the raw dump looks unsafe to show (account ids, request ids, model names…).
+ * Mapped cases (likeness / content-safety) and clean provider messages are
+ * returned as-is via toUserFacingProviderError.
  */
 export const GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE =
   'Generation failed. Please try again later.';
@@ -131,6 +129,11 @@ export function toUserFacingProviderError(
   }
   if (isProviderContentSafetyRejection(raw, providerCode)) {
     return GENJUTSU_CONTENT_SAFETY_USER_MESSAGE;
+  }
+  const trimmed = raw.trim();
+  // No mapping: show the provider message when it is safe; otherwise fallback.
+  if (trimmed && !looksLikeRawProviderError(trimmed)) {
+    return trimmed;
   }
   return GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE;
 }

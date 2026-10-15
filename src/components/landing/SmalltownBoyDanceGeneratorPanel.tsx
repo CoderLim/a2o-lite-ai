@@ -172,6 +172,10 @@ function isPhotoQualityFailureMessage(message: string) {
   return /photos didn't work|front-facing shots/i.test(message);
 }
 
+function isProviderFailedMessage(message: string) {
+  return /generation failed\. please try again later/i.test(message);
+}
+
 function generationFailureUiMessage(
   error?: string | null,
   errorCode?: string | null
@@ -188,8 +192,12 @@ function generationFailureUiMessage(
   ) {
     return m['genjutsu.error.photo_quality']();
   }
-  if (errorCode === 'PROVIDER_FAILED') {
+  // Localize only the generic fallback; passthrough specific provider copy.
+  if (error && isProviderFailedMessage(error)) {
     return m['genjutsu.error.provider_failed']();
+  }
+  if (errorCode === 'PROVIDER_FAILED') {
+    return error || m['genjutsu.error.provider_failed']();
   }
   return error || '';
 }
@@ -215,8 +223,11 @@ function providerSubmitUiMessage(cause: unknown): string {
   ) {
     return m['genjutsu.error.photo_quality']();
   }
-  if (code === 'PROVIDER_FAILED') {
+  if (isProviderFailedMessage(message)) {
     return m['genjutsu.error.provider_failed']();
+  }
+  if (code === 'PROVIDER_FAILED') {
+    return message || m['genjutsu.error.provider_failed']();
   }
   return message;
 }

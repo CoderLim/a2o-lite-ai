@@ -23,7 +23,7 @@ export const SEEDANCE_HIGGSFIELD_MODEL =
  * aspect_ratio/duration fails asynchronously with:
  *   "The selected parameters are not supported for this request.
  *    Check the model requirements and try again."
- * (providerError logged; UI shows GENJUTSU_PROVIDER_FAILURE_USER_MESSAGE)
+ * (providerError logged; safe unmapped copy may pass through to the UI)
  */
 export const SEEDANCE_HIGGSFIELD_EDIT_MODEL =
   'bytedance/seedance-2.5/video-edit';

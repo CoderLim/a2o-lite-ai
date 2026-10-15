@@ -80,6 +80,18 @@ test('always preserves raw text for admin on provider failures', () => {
   assert.equal(split.contentSafety, false);
 });
 
+test('passes through safe unmapped provider messages to users', () => {
+  const raw = 'Could not measure the duration of the provided media.';
+  const split = splitProviderFailureError(raw, '4006');
+  assert.equal(looksLikeRawProviderError(raw), false);
+  assert.equal(split.error, raw);
+  assert.equal(split.providerError, raw);
+  assert.equal(split.errorCode, GENJUTSU_PROVIDER_FAILED_CODE);
+  assert.equal(split.providerCode, '4006');
+  assert.equal(split.likeness, false);
+  assert.equal(split.contentSafety, false);
+});
+
 test('maps Higgsfield content-safety blocks to photo-quality user copy', () => {
   const raw =
     'The generated result was blocked by content safety checks. Try a different prompt or reference media.';
