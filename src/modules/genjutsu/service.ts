@@ -25,6 +25,13 @@ import {
   type HiggsfieldSeedanceAspectRatio,
 } from './seedance-higgsfield';
 import {
+  assertSeeapiSeedanceConfigured,
+  estimateSeeapiSeedanceProviderCost,
+  getSeeapiSeedanceStatus,
+  SeeapiSeedanceHttpError,
+  submitSeeapiSeedance,
+} from './seedance-seeapi';
+import {
   assertVolcengineSeedanceConfigured,
   estimateVolcengineSeedanceProviderCost,
   getVolcengineSeedanceStatus,
@@ -54,6 +61,7 @@ export {
   isSeedanceLikenessRejection,
   SeedanceHttpError,
   SeedancePreflightError,
+  SeeapiSeedanceHttpError,
   VolcengineSeedanceHttpError,
   resolveGenjutsuProviderTarget,
   resolveProductProviderTarget,
@@ -202,6 +210,7 @@ export type GenjutsuCostEstimate = {
     | 'list_fallback'
     | 'seedance_list_estimate'
     | 'volcengine_seedance_estimate'
+    | 'seeapi_seedance_estimate'
     | 'higgsfield_seedance_token_estimate';
   sourceDurationSeconds?: number;
 };
@@ -423,6 +432,18 @@ export async function resolveGenjutsuProviderCost(
       };
     }
 
+    if (input.provider === 'seedance-seeapi') {
+      await assertSeeapiSeedanceConfigured(input.model);
+      return {
+        ...estimateSeeapiSeedanceProviderCost({
+          mode: input.mode,
+          resolution: input.resolution,
+          sourceDurationSeconds,
+        }),
+        sourceDurationSeconds,
+      };
+    }
+
     if (input.provider === 'seedance-higgsfield') {
       return {
         ...estimateHiggsfieldSeedanceProviderCost({
@@ -476,6 +497,13 @@ export async function submitGenjutsu(input: {
       });
     }
 
+    if (input.provider === 'seedance-seeapi') {
+      return submitSeeapiSeedance({
+        ...input,
+        sourceDurationSeconds: input.sourceDurationSeconds,
+      });
+    }
+
     if (input.provider === 'seedance-higgsfield') {
       return submitHiggsfieldSeedance({
         ...input,
@@ -500,6 +528,12 @@ export async function getGenjutsuStatus(input: {
 }) {
   if (input.provider === 'seedance-volcengine') {
     return getVolcengineSeedanceStatus({
+      requestId: input.requestId,
+    });
+  }
+
+  if (input.provider === 'seedance-seeapi') {
+    return getSeeapiSeedanceStatus({
       requestId: input.requestId,
     });
   }

@@ -39,6 +39,7 @@ import {
   HiggsfieldPreflightError,
   resolveGenjutsuProviderCost,
   resolveGenjutsuProviderTarget,
+  SeeapiSeedanceHttpError,
   SeedanceHttpError,
   SeedancePreflightError,
   submitGenjutsu,
@@ -447,11 +448,15 @@ async function POST({ request }: { request: Request }) {
       if (
         error instanceof HiggsfieldHttpError ||
         error instanceof SeedanceHttpError ||
-        error instanceof VolcengineSeedanceHttpError
+        error instanceof VolcengineSeedanceHttpError ||
+        error instanceof SeeapiSeedanceHttpError
       ) {
         const failure = splitProviderFailureError(
           error.message,
-          error instanceof VolcengineSeedanceHttpError ? error.code : undefined
+          error instanceof VolcengineSeedanceHttpError ||
+            error instanceof SeeapiSeedanceHttpError
+            ? error.code
+            : undefined
         );
         logGenjutsuProviderFailure({
           stage: 'generate_submit',

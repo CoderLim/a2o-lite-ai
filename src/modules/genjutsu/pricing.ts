@@ -198,7 +198,8 @@ export function estimateGenjutsuCreditsForProvider(input: {
     | 'higgsfield'
     | 'seedance'
     | 'seedance-volcengine'
-    | 'seedance-higgsfield';
+    | 'seedance-higgsfield'
+    | 'seedance-seeapi';
   durationSeconds: number;
   resolution: GenjutsuBillableResolution;
   /** Required for seedance-higgsfield token pricing (output pixel grid). */
@@ -216,6 +217,7 @@ export function estimateGenjutsuCreditsForProvider(input: {
       }).providerCostUsd
     );
   }
+  // seedance / seedance-volcengine / seedance-seeapi: customer quote uses list rate
   return estimateSeedanceCredits(input);
 }
 

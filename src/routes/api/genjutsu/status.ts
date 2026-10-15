@@ -23,6 +23,7 @@ import {
 import {
   getGenjutsuStatus,
   HiggsfieldHttpError,
+  SeeapiSeedanceHttpError,
   SeedanceHttpError,
   VolcengineSeedanceHttpError,
 } from '@/modules/genjutsu/service';
@@ -256,12 +257,16 @@ async function GET({ request }: { request: Request }) {
       const providerStatus =
         error instanceof HiggsfieldHttpError ||
         error instanceof SeedanceHttpError ||
-        error instanceof VolcengineSeedanceHttpError
+        error instanceof VolcengineSeedanceHttpError ||
+        error instanceof SeeapiSeedanceHttpError
           ? `http_${error.status}`
           : 'status_error';
       const failure = splitProviderFailureError(
         error?.message || 'Provider status request failed',
-        error instanceof VolcengineSeedanceHttpError ? error.code : undefined
+        error instanceof VolcengineSeedanceHttpError ||
+          error instanceof SeeapiSeedanceHttpError
+          ? error.code
+          : undefined
       );
       logGenjutsuProviderFailure({
         stage: 'status_poll',

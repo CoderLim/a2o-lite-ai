@@ -18,6 +18,7 @@ function readRequestId(payload: any, request: Request) {
   const candidates = [
     payload?.request_id,
     payload?.requestId,
+    payload?.generation?.id,
     payload?.id,
     payload?.data?.request_id,
     payload?.data?.requestId,
@@ -65,7 +66,9 @@ async function POST({ request }: { request: Request }) {
     } else if (provider.status === 'failed') {
       const failure = splitProviderFailureError(
         provider.error || 'Generation failed',
-        'errorCode' in provider ? provider.errorCode : undefined
+        'errorCode' in provider && typeof provider.errorCode === 'string'
+          ? provider.errorCode
+          : undefined
       );
       logGenjutsuProviderFailure({
         stage: 'webhook_provider_failed',

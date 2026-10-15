@@ -143,6 +143,20 @@ export const envConfigs: Record<string, string> = {
   seedance_volcengine_cny_per_usd:
     procEnv.SEEDANCE_VOLCENGINE_CNY_PER_USD ?? '7',
 
+  // SeeAPI Seedance 2.5 (server-only). Unified gateway; provider=seedance-seeapi.
+  // Docs: https://www.seeapi.com/docs/seedance-2-5/reference-to-video/
+  seeapi_api_key: procEnv.SEEAPI_API_KEY ?? '',
+  seeapi_api_base_url: procEnv.SEEAPI_API_BASE_URL ?? 'https://api.seeapi.com',
+  seedance_seeapi_model: procEnv.SEEDANCE_SEEAPI_MODEL ?? 'seedance-2-5',
+  seedance_seeapi_upstream_provider:
+    procEnv.SEEDANCE_SEEAPI_UPSTREAM_PROVIDER ?? 'seeapi',
+  seedance_seeapi_nsfw_checker: procEnv.SEEDANCE_SEEAPI_NSFW_CHECKER ?? 'true',
+  seedance_seeapi_usd_per_credit:
+    procEnv.SEEDANCE_SEEAPI_USD_PER_CREDIT ?? '0.0037',
+  // Optional: override Crazy Frog / Smalltown product pins for local A/B
+  // (e.g. GENJUTSU_PRODUCT_PROVIDER=seedance-seeapi).
+  genjutsu_product_provider: procEnv.GENJUTSU_PRODUCT_PROVIDER ?? '',
+
   genjutsu_e2e_mock: procEnv.GENJUTSU_E2E_MOCK ?? 'false',
 
   // Hotel Lobby preset (server-only). Store the licensed/default template in R2

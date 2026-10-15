@@ -178,6 +178,12 @@ export function getSettingGroups(): SettingGroup[] {
       tab: 'ai',
     },
     { name: 'fal', title: 'Fal', description: 'Fal AI API', tab: 'ai' },
+    {
+      name: 'seeapi',
+      title: 'SeeAPI',
+      description: 'SeeAPI unified gateway (Seedance 2.5 and other models)',
+      tab: 'ai',
+    },
 
     // Analytics
     {
@@ -897,6 +903,17 @@ export function getSettings(): Setting[] {
       type: 'password',
       placeholder: 'xxx',
       group: 'fal',
+      tab: 'ai',
+    },
+
+    // ─── AI / SeeAPI ─────────────────────────────────────────────────
+    {
+      name: 'seeapi_api_key',
+      title: 'API Key',
+      type: 'password',
+      placeholder: 'sk_xxx',
+      tip: 'From seeapi.com API Keys. Env fallback: SEEAPI_API_KEY.',
+      group: 'seeapi',
       tab: 'ai',
     },
 

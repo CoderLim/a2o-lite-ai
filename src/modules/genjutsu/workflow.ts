@@ -43,7 +43,8 @@ export function isSeedanceFamilyProvider(
   return (
     provider === 'seedance' ||
     provider === 'seedance-volcengine' ||
-    provider === 'seedance-higgsfield'
+    provider === 'seedance-higgsfield' ||
+    provider === 'seedance-seeapi'
   );
 }
 
@@ -51,6 +52,7 @@ function normalizeProvider(value: string | undefined): GenjutsuProvider {
   const normalized = value?.trim().toLowerCase();
   if (normalized === 'seedance-volcengine') return 'seedance-volcengine';
   if (normalized === 'seedance-higgsfield') return 'seedance-higgsfield';
+  if (normalized === 'seedance-seeapi') return 'seedance-seeapi';
   if (normalized === 'seedance') return 'seedance';
   return 'higgsfield';
 }
@@ -74,6 +76,13 @@ export function resolveGenjutsuProviderTarget(
       model:
         envConfigs.seedance_volcengine_model?.trim() ||
         'doubao-seedance-2-5-260628',
+    };
+  }
+
+  if (provider === 'seedance-seeapi') {
+    return {
+      provider,
+      model: envConfigs.seedance_seeapi_model?.trim() || 'seedance-2-5',
     };
   }
 
@@ -117,8 +126,56 @@ export function resolveProductProviderTarget(
   product: string | null | undefined,
   mode: GenjutsuMode
 ): GenjutsuProviderTarget {
+  // Local A/B: when set, product pages (Crazy Frog / Smalltown) follow this
+  // provider instead of the hardcoded Higgsfield Seedance pin.
+  const productOverride = envConfigs.genjutsu_product_provider?.trim();
+  if (productOverride && isGenjutsuProductId(product)) {
+    return resolveGenjutsuProviderTargetForProvider(
+      normalizeProvider(productOverride),
+      mode
+    );
+  }
+
   if (isGenjutsuProductId(product)) {
     return PRODUCT_PROVIDER_TARGETS[product];
+  }
+  return resolveGenjutsuProviderTarget(mode);
+}
+
+function resolveGenjutsuProviderTargetForProvider(
+  provider: GenjutsuProvider,
+  mode: GenjutsuMode
+): GenjutsuProviderTarget {
+  if (provider === 'seedance-seeapi') {
+    return {
+      provider,
+      model: envConfigs.seedance_seeapi_model?.trim() || 'seedance-2-5',
+    };
+  }
+  if (provider === 'seedance-volcengine') {
+    return {
+      provider,
+      model:
+        envConfigs.seedance_volcengine_model?.trim() ||
+        'doubao-seedance-2-5-260628',
+    };
+  }
+  if (provider === 'seedance-higgsfield') {
+    return {
+      provider,
+      model:
+        mode === 'objects-swap'
+          ? SEEDANCE_HIGGSFIELD_EDIT_MODEL_ID
+          : SEEDANCE_HIGGSFIELD_MODEL_ID,
+    };
+  }
+  if (provider === 'seedance') {
+    return {
+      provider,
+      model:
+        envConfigs.seedance_genjutsu_model?.trim() ||
+        'bytedance/seedance-2.5/us/reference-to-video',
+    };
   }
   return resolveGenjutsuProviderTarget(mode);
 }

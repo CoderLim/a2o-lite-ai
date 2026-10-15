@@ -1475,7 +1475,9 @@ export function GeneratorPanel({
   const pricingProvider =
     rawProvider === 'higgsfield' ||
     rawProvider === 'seedance' ||
-    rawProvider === 'seedance-volcengine'
+    rawProvider === 'seedance-volcengine' ||
+    rawProvider === 'seedance-seeapi' ||
+    rawProvider === 'seedance-higgsfield'
       ? rawProvider
       : null;
 
