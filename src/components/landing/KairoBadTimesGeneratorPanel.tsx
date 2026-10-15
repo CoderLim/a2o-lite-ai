@@ -430,16 +430,16 @@ export function KairoBadTimesGeneratorPanel({
   const posterUrl = templateMeta?.posterUrl || KAIRO_BAD_TIMES_POSTER_PATH;
 
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="space-y-3">
+    <div className={cn('space-y-5', className)}>
+      <div className="grid items-start gap-5 md:grid-cols-[auto_minmax(0,1fr)]">
+        <div className="mx-auto w-full max-w-[240px] space-y-2 sm:max-w-[260px]">
           <p className="text-foreground/80 text-sm font-medium">
             {m['site.kairo.template_label']()}
           </p>
           <div className="border-border/60 overflow-hidden rounded-2xl border bg-black/40">
             <video
               key={previewUrl}
-              className="aspect-[9/16] w-full object-cover"
+              className="mx-auto aspect-[9/16] max-h-[min(48vh,420px)] w-full object-contain"
               src={previewUrl}
               poster={posterUrl}
               controls
@@ -452,7 +452,7 @@ export function KairoBadTimesGeneratorPanel({
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="space-y-2">
             <p className="text-foreground/80 text-sm font-medium">
               {m['site.kairo.photo_label']()}
@@ -468,11 +468,11 @@ export function KairoBadTimesGeneratorPanel({
               onChange={onPickPhoto}
             />
             {photo ? (
-              <div className="border-border/60 relative overflow-hidden rounded-2xl border">
+              <div className="border-border/60 relative mx-auto max-h-[min(36vh,280px)] max-w-[200px] overflow-hidden rounded-2xl border">
                 <img
                   src={photo.url}
                   alt=""
-                  className="aspect-[3/4] w-full object-cover"
+                  className="aspect-[3/4] max-h-[min(36vh,280px)] w-full object-cover"
                 />
                 <button
                   type="button"
@@ -489,7 +489,7 @@ export function KairoBadTimesGeneratorPanel({
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={busy}
-                className="border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/35 flex aspect-[3/4] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-sm transition"
+                className="border-border/70 bg-muted/20 text-muted-foreground hover:bg-muted/35 mx-auto flex aspect-[3/4] max-h-[min(36vh,280px)] w-full max-w-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed text-sm transition"
               >
                 <ImageModeIcon className="size-6 opacity-70" />
                 {m['site.kairo.upload_photo']()}
@@ -512,7 +512,7 @@ export function KairoBadTimesGeneratorPanel({
             disabled={!canGenerate}
             onClick={() => void startGeneration()}
             className={cn(
-              'bg-foreground text-background inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition',
+              'bg-foreground text-background inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition',
               !canGenerate && 'opacity-50'
             )}
           >
@@ -530,7 +530,7 @@ export function KairoBadTimesGeneratorPanel({
         </div>
       </div>
 
-      <div ref={resultPanelRef} className="space-y-3">
+      <div ref={resultPanelRef} className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <p className="text-foreground/80 text-sm font-medium">
             {m['site.generator.preview_result']()}
@@ -546,16 +546,16 @@ export function KairoBadTimesGeneratorPanel({
             </a>
           ) : null}
         </div>
-        <div className="border-border/60 overflow-hidden rounded-2xl border bg-black/30">
+        <div className="border-border/60 mx-auto max-w-[240px] overflow-hidden rounded-2xl border bg-black/30 sm:max-w-[280px]">
           {resultUrl ? (
             <video
-              className="aspect-[9/16] w-full object-contain"
+              className="mx-auto aspect-[9/16] max-h-[min(48vh,420px)] w-full object-contain"
               src={resultUrl}
               controls
               playsInline
             />
           ) : busy ? (
-            <div className="flex aspect-[9/16] flex-col items-center justify-center gap-3 px-6 text-center">
+            <div className="flex aspect-[9/16] max-h-[min(48vh,420px)] flex-col items-center justify-center gap-3 px-6 text-center">
               <LoaderCircle className="text-foreground/70 size-8 animate-spin" />
               <p className="text-muted-foreground text-sm">
                 {m['site.kairo.generating_hint']()}
@@ -568,7 +568,7 @@ export function KairoBadTimesGeneratorPanel({
               </div>
             </div>
           ) : (
-            <div className="text-muted-foreground flex aspect-[9/16] items-center justify-center px-6 text-center text-sm">
+            <div className="text-muted-foreground flex aspect-[9/16] max-h-[min(36vh,240px)] items-center justify-center px-6 text-center text-sm">
               {m['site.kairo.result_empty']()}
             </div>
           )}

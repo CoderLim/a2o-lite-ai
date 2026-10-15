@@ -76,20 +76,20 @@ function KairoBadTimesPage() {
         </div>
 
         <main className="relative z-10">
-          <section className="mx-auto max-w-7xl px-4 pt-14 pb-12 text-center sm:pt-20 md:px-5 md:pb-16">
-            <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-[rgba(120,160,220,0.22)] bg-[rgba(120,160,220,0.08)] px-3 py-1.5 text-xs font-medium text-[rgb(170,200,240)]">
+          <section className="mx-auto max-w-5xl px-4 pt-8 pb-10 text-center sm:pt-12 md:px-5 md:pb-12">
+            <div className="mx-auto mb-3 flex w-fit items-center gap-2 rounded-full border border-[rgba(120,160,220,0.22)] bg-[rgba(120,160,220,0.08)] px-3 py-1.5 text-xs font-medium text-[rgb(170,200,240)]">
               <WandSparkles className="size-3.5" />
               {m['site.kairo.hero_badge']()}
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-[34px] leading-[1.08] font-bold tracking-[-1.4px] sm:text-[44px] md:text-[56px]">
+            <h1 className="mx-auto max-w-4xl text-[28px] leading-[1.08] font-bold tracking-[-1.2px] sm:text-[36px] md:text-[44px]">
               {m['site.kairo.hero_title']()}
             </h1>
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-white/58 sm:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/58 sm:text-base">
               {m['site.kairo.hero_description']()}
             </p>
 
-            <div id="generator" className="mt-8 text-left sm:mt-10">
+            <div id="generator" className="mt-6 text-left">
               <KairoBadTimesGeneratorPanel />
             </div>
           </section>
