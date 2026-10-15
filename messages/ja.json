@@ -1747,6 +1747,8 @@
   "site.kairo.result_label": "Kairo Bad Times · モーショテンプレ · 写真1枚",
   "site.kairo.estimate_tooltip": "テンプレート尺に基づく概算クレジットです。最終請求は生成時にサーバーが計算します。",
   "site.kairo.inspired_note": "独立ツールです。公式提携ではありません。投稿時は必要に応じてプラットフォームのライセンス音源を使用してください。",
+  "site.kairo.example_title": "実例結果",
+  "site.kairo.example_caption": "このジェネレーターで作った Bad Times AI 実例 — 写真1枚、固定モーショテンプレート。",
   "site.kairo.preview_spec": "4秒",
   "site.kairo.preview_help": "有料プレビュー：テンプレート先頭4秒から生成します。最終クレジットはサーバーで計算されます。"
 }

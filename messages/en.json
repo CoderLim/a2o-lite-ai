@@ -1747,6 +1747,8 @@
   "site.kairo.result_label": "Kairo Bad Times · motion template · 1 photo",
   "site.kairo.estimate_tooltip": "Approximate credits from the template length. The server calculates the final charge when you generate.",
   "site.kairo.inspired_note": "Independent tool — not an official partnership. For posting, use a licensed track from the platform music library when required.",
+  "site.kairo.example_title": "Example results",
+  "site.kairo.example_caption": "Real Bad Times AI results from this generator — one photo, fixed motion template.",
   "site.kairo.preview_spec": "4s",
   "site.kairo.preview_help": "Paid preview: generate from the first 4 seconds of the template. The server calculates the final credit charge."
 }

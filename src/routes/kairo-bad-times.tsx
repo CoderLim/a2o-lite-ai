@@ -9,10 +9,36 @@ import { KairoBadTimesGeneratorPanel } from '@/components/landing/KairoBadTimesG
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
 
-const OG_IMAGE = '/videos/kairo-bad-times-tpl-poster.jpg';
-const TEMPLATE_VIDEO = '/videos/kairo-bad-times-tpl.mp4';
-const TEMPLATE_DURATION = 'PT29S';
-const TEMPLATE_UPLOAD_DATE = '2026-10-14';
+/** Real Bad Times outputs shown in the Example results gallery + VideoObject. */
+const KAIRO_EXAMPLE_CASES = [
+  {
+    id: 'case-01',
+    src: '/videos/demos/kairo-bad-times-case-01.mp4',
+    poster: '/videos/demos/kairo-bad-times-case-01-poster.jpg',
+    duration: 'PT21S',
+  },
+  {
+    id: 'case-02',
+    src: '/videos/demos/kairo-bad-times-case-02.mp4',
+    poster: '/videos/demos/kairo-bad-times-case-02-poster.jpg',
+    duration: 'PT1M1S',
+  },
+  {
+    id: 'case-03',
+    src: '/videos/demos/kairo-bad-times-case-03.mp4',
+    poster: '/videos/demos/kairo-bad-times-case-03-poster.jpg',
+    duration: 'PT38S',
+  },
+  {
+    id: 'case-04',
+    src: '/videos/demos/kairo-bad-times-case-04.mp4',
+    poster: '/videos/demos/kairo-bad-times-case-04-poster.jpg',
+    duration: 'PT28S',
+  },
+] as const;
+
+const OG_IMAGE = KAIRO_EXAMPLE_CASES[0].poster;
+const DEMO_UPLOAD_DATE = '2026-10-15';
 
 const FAQ_ITEMS = [
   { question: m['site.kairo.faq1_q'], answer: m['site.kairo.faq1_a'] },
@@ -138,15 +164,16 @@ function softwareApplicationJsonLd() {
 }
 
 function videoJsonLd() {
+  const primary = KAIRO_EXAMPLE_CASES[0];
   return {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: m['site.kairo.hero_title'](),
-    description: m['site.kairo.page_description'](),
-    contentUrl: absoluteUrl(TEMPLATE_VIDEO),
-    thumbnailUrl: absoluteUrl(OG_IMAGE),
-    uploadDate: TEMPLATE_UPLOAD_DATE,
-    duration: TEMPLATE_DURATION,
+    name: m['site.kairo.example_title'](),
+    description: m['site.kairo.example_caption'](),
+    contentUrl: absoluteUrl(primary.src),
+    thumbnailUrl: absoluteUrl(primary.poster),
+    uploadDate: DEMO_UPLOAD_DATE,
+    duration: primary.duration,
   };
 }
 
@@ -197,6 +224,33 @@ function KairoBadTimesPage() {
             >
               <KairoBadTimesGeneratorPanel />
             </div>
+          </section>
+
+          <section className="mx-auto max-w-5xl px-4 pb-14 md:px-5 md:pb-16">
+            <h2 className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
+              {m['site.kairo.example_title']()}
+            </h2>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {KAIRO_EXAMPLE_CASES.map((clip, index) => (
+                <div
+                  key={clip.id}
+                  className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
+                >
+                  <video
+                    src={clip.src}
+                    poster={clip.poster}
+                    title={`${m['site.kairo.example_title']()} ${index + 1}`}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="aspect-[9/16] w-full rounded-xl bg-black object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-center text-xs text-white/34">
+              {m['site.kairo.example_caption']()}
+            </p>
           </section>
 
           <section className="border-y border-white/7 bg-white/[0.018]">
