@@ -34,12 +34,13 @@ export function isCrazyFrogResolution(
  * Asset tags must use a space: @Video 1 / @Image N (not @Video1 / @Image1).
  * @Image 1 = lead (plaid shirt, nearest camera); @Image 2 = pursuer (red cap,
  * dark jacket, orange bike) including the ~5–6.5s solo close-up of that rider.
+ * Keeps wardrobe + timestamp anchors; adds every-appearance anti-leak wording.
  */
 export const CRAZY_FROG_DEFAULT_PROMPT = [
-  'Edit @Video 1. Replace BOTH original human riders with the characters from the two reference images throughout the entire video.',
-  "CHARACTER 1: Replace the lead rider in the red-and-black plaid shirt, closest to the camera, with @Image 1. Use @Image 1 for the character's complete face, hair, body and clothing.",
-  "CHARACTER 2: Replace the pursuing rider wearing a red cap and dark jacket on the orange motorcycle with @Image 2. Use @Image 2 for the character's complete face, hair, body and clothing, not just accessories or facial details.",
-  'IMPORTANT: Around 5–6.5 seconds, the video cuts to a solo close-up of the original rider leaning forward over the orange motorcycle. This is CHARACTER 2, the SAME pursuing rider, not a new person. Replace this entire close-up rider with @Image 2 as well.',
-  'Both replacement characters inherit every action, pose, movement, camera cut, occlusion, disappearance and reappearance of their corresponding original riders. Apply the replacements consistently in close-ups, wide shots and every other shot.',
-  "@Video 1 provides only the original motion, timing, camera movement, vehicles, road and shot sequence. The original riders' faces, bodies and clothing must not be retained. Preserve everything else in the video.",
+  'Edit @Video 1. Replace BOTH original human riders with the two reference identities throughout the entire video.',
+  "CHARACTER 1: Replace the lead rider in the red-and-black plaid shirt, closest to the camera, with @Image 1. Use @Image 1 for this rider's complete identity: face, hair, body, clothing, and overall appearance.",
+  "CHARACTER 2: Replace the pursuing rider wearing a red cap and dark jacket on the orange motorcycle with @Image 2. Use @Image 2 for this rider's complete identity in every appearance: face, hair, body, clothing, and overall appearance. Do not only transfer accessories, glasses, or minor facial traits.",
+  'IMPORTANT: The pursuing rider is always CHARACTER 2 — even when far away, small in the frame, partially visible, temporarily occluded, or shown in a solo close-up. Every appearance of the pursuing rider must be replaced with @Image 2. Do not leave the pursuing rider as the original person in any frame. Around 5–6.5 seconds, the video cuts to a solo close-up of the rider leaning forward over the orange motorcycle; this is CHARACTER 2, the SAME pursuing rider, not a new person, and must be fully replaced with @Image 2.',
+  'Keep CHARACTER 1 and CHARACTER 2 visually distinct and consistent. Never swap, merge, or confuse the two identities. Both replacement characters inherit every action, pose, movement, camera cut, occlusion, disappearance and reappearance of their corresponding original riders.',
+  "Use @Video 1 only for motion, timing, camera movement, road, vehicles, chase choreography, perspective, and shot sequence. Preserve the original action and environment, but do not preserve the original riders' faces, bodies, or clothing.",
 ].join(' ');
