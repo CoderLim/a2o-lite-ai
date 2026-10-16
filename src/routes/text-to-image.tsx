@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
@@ -107,6 +107,13 @@ function TextToImagePage() {
 }
 
 export const Route = createFileRoute('/text-to-image')({
+  // English-only editorial content must not render inside a non-English shell.
+  // A canonical tag alone does not fix mixed-language content or <html lang>.
+  beforeLoad: () => {
+    if (getLocale() !== 'en') {
+      throw redirect({ href: '/text-to-image', statusCode: 308, reloadDocument: true });
+    }
+  },
   loader: () => {
     const locale = getLocale();
     return { locale };
