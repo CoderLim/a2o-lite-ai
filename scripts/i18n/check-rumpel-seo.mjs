@@ -16,12 +16,9 @@ const groups = {
   locks: 'HAND_LOCKS',
   rules: 'RULES',
 };
-const EXPECTED_ENGLISH_BLOCK_HASHES = {
-  "FAQ_ITEMS": "4ee29c39",
-  "HOW_STEPS": "4ee719b1",
-  "HAND_LOCKS": "1ab13d19",
-  "RULES": "71280fc3"
-};
+// English source revisions are acknowledged separately for each locale and item.
+// These hashes do not prove linguistic correctness; reviewers must inspect changed translations.
+const reviewed = JSON.parse(await readFile('scripts/i18n/rumpel-source-review.json', 'utf8'));
 const LOCALES = ['es', 'pt-BR', 'fr', 'de'];
 const REQUIRED_SECTIONS = [
   'whatTitle', 'whatP1', 'whatP2', 'whatP3', 'imageAlt',
@@ -75,9 +72,12 @@ if (declaredIds && copies) {
     assert(englishIds.length > 0, sourceName + ' has no keyed entries');
     assert(JSON.stringify([...englishIds].sort()) === JSON.stringify([...ids].sort()),
       sourceName + ' IDs differ from translation IDs');
-    const actualHash = fingerprint(blockMatch[1].replace(/\s+/g, ' '));
-    assert(actualHash === EXPECTED_ENGLISH_BLOCK_HASHES[sourceName],
-      sourceName + ' English source changed; review translations and refresh its fingerprint');
+    const englishItemHashes = Object.fromEntries(
+      [...blockMatch[1].matchAll(/\{\s*id:\s*'([^']+)'[\s\S]*?\n  \},?/g)]
+        .map((item) => [item[1], fingerprint(item[0].replace(/\s+/g, ' ').trim())])
+    );
+    assert(Object.keys(englishItemHashes).length === englishIds.length,
+      sourceName + ' could not fingerprint every English item');
     for (const locale of LOCALES) {
       const dict = copies[locale]?.[group];
       assert(dict && typeof dict === 'object' && !Array.isArray(dict),
@@ -85,7 +85,12 @@ if (declaredIds && copies) {
       if (!dict || Array.isArray(dict)) continue;
       assert(JSON.stringify(Object.keys(dict).sort()) === JSON.stringify([...ids].sort()),
         locale + '/' + group + ' missing or extra IDs');
+      const acknowledgements = reviewed[locale]?.[sourceName];
+      assert(acknowledgements && JSON.stringify(Object.keys(acknowledgements).sort()) === JSON.stringify([...ids].sort()),
+        locale + '/' + sourceName + ' source-review IDs changed');
       for (const id of ids) {
+        assert(acknowledgements?.[id] === englishItemHashes[id],
+          locale + '/' + sourceName + '/' + id + ' English source changed; review this translation and acknowledge its hash');
         const value = dict[id];
         const valid = group === 'rules'
           ? typeof value === 'string' && value.trim().length > 0
@@ -109,4 +114,4 @@ if (declaredIds && copies) {
 assert(route.includes("inLanguage: getRumpelSeoCopy(getLocale()) ? getLocale() : 'en'"),
   'English editorial fallback must declare inLanguage en');
 if (errors) process.exitCode = 1;
-else console.log('Rumpel SEO: four locales, keyed content and English source fingerprints verified.');
+else console.log('Rumpel SEO: four locales, keyed content and per-locale source acknowledgements verified.');
