@@ -30,11 +30,25 @@ export async function checkLocalizedPages(baseUrl) {
 
     for (const path of ['/text-to-image', '/bulin-47-ai']) {
       const localPath = '/' + locale + path;
-      const html = await htmlFor(localPath);
+      // Do not serve English editorial text as a 200 response with a
+      // misleading non-English HTML language. Redirect to the English URL.
+      const redirectResponse = await fetch(baseUrl + localPath, {
+        redirect: 'manual',
+      });
+      assert.equal(redirectResponse.status, 308,
+        localPath + ': expected 308 redirect to English');
+      assert.equal(
+        new URL(redirectResponse.headers.get('location'), baseUrl).pathname,
+        path,
+        localPath + ': wrong redirect target'
+      );
+      const html = await htmlFor(path);
+      assert.match(html, /<html[^>]*lang=["']en["']/i,
+        path + ': English editorial document language');
       assert.ok(canonicalTag(html).includes(baseUrl + path),
-        localPath + ': English editorial fallback must canonicalize to English');
+        path + ': English editorial canonical');
       assert.ok(!/hreflang=["'](?:es|pt-BR|fr|de)["']/.test(html),
-        localPath + ': English editorial fallback must not advertise translated alternates');
+        path + ': English-only content must not advertise translated alternates');
     }
   }
 
