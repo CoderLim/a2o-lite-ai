@@ -19,8 +19,9 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   },
   {
     path: '/a2o-lite-ai',
-    title: 'A2O Lite AI',
-    description: 'Two-photo twin dance AI video generator',
+    title: 'A2O LITE AI Video Generator',
+    description:
+      'Two-photo A2O LITE NEON-style AI dance video generator (fixed duo template)',
   },
   {
     path: '/crazy-frog-ai',

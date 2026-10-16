@@ -643,6 +643,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     title: 'Tools',
     links: [
       {
+        label: 'A2O LITE AI',
+        href: '/a2o-lite-ai',
+      },
+      {
         label: 'Crazy Frog AI',
         href: '/crazy-frog-ai',
       },

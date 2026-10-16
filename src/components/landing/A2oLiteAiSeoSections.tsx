@@ -36,7 +36,11 @@ const FAQ_KEYS = [
   { q: 'site.a2o.seo.faq8_q', a: 'site.a2o.seo.faq8_a' },
   { q: 'site.a2o.seo.faq9_q', a: 'site.a2o.seo.faq9_a' },
   { q: 'site.a2o.seo.faq10_q', a: 'site.a2o.seo.faq10_a' },
-  { q: 'site.a2o.seo.faq11_q', a: 'site.a2o.seo.faq11_a' },
+  {
+    q: 'site.a2o.seo.faq11_q',
+    a: 'site.a2o.seo.faq11_a',
+    privacyLink: true as const,
+  },
   { q: 'site.a2o.seo.faq12_q', a: 'site.a2o.seo.faq12_a' },
   { q: 'site.a2o.seo.faq13_q', a: 'site.a2o.seo.faq13_a' },
 ] as const;
@@ -70,10 +74,18 @@ const IDEA_KEYS = [
 ] as const;
 
 export function getA2oLiteAiFaqItems() {
-  return FAQ_KEYS.map((item) => ({
-    question: m[item.q](),
-    answer: m[item.a](),
-  }));
+  return FAQ_KEYS.map((item) => {
+    const base = m[item.a]();
+    const answer =
+      'privacyLink' in item && item.privacyLink
+        ? `${base} ${m['site.a2o.seo.faq11_privacy']()}.`
+        : base;
+    return {
+      question: m[item.q](),
+      answer,
+      privacyLink: 'privacyLink' in item ? item.privacyLink : false,
+    };
+  });
 }
 
 export function getA2oLiteAiHowToSteps() {
@@ -225,7 +237,20 @@ export function A2oLiteAiSeoSections() {
                   {item.question}
                 </summary>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-white/45">
-                  {item.answer}
+                  {item.privacyLink ? (
+                    <>
+                      {m['site.a2o.seo.faq11_a']()}{' '}
+                      <Link
+                        href="/privacy-policy"
+                        className="font-medium text-[rgb(220,155,99)] underline-offset-4 hover:underline"
+                      >
+                        {m['site.a2o.seo.faq11_privacy']()}
+                      </Link>
+                      .
+                    </>
+                  ) : (
+                    item.answer
+                  )}
                 </p>
               </details>
             ))}

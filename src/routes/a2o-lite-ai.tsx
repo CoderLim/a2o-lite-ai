@@ -10,11 +10,30 @@ import {
   getA2oLiteAiFaqItems,
   getA2oLiteAiHowToSteps,
 } from '@/components/landing/A2oLiteAiSeoSections';
+import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
 
 const OG_IMAGE = '/imgs/generated/a2o-lite-ai-og.png';
 const PAGE_PATH = '/a2o-lite-ai';
+
+/** Real NEON dance outputs shown in the Example results gallery + VideoObject. */
+const A2O_EXAMPLE_CASES = [
+  {
+    id: 'case-01',
+    src: '/videos/demos/a2o-lite-ai-case-01.mp4',
+    poster: '/videos/demos/a2o-lite-ai-case-01-poster.jpg',
+    duration: 'PT23S',
+  },
+  {
+    id: 'case-02',
+    src: '/videos/demos/a2o-lite-ai-case-02.mp4',
+    poster: '/videos/demos/a2o-lite-ai-case-02-poster.jpg',
+    duration: 'PT23S',
+  },
+] as const;
+
+const A2O_DEMO_UPLOAD_DATE = '2026-10-16';
 
 function faqJsonLd() {
   return {
@@ -36,7 +55,7 @@ function howToJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
     name: m['site.a2o.seo.howto_title'](),
-    totalTime: 'PT5M',
+    totalTime: 'PT10M',
     step: getA2oLiteAiHowToSteps().map((step) => ({
       '@type': 'HowToStep',
       name: step.name,
@@ -64,6 +83,20 @@ function webApplicationJsonLd(canonical: string) {
   };
 }
 
+function videoJsonLd() {
+  const primary = A2O_EXAMPLE_CASES[0];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: m['site.a2o.example_title'](),
+    description: m['site.a2o.example_caption'](),
+    contentUrl: absoluteUrl(primary.src),
+    thumbnailUrl: absoluteUrl(primary.poster),
+    uploadDate: A2O_DEMO_UPLOAD_DATE,
+    duration: primary.duration,
+  };
+}
+
 function A2oLiteAiPage() {
   const { creditProvider } = Route.useLoaderData();
   const canonical = absoluteUrl(PAGE_PATH);
@@ -73,6 +106,7 @@ function A2oLiteAiPage() {
       <SeoJsonLd value={faqJsonLd()} />
       <SeoJsonLd value={howToJsonLd()} />
       <SeoJsonLd value={webApplicationJsonLd(canonical)} />
+      <SeoJsonLd value={videoJsonLd()} />
 
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -107,8 +141,37 @@ function A2oLiteAiPage() {
             </div>
           </section>
 
+          <section className="mx-auto max-w-5xl px-4 pb-14 md:px-5 md:pb-16">
+            <h2 className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
+              {m['site.a2o.example_title']()}
+            </h2>
+            <div className="mt-4 grid items-start gap-3 sm:grid-cols-2">
+              {A2O_EXAMPLE_CASES.map((clip, index) => (
+                <div
+                  key={clip.id}
+                  className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
+                >
+                  <video
+                    src={clip.src}
+                    poster={clip.poster}
+                    title={`${m['site.a2o.example_title']()} ${index + 1}`}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="aspect-video w-full rounded-xl bg-black object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-center text-xs text-white/34">
+              {m['site.a2o.example_caption']()}
+            </p>
+          </section>
+
           <A2oLiteAiSeoSections />
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   );
