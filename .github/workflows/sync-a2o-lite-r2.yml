@@ -30,6 +30,12 @@ jobs:
       - name: Checkout exact source
         uses: actions/checkout@v4
 
+      - name: Install video metadata tools
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
       - name: Verify the public template is full-length
         shell: bash
         run: |
