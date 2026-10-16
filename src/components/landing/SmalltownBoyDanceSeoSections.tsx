@@ -56,6 +56,10 @@ const FAQ_KEYS = [
 ] as const;
 
 const EXPLORE_LINKS = [
+  {
+    label: () => m['site.smalltown.seo.more_a2o'](),
+    href: '/a2o-lite-ai',
+  },
   { label: () => m['site.smalltown.seo.more_crazy'](), href: '/crazy-frog-ai' },
   {
     label: () => m['site.smalltown.seo.more_hotel'](),

@@ -5,52 +5,62 @@ import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { A2oLiteAiGeneratorPanel } from '@/components/landing/A2oLiteAiGeneratorPanel';
+import {
+  A2oLiteAiSeoSections,
+  getA2oLiteAiFaqItems,
+  getA2oLiteAiHowToSteps,
+} from '@/components/landing/A2oLiteAiSeoSections';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
 
-const OG_IMAGE = '/videos/a2o-lite-ai-tpl-poster.jpg';
+const OG_IMAGE = '/imgs/generated/a2o-lite-ai-og.png';
 const PAGE_PATH = '/a2o-lite-ai';
-const DATE_MODIFIED = '2026-10-16';
-
-const FAQ_ITEMS = [
-  { question: m['site.a2o.faq1_q'], answer: m['site.a2o.faq1_a'] },
-  { question: m['site.a2o.faq2_q'], answer: m['site.a2o.faq2_a'] },
-  { question: m['site.a2o.faq3_q'], answer: m['site.a2o.faq3_a'] },
-  { question: m['site.a2o.faq4_q'], answer: m['site.a2o.faq4_a'] },
-] as const;
-
-function articleJsonLd(canonical: string) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: m['site.a2o.page_title'](),
-    description: m['site.a2o.page_description'](),
-    dateModified: DATE_MODIFIED,
-    datePublished: DATE_MODIFIED,
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical,
-    },
-    image: absoluteUrl(OG_IMAGE),
-    author: {
-      '@type': 'Organization',
-      name: 'Genjutsu',
-    },
-  };
-}
 
 function faqJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: getA2oLiteAiFaqItems().map((item) => ({
       '@type': 'Question',
-      name: item.question(),
+      name: item.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: item.answer(),
+        text: item.answer,
       },
     })),
+  };
+}
+
+function howToJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: m['site.a2o.seo.howto_title'](),
+    totalTime: 'PT5M',
+    step: getA2oLiteAiHowToSteps().map((step) => ({
+      '@type': 'HowToStep',
+      name: step.name,
+      text: step.text,
+    })),
+  };
+}
+
+function webApplicationJsonLd(canonical: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'A2O LITE AI Video Generator',
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'Free to try; generation uses Genjutsu AI credits',
+    },
+    url: canonical,
+    description: m['site.a2o.page_description'](),
+    image: absoluteUrl(OG_IMAGE),
   };
 }
 
@@ -60,8 +70,9 @@ function A2oLiteAiPage() {
 
   return (
     <div className="min-h-screen bg-[hsl(28_25%_9%)] text-[rgb(237,234,222)]">
-      <SeoJsonLd value={articleJsonLd(canonical)} />
       <SeoJsonLd value={faqJsonLd()} />
+      <SeoJsonLd value={howToJsonLd()} />
+      <SeoJsonLd value={webApplicationJsonLd(canonical)} />
 
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -96,23 +107,7 @@ function A2oLiteAiPage() {
             </div>
           </section>
 
-          <section className="mx-auto max-w-3xl px-4 pb-16 md:px-5">
-            <h2 className="text-center text-2xl font-semibold tracking-tight">
-              {m['site.a2o.faq_title']()}
-            </h2>
-            <div className="mt-8 space-y-6 text-left">
-              {FAQ_ITEMS.map((item) => (
-                <div key={item.question()}>
-                  <h3 className="text-base font-medium text-white/88">
-                    {item.question()}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-white/55">
-                    {item.answer()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+          <A2oLiteAiSeoSections />
         </main>
       </div>
     </div>
@@ -140,6 +135,10 @@ export const Route = createFileRoute('/a2o-lite-ai')({
           url: canonical,
           image: absoluteUrl(OG_IMAGE),
         }),
+        {
+          property: 'og:image:alt',
+          content: 'A2O LITE NEON dance video made from a photo',
+        },
       ],
       links: [{ rel: 'canonical', href: canonical }, ...alternates],
     };
