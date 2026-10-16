@@ -2,6 +2,18 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import {
+  A2oLiteAiPreflightError,
+  assertA2oLiteAiInputs,
+} from '@/modules/a2o-lite-ai/assert';
+import {
+  A2O_LITE_AI_ASPECT_RATIO,
+  A2O_LITE_AI_PRODUCT_ID,
+} from '@/modules/a2o-lite-ai/constants';
+import {
+  A2oLiteAiProviderBindingError,
+  assertA2oLiteAiProviderBinding,
+} from '@/modules/a2o-lite-ai/provider';
+import {
   assertCrazyFrogInputs,
   CrazyFrogPreflightError,
 } from '@/modules/crazy-frog/assert';
@@ -254,13 +266,6 @@ async function POST({ request }: { request: Request }) {
 
     const needsReservation = !task || task.status === 'ready';
 
-    const target = task
-      ? {
-          provider: (task.provider || 'higgsfield') as GenjutsuProvider,
-          model: task.model || resolveGenjutsuProviderTarget(input.mode).model,
-        }
-      : resolveGenjutsuProviderTarget(input.mode);
-
     const taskOptions = task?.options
       ? (JSON.parse(task.options) as Record<string, unknown>)
       : null;
@@ -272,6 +277,28 @@ async function POST({ request }: { request: Request }) {
     if (product === CRAZY_FROG_PRODUCT_ID) {
       assertCrazyFrogInputs(taskOptions);
     }
+    if (product === A2O_LITE_AI_PRODUCT_ID) {
+      if (!task) {
+        throw new A2oLiteAiPreflightError(
+          'A2O Lite AI generation must start from a saved attempt'
+        );
+      }
+      assertA2oLiteAiInputs(taskOptions);
+      assertA2oLiteAiProviderBinding(task.provider, task.model);
+    }
+    const target =
+      product === A2O_LITE_AI_PRODUCT_ID && task
+        ? {
+            provider: task.provider as GenjutsuProvider,
+            model: task.model as string,
+          }
+        : task
+          ? {
+              provider: (task.provider || 'higgsfield') as GenjutsuProvider,
+              model:
+                task.model || resolveGenjutsuProviderTarget(input.mode).model,
+            }
+          : resolveGenjutsuProviderTarget(input.mode);
     // Aspect is product-scoped (not provider-scoped) so other seedance-higgsfield
     // callers are not forced into a product's frame.
     const aspectRatio =
@@ -279,7 +306,9 @@ async function POST({ request }: { request: Request }) {
         ? SMALLTOWN_ASPECT_RATIO
         : product === CRAZY_FROG_PRODUCT_ID
           ? CRAZY_FROG_ASPECT_RATIO
-          : undefined;
+          : product === A2O_LITE_AI_PRODUCT_ID
+            ? A2O_LITE_AI_ASPECT_RATIO
+            : undefined;
 
     if (isSeedanceFamilyProvider(target.provider) && !hasStorageInput(input)) {
       throw new Error(
@@ -426,7 +455,9 @@ async function POST({ request }: { request: Request }) {
         error instanceof HiggsfieldPreflightError ||
         error instanceof SeedancePreflightError ||
         error instanceof SmalltownBoyDancePreflightError ||
-        error instanceof CrazyFrogPreflightError
+        error instanceof CrazyFrogPreflightError ||
+        error instanceof A2oLiteAiPreflightError ||
+        error instanceof A2oLiteAiProviderBindingError
       ) {
         await refundGenjutsuGeneration({
           generationId,

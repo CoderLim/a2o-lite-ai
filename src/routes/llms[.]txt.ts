@@ -18,6 +18,11 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description: 'One-photo Bulin 47 freestyle AI video generator',
   },
   {
+    path: '/a2o-lite-ai',
+    title: 'A2O Lite AI',
+    description: 'Two-photo twin dance AI video generator',
+  },
+  {
     path: '/crazy-frog-ai',
     title: 'Crazy Frog AI Video',
     description: 'Two-photo Crazy Frog chase AI video generator',

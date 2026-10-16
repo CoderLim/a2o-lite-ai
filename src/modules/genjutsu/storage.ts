@@ -952,6 +952,13 @@ export function getCrazyFrogTemplateVideoKey() {
   );
 }
 
+export function getA2oLiteAiTemplateVideoKey() {
+  return (
+    envConfigs.a2o_lite_ai_template_video_key?.trim() ||
+    'genjutsu/templates/a2o-lite-ai-v1.mp4'
+  );
+}
+
 async function ensureGenjutsuPublicTemplateInR2(params: {
   key: string;
   localRelative: string;
@@ -1016,6 +1023,14 @@ export async function ensureCrazyFrogTemplateInR2() {
     key: getCrazyFrogTemplateVideoKey(),
     localRelative: 'public/videos/crazy-frog-tpl.mp4',
     label: 'Crazy Frog',
+  });
+}
+
+export async function ensureA2oLiteAiTemplateInR2() {
+  return ensureGenjutsuPublicTemplateInR2({
+    key: getA2oLiteAiTemplateVideoKey(),
+    localRelative: 'public/videos/a2o-lite-ai-tpl.mp4',
+    label: 'A2O Lite AI',
   });
 }
 
@@ -1085,6 +1100,7 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
   const portraitKey = getZombieHugTemplateVideoKey('9:16');
   const smalltownKey = getSmalltownBoyDanceTemplateVideoKey();
   const crazyFrogKey = getCrazyFrogTemplateVideoKey();
+  const a2oLiteAiKey = getA2oLiteAiTemplateVideoKey();
   const templateVideoKey =
     params.templateVideoKey === landscapeKey
       ? await ensureZombieHugTemplateInR2('16:9')
@@ -1094,7 +1110,9 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
           ? await ensureSmalltownBoyDanceTemplateInR2()
           : params.templateVideoKey === crazyFrogKey
             ? await ensureCrazyFrogTemplateInR2()
-            : params.templateVideoKey;
+            : params.templateVideoKey === a2oLiteAiKey
+              ? await ensureA2oLiteAiTemplateInR2()
+              : params.templateVideoKey;
 
   assertSafeObjectKey(templateVideoKey);
   if (!templateVideoKey.startsWith('genjutsu/')) {

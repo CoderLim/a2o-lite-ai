@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  A2O_LITE_AI_PRODUCT,
   CRAZY_FROG_PRODUCT,
   isGenjutsuProductId,
   resolveGenjutsuProviderTarget,
@@ -51,6 +52,7 @@ test('missing product falls back to mode env router', () => {
 test('isGenjutsuProductId allowlist', () => {
   assert.equal(isGenjutsuProductId(SMALLTOWN_BOY_DANCE_PRODUCT), true);
   assert.equal(isGenjutsuProductId(CRAZY_FROG_PRODUCT), true);
+  assert.equal(isGenjutsuProductId(A2O_LITE_AI_PRODUCT), true);
   assert.equal(isGenjutsuProductId('bulin-47'), false);
   assert.equal(isGenjutsuProductId(''), false);
 });

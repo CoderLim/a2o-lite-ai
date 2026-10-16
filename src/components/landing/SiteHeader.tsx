@@ -31,6 +31,7 @@ const NAV_LINKS = [
 ] as const;
 
 const TRENDING_LINKS = [
+  { label: 'A2O Lite AI', href: '/a2o-lite-ai' },
   { label: 'Crazy Frog AI', href: '/crazy-frog-ai' },
   { label: 'Smalltown Boy Dance', href: '/smalltown-boy-dance' },
   { label: 'Rumpelstiltskin AI', href: '/ai-rumpelstiltskin' },

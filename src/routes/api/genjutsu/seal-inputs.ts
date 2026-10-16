@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import { A2O_LITE_AI_PRODUCT_ID } from '@/modules/a2o-lite-ai/constants';
 import { CRAZY_FROG_PRODUCT_ID } from '@/modules/crazy-frog/constants';
 import {
   assertGenerationId,
@@ -18,6 +19,7 @@ import {
 import {
   findExistingSealedGenjutsuTemplateInputs,
   genjutsuR2ObjectExists,
+  getA2oLiteAiTemplateVideoKey,
   getCrazyFrogTemplateVideoKey,
   getGenjutsuSealedInputKey,
   getSmalltownBoyDanceTemplateVideoKey,
@@ -110,7 +112,9 @@ async function POST({ request }: { request: Request }) {
         ? getSmalltownBoyDanceTemplateVideoKey()
         : product === CRAZY_FROG_PRODUCT_ID
           ? getCrazyFrogTemplateVideoKey()
-          : getZombieHugTemplateVideoKey(templateAspectRatio);
+          : product === A2O_LITE_AI_PRODUCT_ID
+            ? getA2oLiteAiTemplateVideoKey()
+            : getZombieHugTemplateVideoKey(templateAspectRatio);
     const videoKey =
       typeof currentOptions?.videoKey === 'string'
         ? currentOptions.videoKey

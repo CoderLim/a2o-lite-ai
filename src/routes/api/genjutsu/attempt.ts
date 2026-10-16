@@ -1,6 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import { isAllowedA2oLiteAiPrompt } from '@/modules/a2o-lite-ai/assert';
+import {
+  A2O_LITE_AI_MODE,
+  A2O_LITE_AI_PRODUCT_ID,
+  A2O_LITE_AI_RESOLUTIONS,
+} from '@/modules/a2o-lite-ai/constants';
+import {
+  A2oLiteAiProviderConfigError,
+  resolveA2oLiteAiProviderTarget,
+} from '@/modules/a2o-lite-ai/provider';
 import {
   CRAZY_FROG_PRODUCT_ID,
   CRAZY_FROG_RESOLUTIONS,
@@ -73,8 +83,32 @@ async function POST({ request }: { request: Request }) {
         status: 400,
       });
     }
+    const isA2oLiteAi = product === A2O_LITE_AI_PRODUCT_ID;
+    if (isA2oLiteAi && mode !== A2O_LITE_AI_MODE) {
+      return respErr('A2O Lite AI only supports objects-swap', { status: 400 });
+    }
+    if (
+      isA2oLiteAi &&
+      !A2O_LITE_AI_RESOLUTIONS.includes(
+        resolution as (typeof A2O_LITE_AI_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('A2O Lite AI only supports 480p and 720p', {
+        status: 400,
+      });
+    }
+    if (isA2oLiteAi && !isAllowedA2oLiteAiPrompt(prompt)) {
+      return respErr(
+        'A2O Lite AI prompt does not match the fixed product prompt',
+        {
+          status: 400,
+        }
+      );
+    }
 
-    const target = resolveProductProviderTarget(product, mode);
+    const target = isA2oLiteAi
+      ? resolveA2oLiteAiProviderTarget()
+      : resolveProductProviderTarget(product, mode);
     const task = await createGenjutsuAttempt({
       generationId,
       userId: session.user.id,
@@ -92,6 +126,9 @@ async function POST({ request }: { request: Request }) {
       model: task.model,
     });
   } catch (error: any) {
+    if (error instanceof A2oLiteAiProviderConfigError) {
+      return respErr(error.message, { status: 500 });
+    }
     if (error instanceof GenjutsuAttemptConflictError) {
       return respJson(-1, error.message, { code: error.code }, { status: 409 });
     }

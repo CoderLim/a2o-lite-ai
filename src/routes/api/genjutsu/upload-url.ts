@@ -1,6 +1,19 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import { isAllowedA2oLiteAiPrompt } from '@/modules/a2o-lite-ai/assert';
+import {
+  A2O_LITE_AI_ASPECT_RATIO,
+  A2O_LITE_AI_MODE,
+  A2O_LITE_AI_PRODUCT_ID,
+  A2O_LITE_AI_RESOLUTIONS,
+} from '@/modules/a2o-lite-ai/constants';
+import {
+  A2oLiteAiProviderBindingError,
+  A2oLiteAiProviderConfigError,
+  assertA2oLiteAiProviderBinding,
+  resolveA2oLiteAiProviderTarget,
+} from '@/modules/a2o-lite-ai/provider';
 import {
   CRAZY_FROG_ASPECT_RATIO,
   CRAZY_FROG_PRODUCT_ID,
@@ -23,9 +36,11 @@ import {
   assertGenjutsuUploadSize,
   createGenjutsuProxyUploadDescriptor,
   createGenjutsuR2UploadDescriptor,
+  ensureA2oLiteAiTemplateInR2,
   ensureCrazyFrogTemplateInR2,
   ensureSmalltownBoyDanceTemplateInR2,
   GENJUTSU_PROXY_UPLOAD_MAX_BYTES,
+  getA2oLiteAiTemplateVideoKey,
   getCrazyFrogTemplateVideoKey,
   getGenjutsuInputKey,
   getSmalltownBoyDanceTemplateVideoKey,
@@ -74,11 +89,12 @@ async function POST({ request }: { request: Request }) {
         : undefined;
     const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
     const isCrazyFrog = product === CRAZY_FROG_PRODUCT_ID;
+    const isA2oLiteAi = product === A2O_LITE_AI_PRODUCT_ID;
     const isCrazyFrogPreview = isCrazyFrog && body.preview === true;
     // Full Crazy Frog / Smalltown: server template + image-only uploads.
     // Crazy Frog preview: client uploads trimmed ≤4s clip + two images.
     const isFixedTemplateProduct =
-      (isSmalltown || isCrazyFrog) && !isCrazyFrogPreview;
+      (isSmalltown || isCrazyFrog || isA2oLiteAi) && !isCrazyFrogPreview;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -112,6 +128,27 @@ async function POST({ request }: { request: Request }) {
     }
     if (isCrazyFrogPreview && resolution !== '480p') {
       return respErr('Crazy Frog preview must use 480p', { status: 400 });
+    }
+    if (isA2oLiteAi && mode !== A2O_LITE_AI_MODE) {
+      return respErr('A2O Lite AI only supports objects-swap', { status: 400 });
+    }
+    if (
+      isA2oLiteAi &&
+      !A2O_LITE_AI_RESOLUTIONS.includes(
+        resolution as (typeof A2O_LITE_AI_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('A2O Lite AI only supports 480p and 720p', {
+        status: 400,
+      });
+    }
+    if (isA2oLiteAi && !isAllowedA2oLiteAiPrompt(prompt)) {
+      return respErr(
+        'A2O Lite AI prompt does not match the fixed product prompt',
+        {
+          status: 400,
+        }
+      );
     }
 
     const contentTypes = Array.isArray(body.contentTypes)
@@ -157,7 +194,9 @@ async function POST({ request }: { request: Request }) {
         return respErr(
           isCrazyFrog
             ? 'Upload exactly two reference images (lead and chaser)'
-            : 'Upload exactly two reference images (front and back)',
+            : isA2oLiteAi
+              ? 'Upload exactly two reference images'
+              : 'Upload exactly two reference images (front and back)',
           { status: 400 }
         );
       }
@@ -176,10 +215,14 @@ async function POST({ request }: { request: Request }) {
           ensureGenjutsuE2ETemplateObject(
             isCrazyFrog
               ? getCrazyFrogTemplateVideoKey()
-              : getSmalltownBoyDanceTemplateVideoKey()
+              : isA2oLiteAi
+                ? getA2oLiteAiTemplateVideoKey()
+                : getSmalltownBoyDanceTemplateVideoKey()
           );
         } else if (isCrazyFrog) {
           await ensureCrazyFrogTemplateInR2();
+        } else if (isA2oLiteAi) {
+          await ensureA2oLiteAiTemplateInR2();
         } else {
           await ensureSmalltownBoyDanceTemplateInR2();
         }
@@ -189,7 +232,9 @@ async function POST({ request }: { request: Request }) {
           error?.message ||
             (isCrazyFrog
               ? 'Crazy Frog template is not configured in R2.'
-              : 'Smalltown Boy Dance template is not configured in R2.'),
+              : isA2oLiteAi
+                ? 'A2O Lite AI template is not configured in R2.'
+                : 'Smalltown Boy Dance template is not configured in R2.'),
           { code: 'TEMPLATE_NOT_CONFIGURED' },
           { status: 503 }
         );
@@ -231,7 +276,17 @@ async function POST({ request }: { request: Request }) {
       generationId,
       userId: session.user.id,
     });
-    const resolved = resolveProductProviderTarget(product, mode);
+    const resolved = isA2oLiteAi
+      ? existing
+        ? {
+            provider: existing.provider as GenjutsuProvider,
+            model: existing.model,
+          }
+        : resolveA2oLiteAiProviderTarget()
+      : resolveProductProviderTarget(product, mode);
+    if (isA2oLiteAi && existing) {
+      assertA2oLiteAiProviderBinding(existing.provider, existing.model);
+    }
     const target = existing
       ? {
           provider: (existing.provider ||
@@ -262,7 +317,9 @@ async function POST({ request }: { request: Request }) {
         useDefaultTemplate: true,
         aspectRatio: isCrazyFrog
           ? CRAZY_FROG_ASPECT_RATIO
-          : SMALLTOWN_ASPECT_RATIO,
+          : isA2oLiteAi
+            ? A2O_LITE_AI_ASPECT_RATIO
+            : SMALLTOWN_ASPECT_RATIO,
         imageKeys: normalizedInputs.map((item) => item.key),
         contentTypes: normalizedInputs.map((item) => item.contentType),
         contentLengths,
@@ -329,6 +386,14 @@ async function POST({ request }: { request: Request }) {
         : uploads,
     });
   } catch (error: any) {
+    if (
+      error instanceof A2oLiteAiProviderConfigError ||
+      error instanceof A2oLiteAiProviderBindingError
+    ) {
+      return respErr(error.message, {
+        status: error instanceof A2oLiteAiProviderConfigError ? 500 : 400,
+      });
+    }
     if (error instanceof GenjutsuAttemptConflictError) {
       return respJson(-1, error.message, { code: error.code }, { status: 409 });
     }

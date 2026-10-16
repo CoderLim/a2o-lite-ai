@@ -1,4 +1,8 @@
 import {
+  A2O_LITE_AI_TEMPLATE_PATH,
+  A2O_LITE_AI_TEMPLATE_POSTER_PATH,
+} from '@/modules/a2o-lite-ai/constants';
+import {
   CRAZY_FROG_TEMPLATE_PATH,
   CRAZY_FROG_TEMPLATE_POSTER_PATH,
 } from '@/modules/crazy-frog/constants';
@@ -72,6 +76,14 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     mode: ZOMBIE_HUG_MODE,
     resolution: ZOMBIE_HUG_DEFAULT_RESOLUTION,
     aspect: 'portrait',
+  },
+  {
+    id: 'a2o-lite-ai',
+    titleKey: 'site.templates.a2o_lite_ai',
+    poster: A2O_LITE_AI_TEMPLATE_POSTER_PATH,
+    sourceVideo: A2O_LITE_AI_TEMPLATE_PATH,
+    href: '/a2o-lite-ai',
+    aspect: 'landscape',
   },
   {
     id: 'crazy-frog',

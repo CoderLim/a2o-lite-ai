@@ -208,6 +208,11 @@ export const envConfigs: Record<string, string> = {
     procEnv.CRAZY_FROG_TEMPLATE_VIDEO_KEY ??
     'genjutsu/templates/crazy-frog-v1.mp4',
 
+  // A2O Lite AI (server-only). Fixed R2 template; client uploads two images.
+  a2o_lite_ai_template_video_key:
+    procEnv.A2O_LITE_AI_TEMPLATE_VIDEO_KEY ??
+    'genjutsu/templates/a2o-lite-ai-v1.mp4',
+
   // Locale (public)
   locale: publicEnv('VITE_DEFAULT_LOCALE') ?? 'en',
 };

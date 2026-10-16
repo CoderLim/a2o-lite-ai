@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { RUMPEL_SEO_LOCALES } from '@/components/landing/rumpel-seo-i18n';
 import { baseLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
+import { RUMPEL_SEO_LOCALES } from '@/components/landing/rumpel-seo-i18n';
 import {
   getLocalPostLocales,
   getLocalPosts,
@@ -14,6 +14,7 @@ const STATIC_PATHS = [
   '/pricing',
   '/genjutsu-prompts',
   '/hotel-lobby-ai',
+  '/a2o-lite-ai',
   '/crazy-frog-ai',
   '/kairo-bad-times',
   '/smalltown-boy-dance',
@@ -124,7 +125,9 @@ export const Route = createFileRoute('/sitemap.xml')({
           const posts = mergePosts(dbPosts, getLocalPosts(baseLocale));
           for (const post of posts) {
             if (post.source === 'local') {
-              const postLocales = enabledContentLocales(getLocalPostLocales(post.slug));
+              const postLocales = enabledContentLocales(
+                getLocalPostLocales(post.slug)
+              );
               const localesToEmit =
                 postLocales.length > 0 ? postLocales : [baseLocale];
               for (const locale of localesToEmit) {
@@ -150,7 +153,9 @@ export const Route = createFileRoute('/sitemap.xml')({
           }
         } catch {
           for (const post of getLocalPosts(baseLocale)) {
-            const postLocales = enabledContentLocales(getLocalPostLocales(post.slug));
+            const postLocales = enabledContentLocales(
+              getLocalPostLocales(post.slug)
+            );
             const localesToEmit =
               postLocales.length > 0 ? postLocales : [baseLocale];
             for (const locale of localesToEmit) {
