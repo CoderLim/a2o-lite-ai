@@ -104,7 +104,7 @@ const copies: Record<string, RumpelSeoCopy> = {
     "rules": {
       "original": "Crea tu propia versión. Rumpelstiltskin es un personaje de los hermanos Grimm de 1812, de dominio público; no es la imagen de una persona viva. Puedes utilizar tu propia foto.",
       "accurate_label": "No lo presentes como una película real. Existe Rumpelstiltskin (1987), cuyos derechos corresponden a Amazon MGM; atribuirle falsamente esta escena perjudicaría a sus creadores y al legado de Billy Barty. Inventa un título, estudio y año ficticios.",
-      "consent": "No utilices rostros ajenos sin autorización escrita. Aunque circulen versiones con figuras públicas, no puedes subir sus imágenes sin permiso. Usa tu foto, la de un amigo con permiso o ningún rostro real.",
+      "consent": "No utilices imágenes de personas sin permiso. Aunque circulen versiones con figuras públicas, debes disponer de los derechos y de cualquier consentimiento necesario para editar o publicar la imagen de otra persona. Utiliza solo imágenes que estés autorizado a editar.",
       "music": "No incluyas la canción de Riff Raff sin tener derechos. «Tip Toe Wing in My Jawwdinz» se publicó en Mad Decent; que aparezca en sonidos populares no supone una licencia. Utiliza música autorizada.",
       "disclosure": "Indica claramente que es IA. Añade «IA» en la propia tarjeta de título, no en un comentario poco visible."
     },
@@ -193,7 +193,7 @@ const copies: Record<string, RumpelSeoCopy> = {
     "rules": {
       "original": "Crie sua própria versão. Rumpelstiltskin é um personagem dos irmãos Grimm de 1812, em domínio público, sem envolver a imagem de uma pessoa viva. Usar sua foto é permitido.",
       "accurate_label": "Não apresente como filme real. Rumpelstiltskin (1987) existe e seus direitos pertencem à Amazon MGM; atribuir essa cena ao filme prejudica seus criadores e o legado de Billy Barty. Invente título, estúdio e ano fictícios.",
-      "consent": "Não use rostos de terceiros sem autorização por escrito. Mesmo que existam versões com figuras públicas, enviar a imagem de alguém sem permissão não é aceitável. Use sua foto, a de um amigo com permissão ou nenhuma pessoa real.",
+      "consent": "Não use imagens de pessoas sem permissão. Mesmo que circulem versões com figuras públicas, você precisa ter os direitos e qualquer consentimento necessário para editar ou publicar a imagem de outra pessoa. Use apenas imagens que você tenha autorização para editar.",
       "music": "Não use a música de Riff Raff sem direitos. «Tip Toe Wing in My Jawwdinz» é um lançamento Mad Decent; uma biblioteca de sons populares não constitui licença. Escolha áudio autorizado.",
       "disclosure": "Identifique como IA. Coloque «IA» no próprio cartão de título, não em um comentário que ninguém verá."
     },
@@ -282,7 +282,7 @@ const copies: Record<string, RumpelSeoCopy> = {
     "rules": {
       "original": "Créez votre propre version. Rumpelstiltskin est un personnage des frères Grimm datant de 1812, dans le domaine public, sans ressemblance avec une personne vivante. Vous pouvez utiliser votre propre photo.",
       "accurate_label": "Ne présentez pas le clip comme un vrai film. Rumpelstiltskin (1987) existe, avec des droits appartenant à Amazon MGM ; lui attribuer cette scène serait trompeur pour les créateurs et l’héritage de Billy Barty. Inventez plutôt un titre, un studio et une année fictifs.",
-      "consent": "N’utilisez pas l’image de tiers sans autorisation écrite. Même si des versions avec des personnalités publiques circulent, vous ne devez pas importer la ressemblance d’autrui sans permission. Utilisez votre photo, celle d’un ami consentant ou aucun visage réel.",
+      "consent": "N’utilisez pas d’images de personnes sans autorisation. Même si des versions mettant en scène des personnalités públicas circulent, vous devez disposer des droits et des consentements nécessaires pour modifier ou publier l’image d’autrui. Utilisez uniquement des images que vous êtes autorisé à modifier.",
       "music": "N’utilisez pas la chanson de Riff Raff sans droits. « Tip Toe Wing in My Jawwdinz » est sorti chez Mad Decent ; une bibliothèque de sons tendance n’est pas en soi une licence. Choisissez une piste autorisée.",
       "disclosure": "Signalez l’IA. Ajoutez « IA » sur la carte de titre elle-même, pas dans un commentaire invisible."
     },
@@ -371,7 +371,7 @@ const copies: Record<string, RumpelSeoCopy> = {
     "rules": {
       "original": "Erstelle eine eigene Version. Rumpelstilzchen ist eine Märchenfigur der Brüder Grimm aus dem Jahr 1812 und gemeinfrei, kein Abbild einer lebenden Person. Du kannst dein eigenes Foto verwenden.",
       "accurate_label": "Tu nicht so, als stamme der Clip aus einem echten Film. Rumpelstiltskin (1987) existiert und die Rechte liegen bei Amazon MGM; eine falsche Zuordnung wäre irreführend gegenüber den Urhebern und dem Nachlass von Billy Barty. Erfinde besser einen fiktiven Filmtitel, ein Studio und ein Jahr.",
-      "consent": "Verwende keine fremden Gesichter ohne schriftliche Einwilligung. Auch wenn Fassungen mit Prominenten kursieren, ist das Hochladen fremder Abbilder ohne Erlaubnis ausgeschlossen. Nimm dein Foto oder das eines zustimmenden Freundes.",
+      "consent": "Verwende keine Bilder von Personen ohne Erlaubnis. Auch wenn Versionen mit bekannten Persönlichkeiten im Umlauf sind, musst du die erforderlichen Rechte und gegebenenfalls Einwilligungen besitzen, um das Abbild einer anderen Person zu bearbeiten oder zu veröffentlichen. Verwende nur Bilder, die du bearbeiten darfst.",
       "music": "Verwende den Riff-Raff-Titel nicht ohne Musikrechte. „Tip Toe Wing in My Jawwdinz“ erschien bei Mad Decent; eine Trend-Sound-Bibliothek ist keine allgemeine Lizenz. Nutze rechtmäßig freigegebenen Ton.",
       "disclosure": "Kennzeichne das Ergebnis als KI. Schreibe „KI“ auf die Titelkarte selbst, nicht in einen versteckten Kommentar."
     },
