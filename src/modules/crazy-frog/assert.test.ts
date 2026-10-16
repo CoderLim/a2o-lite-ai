@@ -45,7 +45,8 @@ test('default prompt locks chaser identity across the solo close-up cut', () => 
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /CHARACTER 2/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /red-and-black plaid shirt/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /red cap and dark jacket/);
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /5–6\.5 seconds/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /middle of the video/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /solo close-up/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /orange motorcycle/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /SAME pursuing rider/);
   assert.match(
