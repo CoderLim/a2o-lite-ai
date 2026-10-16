@@ -1,79 +1,113 @@
+/**
+ * Stable IDs make translations independent of English array order.
+ * CI validates these IDs against the route's English FAQ, HowTo and rules.
+ */
+export const RUMPEL_SEO_IDS = {
+  "faq": [
+    "origin",
+    "dance",
+    "generate",
+    "audio",
+    "year"
+  ],
+  "steps": [
+    "image",
+    "template",
+    "render"
+  ],
+  "locks": [
+    "character",
+    "set",
+    "beats",
+    "grade",
+    "audio"
+  ],
+  "rules": [
+    "original",
+    "accurate_label",
+    "consent",
+    "music",
+    "disclosure"
+  ]
+} as const;
+type SeoId<T extends keyof typeof RUMPEL_SEO_IDS> = (typeof RUMPEL_SEO_IDS)[T][number];
+
 export type RumpelSeoCopy = {
-  faq: readonly (readonly [string, string])[];
-  steps: readonly (readonly [string, string])[];
-  locks: readonly (readonly [string, string])[];
-  rules: readonly string[];
+  faq: Readonly<Record<SeoId<'faq'>, readonly [string, string]>>;
+  steps: Readonly<Record<SeoId<'steps'>, readonly [string, string]>>;
+  locks: Readonly<Record<SeoId<'locks'>, readonly [string, string]>>;
+  rules: Readonly<Record<SeoId<'rules'>, string>>;
   sections: Readonly<Record<string, string>>;
 };
-/** Only published translations are exposed for the long-form SEO article. */
+/** Only locales with translated long-form content are advertised. */
 export const RUMPEL_SEO_LOCALES = ['en', 'es', 'pt-BR', 'fr', 'de'] as const;
 const copies: Record<string, RumpelSeoCopy> = {
   "es": {
-    "faq": [
-      [
+    "faq": {
+      "origin": [
         "¿La escena de Rumpelstiltskin (1987) pertenece a una película real?",
         "En 1987 sí se estrenó una película de Rumpelstiltskin, un musical de Cannon Movie Tales protagonizado por Billy Barty, pero la escena del granero no aparece en ella. El clip fue generado con IA y se publicó por primera vez en Instagram en agosto de 2026."
       ],
-      [
+      "dance": [
         "¿Qué es el baile de Rumpelstiltskin?",
         "Es el baile de puntillas del clip viral: un hombre pequeño con esmoquin de terciopelo cruza sigilosamente un granero, pide silencio a la cámara y sigue bailando mientras la paja se transforma en oro."
       ],
-      [
+      "generate": [
         "¿Cómo creo un vídeo Rumpelstiltskin con IA?",
-        "Sube una foto tuya y abre la plantilla Rumpelstiltskin. El personaje, granero y aspecto cinematográfico vienen preparados; no hace falta escribir un prompt. El vídeo tarda unos minutos."
+        "Sube una imagen clara y abre la plantilla Rumpelstiltskin. El personaje, el granero y el aspecto de película ya están configurados: no necesitas escribir un prompt. El vídeo tarda unos minutos."
       ],
-      [
+      "audio": [
         "¿Puedo utilizar el audio original?",
         "Solo si tienes los derechos necesarios. La canción que popularizó la tendencia es una grabación comercial. Utiliza audio autorizado o el sonido de una plantilla con licencia."
       ],
-      [
+      "year": [
         "¿Por qué aparece 1987 si no es de ese año?",
         "Es parte de la broma, pero también genera confusión. El título pretende hacer parecer que es una película perdida. Si creas tu versión, inventa un título y señala que está hecho con IA."
       ]
-    ],
-    "steps": [
-      [
-        "Sube una foto",
-        "Funcionan mejor las fotos de cuerpo completo: el modelo necesita espacio para los pasos. Usa una imagen frontal, rostro visible, sin gafas de sol ni máscara, con una sola persona."
+    },
+    "steps": {
+      "image": [
+        "Sube una imagen clara",
+        "Elige una imagen clara y bien iluminada, con el sujeto visible y espacio suficiente para mostrar la postura del baile. Evita imágenes borrosas o con filtros intensos."
       ],
-      [
+      "template": [
         "Abre la plantilla Rumpelstiltskin",
         "El personaje, el granero, el oro y la estética de cine ochentero ya están definidos. Al elegir la plantilla no tienes que escribir un prompt."
       ],
-      [
+      "render": [
         "Genera y descarga",
         "El clip se genera en HD en unos minutos con pasos de puntillas, gesto de silencio y transformación en oro. Identifica el resultado como IA cuando lo publiques."
       ]
-    ],
-    "locks": [
-      [
+    },
+    "locks": {
+      "character": [
         "Mantén fijo el personaje",
         "Crea una ficha del personaje con vistas frontal, lateral y de cuerpo entero. Usa la misma ficha en cada plano para reducir los cambios de rostro entre tomas."
       ],
-      [
+      "set": [
         "Fija el escenario con una imagen",
         "Primero genera el granero como una fotografía: noche, pacas de heno, un farol, sombras profundas y estética de película. Si la imagen parece digital, el vídeo también."
       ],
-      [
+      "beats": [
         "Anima en fragmentos de 4 a 6 segundos",
         "Un movimiento por generación: caminar de puntillas, detenerse y pedir silencio, la mujer girando y el baile. Las tomas largas pierden coherencia."
       ],
-      [
+      "grade": [
         "Corrige el color como una película, no como un filtro",
         "Describe en el prompt la emulsión y sus defectos: «fotograma de cuento de hadas de los años 70, 16 mm, grano visible, enfoque suave, halo luminoso». Añade grano y un ligero temblor vertical en la edición."
       ],
-      [
+      "audio": [
         "El audio, al final",
         "Comprueba que tengas licencia: consulta las normas de derechos más abajo."
       ]
-    ],
-    "rules": [
-      "Crea tu propia versión. Rumpelstiltskin es un personaje de los hermanos Grimm de 1812, de dominio público; no es la imagen de una persona viva. Puedes utilizar tu propia foto.",
-      "No lo presentes como una película real. Existe Rumpelstiltskin (1987), cuyos derechos corresponden a Amazon MGM; atribuirle falsamente esta escena perjudicaría a sus creadores y al legado de Billy Barty. Inventa un título, estudio y año ficticios.",
-      "No utilices rostros ajenos sin autorización escrita. Aunque circulen versiones con figuras públicas, no puedes subir sus imágenes sin permiso. Usa tu foto, la de un amigo con permiso o ningún rostro real.",
-      "No incluyas la canción de Riff Raff sin tener derechos. «Tip Toe Wing in My Jawwdinz» se publicó en Mad Decent; que aparezca en sonidos populares no supone una licencia. Utiliza música autorizada.",
-      "Indica claramente que es IA. Añade «IA» en la propia tarjeta de título, no en un comentario poco visible."
-    ],
+    },
+    "rules": {
+      "original": "Crea tu propia versión. Rumpelstiltskin es un personaje de los hermanos Grimm de 1812, de dominio público; no es la imagen de una persona viva. Puedes utilizar tu propia foto.",
+      "accurate_label": "No lo presentes como una película real. Existe Rumpelstiltskin (1987), cuyos derechos corresponden a Amazon MGM; atribuirle falsamente esta escena perjudicaría a sus creadores y al legado de Billy Barty. Inventa un título, estudio y año ficticios.",
+      "consent": "No utilices rostros ajenos sin autorización escrita. Aunque circulen versiones con figuras públicas, no puedes subir sus imágenes sin permiso. Usa tu foto, la de un amigo con permiso o ningún rostro real.",
+      "music": "No incluyas la canción de Riff Raff sin tener derechos. «Tip Toe Wing in My Jawwdinz» se publicó en Mad Decent; que aparezca en sonidos populares no supone una licencia. Utiliza música autorizada.",
+      "disclosure": "Indica claramente que es IA. Añade «IA» en la propia tarjeta de título, no en un comentario poco visible."
+    },
     "sections": {
       "whatTitle": "Qué es realmente el vídeo Rumpelstiltskin de 1987",
       "whatP1": "Un hombre pequeño, de pelo rojizo encrespado, arrugas pintadas, esmoquin de terciopelo negro y pajarita, se asoma tras una paca de heno, camina de puntillas hacia la cámara, se lleva un dedo a los labios, baila entre la paja y la convierte en monedas de oro.",
@@ -98,71 +132,71 @@ const copies: Record<string, RumpelSeoCopy> = {
     }
   },
   "pt-BR": {
-    "faq": [
-      [
+    "faq": {
+      "origin": [
         "O vídeo Rumpelstiltskin de 1987 é de um filme real?",
         "Um filme Rumpelstiltskin foi lançado em 1987, um musical Cannon Movie Tales com Billy Barty, mas a cena do celeiro não aparece nele. O vídeo foi gerado por IA e publicado inicialmente no Instagram em agosto de 2026."
       ],
-      [
+      "dance": [
         "O que é a dança Rumpelstiltskin?",
         "É a dança sorrateira na ponta dos pés do vídeo viral: um homem pequeno de smoking de veludo atravessa o celeiro, pede silêncio para a câmera e continua dançando enquanto a palha vira ouro."
       ],
-      [
+      "generate": [
         "Como criar um vídeo Rumpelstiltskin com IA?",
-        "Envie uma foto sua e abra o modelo Rumpelstiltskin. Personagem, celeiro e visual de filme já estão configurados, sem precisar escrever prompt. A geração demora alguns minutos."
+        "Envie uma imagem nítida e abra o modelo Rumpelstiltskin. O personagem, o celeiro e o visual de filme já estão configurados, sem precisar escrever prompt. A geração leva alguns minutos."
       ],
-      [
+      "audio": [
         "Posso usar o áudio original?",
         "Somente se tiver os direitos necessários. A música que popularizou a tendência é um lançamento comercial. Use áudio liberado ou um som de modelo licenciado."
       ],
-      [
+      "year": [
         "Por que o vídeo diz 1987 se não é daquele ano?",
         "É uma piada, mas também desinformação. O título faz parecer um filme perdido. Crie um título fictício para sua versão e identifique o vídeo como IA."
       ]
-    ],
-    "steps": [
-      [
-        "Envie uma foto",
-        "Fotos de corpo inteiro funcionam melhor: o modelo precisa de espaço para a dança. Escolha uma imagem frontal, com rosto visível, sem óculos escuros ou máscara e apenas uma pessoa."
+    },
+    "steps": {
+      "image": [
+        "Envie uma imagem nítida",
+        "Escolha uma imagem nítida e bem iluminada, com o personagem visível e espaço para mostrar a pose da dança. Evite imagens borradas ou com filtros fortes."
       ],
-      [
+      "template": [
         "Abra o modelo Rumpelstiltskin",
         "O personagem, o celeiro, o ouro e o visual de filme dos anos 80 já estão configurados. Basta selecionar o modelo, sem escrever prompt."
       ],
-      [
+      "render": [
         "Gere e baixe",
         "O vídeo é gerado em HD em alguns minutos, com os passos, o gesto de silêncio e o ouro já coreografados. Informe que foi feito com IA ao publicar."
       ]
-    ],
-    "locks": [
-      [
+    },
+    "locks": {
+      "character": [
         "Defina o personagem primeiro",
         "Crie uma ficha do personagem com vista frontal, lateral e corpo inteiro em um modelo de imagem. Use a mesma ficha em todas as cenas para evitar mudanças de rosto."
       ],
-      [
+      "set": [
         "Defina o cenário em uma imagem",
         "Gere primeiro uma foto do celeiro: noite, fardos de feno, uma lanterna, sombras profundas e visual de filme. Se a imagem parecer digital, o vídeo também parecerá."
       ],
-      [
+      "beats": [
         "Anime em trechos de 4 a 6 segundos",
         "Um movimento por geração: andar na ponta dos pés, parar e pedir silêncio, a mulher se virando e a dança. Cenas longas perdem consistência."
       ],
-      [
+      "grade": [
         "Faça a correção de cor como filme, não como filtro",
         "Descreva no prompt a película e seus defeitos: «fotograma de conto de fadas dos anos 70, 16 mm, grão visível, foco suave, brilho difuso». Depois adicione grão e leve tremor vertical na edição."
       ],
-      [
+      "audio": [
         "Áudio por último",
         "Verifique os direitos — consulte a seção abaixo."
       ]
-    ],
-    "rules": [
-      "Crie sua própria versão. Rumpelstiltskin é um personagem dos irmãos Grimm de 1812, em domínio público, sem envolver a imagem de uma pessoa viva. Usar sua foto é permitido.",
-      "Não apresente como filme real. Rumpelstiltskin (1987) existe e seus direitos pertencem à Amazon MGM; atribuir essa cena ao filme prejudica seus criadores e o legado de Billy Barty. Invente título, estúdio e ano fictícios.",
-      "Não use rostos de terceiros sem autorização por escrito. Mesmo que existam versões com figuras públicas, enviar a imagem de alguém sem permissão não é aceitável. Use sua foto, a de um amigo com permissão ou nenhuma pessoa real.",
-      "Não use a música de Riff Raff sem direitos. «Tip Toe Wing in My Jawwdinz» é um lançamento Mad Decent; uma biblioteca de sons populares não constitui licença. Escolha áudio autorizado.",
-      "Identifique como IA. Coloque «IA» no próprio cartão de título, não em um comentário que ninguém verá."
-    ],
+    },
+    "rules": {
+      "original": "Crie sua própria versão. Rumpelstiltskin é um personagem dos irmãos Grimm de 1812, em domínio público, sem envolver a imagem de uma pessoa viva. Usar sua foto é permitido.",
+      "accurate_label": "Não apresente como filme real. Rumpelstiltskin (1987) existe e seus direitos pertencem à Amazon MGM; atribuir essa cena ao filme prejudica seus criadores e o legado de Billy Barty. Invente título, estúdio e ano fictícios.",
+      "consent": "Não use rostos de terceiros sem autorização por escrito. Mesmo que existam versões com figuras públicas, enviar a imagem de alguém sem permissão não é aceitável. Use sua foto, a de um amigo com permissão ou nenhuma pessoa real.",
+      "music": "Não use a música de Riff Raff sem direitos. «Tip Toe Wing in My Jawwdinz» é um lançamento Mad Decent; uma biblioteca de sons populares não constitui licença. Escolha áudio autorizado.",
+      "disclosure": "Identifique como IA. Coloque «IA» no próprio cartão de título, não em um comentário que ninguém verá."
+    },
     "sections": {
       "whatTitle": "O que realmente é o vídeo Rumpelstiltskin de 1987",
       "whatP1": "Um homem baixinho, de cabelo ruivo arrepiado, rugas pintadas, smoking de veludo preto e gravata borboleta surge atrás de um fardo de feno, anda na ponta dos pés em direção à câmera, leva o dedo aos lábios, dança na palha e a transforma em moedas de ouro.",
@@ -187,71 +221,71 @@ const copies: Record<string, RumpelSeoCopy> = {
     }
   },
   "fr": {
-    "faq": [
-      [
+    "faq": {
+      "origin": [
         "La scène Rumpelstiltskin de 1987 vient-elle d’un vrai film ?",
         "Un film Rumpelstiltskin est bien sorti en 1987 : une comédie musicale Cannon Movie Tales avec Billy Barty. Mais la scène de grange n’y figure pas. Le clip est généré par IA et a été publié sur Instagram en août 2026."
       ],
-      [
+      "dance": [
         "Qu’est-ce que la danse Rumpelstiltskin ?",
         "C’est la danse furtive sur la pointe des pieds du clip viral : un petit homme en smoking de velours traverse une grange, fait signe de se taire à la caméra et danse tandis que la paille devient de l’or."
       ],
-      [
+      "generate": [
         "Comment créer une vidéo Rumpelstiltskin IA ?",
-        "Importez une photo de vous et ouvrez le modèle Rumpelstiltskin. Le personnage, la grange et le rendu film sont déjà configurés : aucun prompt nécessaire. Le clip se génère en quelques minutes."
+        "Importez une image nette et ouvrez le modèle Rumpelstiltskin. Le personnage, la grange et le rendu film sont préconfigurés : aucun prompt à rédiger. La génération prend quelques minutes."
       ],
-      [
+      "audio": [
         "Puis-je utiliser l’audio original ?",
         "Seulement si vous en détenez les droits. La chanson qui a popularisé la tendance est une sortie commerciale. Utilisez une piste autorisée ou un son de modèle sous licence."
       ],
-      [
+      "year": [
         "Pourquoi l’année 1987 apparaît-elle si la vidéo est récente ?",
         "C’est une plaisanterie, mais aussi une information trompeuse. La légende vise à faire croire à un film perdu. Pour votre version, inventez un titre et précisez qu’elle est générée par IA."
       ]
-    ],
-    "steps": [
-      [
-        "Importez une photo",
-        "Une photo en pied est idéale : le modèle a besoin de voir la posture pour les pas. De face, visage entier visible, sans lunettes de soleil ni masque, une seule personne."
+    },
+    "steps": {
+      "image": [
+        "Importez une image nette",
+        "Choisissez une image nette et bien éclairée où le sujet est visible et dispose d'assez d'espace pour la posture de danse. Évitez le flou et les filtres prononcés."
       ],
-      [
+      "template": [
         "Ouvrez le modèle Rumpelstiltskin",
         "Le personnage, la grange, l’or et le rendu de film des années 80 sont déjà définis. Vous n’avez pas besoin de rédiger de prompt."
       ],
-      [
+      "render": [
         "Générez et téléchargez",
         "La vidéo HD se génère en quelques minutes, avec les pas, le geste de silence et l’or déjà chorégraphiés. Signalez l’IA lors de la publication."
       ]
-    ],
-    "locks": [
-      [
+    },
+    "locks": {
+      "character": [
         "Fixez d’abord le personnage",
         "Créez une fiche de personnage de face, de profil et en pied avec un modèle d’image. Utilisez-la dans chaque plan pour éviter la dérive du visage."
       ],
-      [
+      "set": [
         "Fixez le décor sur une image",
         "Générez d’abord une photographie de la grange : nuit, bottes de foin, lanterne, ombres profondes et rendu de pellicule. Si l’image paraît numérique, la vidéo aussi."
       ],
-      [
+      "beats": [
         "Animez par séquences de 4 à 6 secondes",
         "Un mouvement par génération : pas sur la pointe des pieds, arrêt et doigt sur les lèvres, femme se retournant, danse. Les longues prises dérivent."
       ],
-      [
+      "grade": [
         "Étalonnez comme une pellicule, pas comme un filtre",
         "Indiquez le support et ses défauts dans le prompt : « photogramme de conte de fées des années 1970, 16 mm, grain visible, mise au point douce, halo lumineux ». Ajoutez ensuite du grain et une légère oscillation verticale."
       ],
-      [
+      "audio": [
         "Ajoutez l’audio en dernier",
         "Assurez-vous de disposer des droits : consultez la section ci-dessous."
       ]
-    ],
-    "rules": [
-      "Créez votre propre version. Rumpelstiltskin est un personnage des frères Grimm datant de 1812, dans le domaine public, sans ressemblance avec une personne vivante. Vous pouvez utiliser votre propre photo.",
-      "Ne présentez pas le clip comme un vrai film. Rumpelstiltskin (1987) existe, avec des droits appartenant à Amazon MGM ; lui attribuer cette scène serait trompeur pour les créateurs et l’héritage de Billy Barty. Inventez plutôt un titre, un studio et une année fictifs.",
-      "N’utilisez pas l’image de tiers sans autorisation écrite. Même si des versions avec des personnalités publiques circulent, vous ne devez pas importer la ressemblance d’autrui sans permission. Utilisez votre photo, celle d’un ami consentant ou aucun visage réel.",
-      "N’utilisez pas la chanson de Riff Raff sans droits. « Tip Toe Wing in My Jawwdinz » est sorti chez Mad Decent ; une bibliothèque de sons tendance n’est pas en soi une licence. Choisissez une piste autorisée.",
-      "Signalez l’IA. Ajoutez « IA » sur la carte de titre elle-même, pas dans un commentaire invisible."
-    ],
+    },
+    "rules": {
+      "original": "Créez votre propre version. Rumpelstiltskin est un personnage des frères Grimm datant de 1812, dans le domaine public, sans ressemblance avec une personne vivante. Vous pouvez utiliser votre propre photo.",
+      "accurate_label": "Ne présentez pas le clip comme un vrai film. Rumpelstiltskin (1987) existe, avec des droits appartenant à Amazon MGM ; lui attribuer cette scène serait trompeur pour les créateurs et l’héritage de Billy Barty. Inventez plutôt un titre, un studio et une année fictifs.",
+      "consent": "N’utilisez pas l’image de tiers sans autorisation écrite. Même si des versions avec des personnalités publiques circulent, vous ne devez pas importer la ressemblance d’autrui sans permission. Utilisez votre photo, celle d’un ami consentant ou aucun visage réel.",
+      "music": "N’utilisez pas la chanson de Riff Raff sans droits. « Tip Toe Wing in My Jawwdinz » est sorti chez Mad Decent ; une bibliothèque de sons tendance n’est pas en soi une licence. Choisissez une piste autorisée.",
+      "disclosure": "Signalez l’IA. Ajoutez « IA » sur la carte de titre elle-même, pas dans un commentaire invisible."
+    },
     "sections": {
       "whatTitle": "Ce qu’est réellement le clip Rumpelstiltskin de 1987",
       "whatP1": "Un petit homme aux cheveux roux ébouriffés, aux rides maquillées, en smoking de velours noir et nœud papillon, se cache derrière une botte de foin, avance sur la pointe des pieds, pose un doigt sur ses lèvres, danse dans la paille et transforme celle-ci en pièces d’or.",
@@ -276,71 +310,71 @@ const copies: Record<string, RumpelSeoCopy> = {
     }
   },
   "de": {
-    "faq": [
-      [
+    "faq": {
+      "origin": [
         "Ist der Rumpelstiltskin-Clip von 1987 aus einem echten Film?",
         "1987 erschien tatsächlich ein Rumpelstiltskin-Film – ein Cannon-Movie-Tales-Musical mit Billy Barty. Die Scheunenszene kommt darin jedoch nicht vor. Der Clip wurde mit KI erstellt und erstmals im August 2026 auf Instagram veröffentlicht."
       ],
-      [
+      "dance": [
         "Was ist der Rumpelstiltskin-Tanz?",
         "Der freche Zehenspitzen-Tanz aus dem viralen Clip: Ein kleiner Mann im Samtsmoking schleicht durch eine Scheune, mahnt die Kamera zur Ruhe und tanzt, während Stroh zu Gold wird."
       ],
-      [
+      "generate": [
         "Wie erstelle ich ein Rumpelstiltskin-KI-Video?",
-        "Lade ein Foto von dir hoch und öffne die Rumpelstiltskin-Vorlage. Figur, Scheune und Filmlook sind voreingestellt – du brauchst keinen Prompt. Die Generierung dauert einige Minuten."
+        "Lade ein klares Bild hoch und öffne die Rumpelstiltskin-Vorlage. Figur, Scheune und Filmlook sind voreingestellt. Du brauchst keinen Prompt; das Video wird in einigen Minuten erstellt."
       ],
-      [
+      "audio": [
         "Darf ich den Originalton verwenden?",
         "Nur wenn du die Rechte daran besitzt. Der Trend-Song ist eine kommerzielle Veröffentlichung. Nutze einen rechtmäßig lizenzierten Titel oder Vorlagensound."
       ],
-      [
+      "year": [
         "Warum steht 1987 im Video, obwohl es nicht von damals ist?",
         "Das ist der Witz, aber auch irreführend. Der Titel soll wie ein verschollener Film wirken. Erfinde für deine Version einen Titel und kennzeichne sie als KI-generiert."
       ]
-    ],
-    "steps": [
-      [
-        "Ein Foto hochladen",
-        "Ganzkörperfotos funktionieren am besten, weil das Modell Platz für Tanzschritte braucht. Frontal, ganzes Gesicht sichtbar, keine Sonnenbrille oder Maske, nur eine Person."
+    },
+    "steps": {
+      "image": [
+        "Klares Bild hochladen",
+        "Wähle ein klares, gut beleuchtetes Bild, auf dem das Motiv und seine Tanzhaltung ausreichend zu sehen sind. Vermeide unscharfe Bilder und starke Filter."
       ],
-      [
+      "template": [
         "Rumpelstiltskin-Vorlage öffnen",
         "Figur, Scheune, Gold und 80er-Filmlook sind bereits festgelegt. Mit dieser Vorlage entfällt das Schreiben eines Prompts."
       ],
-      [
+      "render": [
         "Generieren und herunterladen",
         "Der HD-Clip wird in einigen Minuten erstellt, inklusive Zehenspitzen-Tanz, Ruhezeichen und Gold. Kennzeichne ihn beim Posten als KI."
       ]
-    ],
-    "locks": [
-      [
+    },
+    "locks": {
+      "character": [
         "Zuerst die Figur festlegen",
         "Erstelle ein Character-Sheet mit Vorder-, Seiten- und Ganzkörperansicht. Nutze dieselbe Vorlage für jede Einstellung, damit das Gesicht nicht von Szene zu Szene abweicht."
       ],
-      [
+      "set": [
         "Die Kulisse als Standbild festlegen",
         "Generiere zuerst ein Foto der Scheune: Nacht, Heuballen, eine Laterne, tiefe Schatten und Filmlook. Wenn das Standbild digital aussieht, wirkt das Video genauso."
       ],
-      [
+      "beats": [
         "In 4–6-Sekunden-Bewegungen animieren",
         "Eine Bewegung pro Generierung: Zehenspitzen, Anhalten mit Finger auf den Lippen, Drehung der Frau, Tanz. Lange Einstellungen verlieren an Konsistenz."
       ],
-      [
+      "grade": [
         "Farbkorrektur wie beim Film statt Filter",
         "Beschreibe im Prompt das Filmmaterial mit seinen Fehlern: „Märchenfilm-Standbild der 1970er, 16 mm, sichtbares Korn, weicher Fokus, Lichtsaum“. Füge anschließend Korn und ein leichtes vertikales Bildzittern hinzu."
       ],
-      [
+      "audio": [
         "Audio zum Schluss",
         "Kläre die Rechte – siehe unten."
       ]
-    ],
-    "rules": [
-      "Erstelle eine eigene Version. Rumpelstilzchen ist eine Märchenfigur der Brüder Grimm aus dem Jahr 1812 und gemeinfrei, kein Abbild einer lebenden Person. Du kannst dein eigenes Foto verwenden.",
-      "Tu nicht so, als stamme der Clip aus einem echten Film. Rumpelstiltskin (1987) existiert und die Rechte liegen bei Amazon MGM; eine falsche Zuordnung wäre irreführend gegenüber den Urhebern und dem Nachlass von Billy Barty. Erfinde besser einen fiktiven Filmtitel, ein Studio und ein Jahr.",
-      "Verwende keine fremden Gesichter ohne schriftliche Einwilligung. Auch wenn Fassungen mit Prominenten kursieren, ist das Hochladen fremder Abbilder ohne Erlaubnis ausgeschlossen. Nimm dein Foto oder das eines zustimmenden Freundes.",
-      "Verwende den Riff-Raff-Titel nicht ohne Musikrechte. „Tip Toe Wing in My Jawwdinz“ erschien bei Mad Decent; eine Trend-Sound-Bibliothek ist keine allgemeine Lizenz. Nutze rechtmäßig freigegebenen Ton.",
-      "Kennzeichne das Ergebnis als KI. Schreibe „KI“ auf die Titelkarte selbst, nicht in einen versteckten Kommentar."
-    ],
+    },
+    "rules": {
+      "original": "Erstelle eine eigene Version. Rumpelstilzchen ist eine Märchenfigur der Brüder Grimm aus dem Jahr 1812 und gemeinfrei, kein Abbild einer lebenden Person. Du kannst dein eigenes Foto verwenden.",
+      "accurate_label": "Tu nicht so, als stamme der Clip aus einem echten Film. Rumpelstiltskin (1987) existiert und die Rechte liegen bei Amazon MGM; eine falsche Zuordnung wäre irreführend gegenüber den Urhebern und dem Nachlass von Billy Barty. Erfinde besser einen fiktiven Filmtitel, ein Studio und ein Jahr.",
+      "consent": "Verwende keine fremden Gesichter ohne schriftliche Einwilligung. Auch wenn Fassungen mit Prominenten kursieren, ist das Hochladen fremder Abbilder ohne Erlaubnis ausgeschlossen. Nimm dein Foto oder das eines zustimmenden Freundes.",
+      "music": "Verwende den Riff-Raff-Titel nicht ohne Musikrechte. „Tip Toe Wing in My Jawwdinz“ erschien bei Mad Decent; eine Trend-Sound-Bibliothek ist keine allgemeine Lizenz. Nutze rechtmäßig freigegebenen Ton.",
+      "disclosure": "Kennzeichne das Ergebnis als KI. Schreibe „KI“ auf die Titelkarte selbst, nicht in einen versteckten Kommentar."
+    },
     "sections": {
       "whatTitle": "Was der Rumpelstiltskin-Clip von 1987 wirklich ist",
       "whatP1": "Ein kleiner Mann mit zerzausten roten Haaren, aufgemalten Falten, schwarzem Samtsmoking und Fliege lugt hinter einem Heuballen hervor, schleicht auf Zehenspitzen zur Kamera, legt einen Finger auf die Lippen, tanzt im Stroh und verwandelt es in Goldmünzen.",
