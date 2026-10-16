@@ -72,6 +72,7 @@ async function translate(batch, attempt = 0) {
     'Preserve literal @Image1, @Image2, @Video1 references, numbers, units, URLs, markup and formatting.',
     'Preserve Genjutsu AI, named trends, proper nouns, and model/provider names ONLY when the English source explicitly uses them in an appropriate context (for example, a comparison article).',
     'Never introduce or expose upstream backend engine/provider names in consumer-facing UI copy; follow the project policy in AGENTS.md. Prefer generic user-facing capability language for hidden implementation details.',
+    'For upload guidance, simply say "upload a clear image" in the target language. Do not specifically instruct users to upload clear photos of real people or emphasize real-person faces. Keep consent and content-safety requirements when the source discusses them.',
     'Translate SEO descriptions in idiomatic marketing language without inventing capabilities or promises.',
     'Translate error messages precisely and retain payment / consent / safety meanings.',
     'Do not translate programming identifiers in the JSON keys.',
