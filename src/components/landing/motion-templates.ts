@@ -206,9 +206,33 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     poster: '/videos/long-trival-tpl-poster.jpg',
     sourceVideo: '/videos/long-trival-tpl.mp4',
     prompt:
-      'Replace the man in @Video1 with the subject in @Image1. Keep the long-travel vibe, camera path, lighting, and timing. Use only this authorized likeness.',
+      'Replace the man in @Video1 with the subject in @Image1. Keep the gas-station dance moves, camera path, lighting, and timing. Use only this authorized likeness.',
     mode: 'objects-swap',
     resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'portrait',
+  },
+  {
+    id: 'dog-kick-bottle',
+    titleKey: 'site.templates.dog_kick_bottle',
+    poster: '/videos/dog-kick-bottle-tpl-poster.jpg',
+    sourceVideo: '/videos/dog-kick-bottle-tpl.mp4',
+    prompt:
+      'Replace the dog in @Video1 with the subject in @Image1. Keep the bottle-kick motion, camera path, lighting, and timing. Use only this authorized likeness.',
+    mode: 'objects-swap',
+    resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'landscape',
+  },
+  {
+    id: '3-meters-above-the-sky',
+    titleKey: 'site.templates.3_meters_above_the_sky',
+    poster: '/videos/3-meters-above-the-sky-tpl-poster.jpg',
+    sourceVideo: '/videos/3-meters-above-the-sky-tpl.mp4',
+    prompt: `Character 1 @image 1
+Character 2 @image2
+
+UNDER NO CIRCUMSTANCES CHANGE THE CHARACTERS' IDENTITIES! THEY MUST LOOK EXACTLY LIKE THEIR REFERENCES! DO NOT ALTER THEIR FACIAL PROPORTIONS OR HAIRSTYLES!`,
+    mode: 'motion-transfer',
+    resolution: '720p',
     aspect: 'portrait',
   },
 ];

@@ -17,6 +17,7 @@ export const BLOG_POST_SLUGS: readonly string[] = [
   'higgsfield-genjutsu-alternative',
   'how-to-make-bulin-47-ai-video',
   'how-to-make-rumpelstiltskin-ai-video',
+  'how-to-make-burning-bridges-ai-video',
 ];
 
 export type BlogPostMeta = {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { tDynamic } from '@/core/i18n/dynamic';
@@ -12,6 +12,53 @@ import {
   MOTION_TEMPLATES,
   type MotionTemplate,
 } from '@/components/landing/motion-templates';
+
+/** Load + play muted loop only when the card nears the viewport. */
+function useLazyAutoplayVideo(src: string) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+    if (reduceMotion) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        setActive(Boolean(entry?.isIntersecting));
+      },
+      { rootMargin: '200px 0px', threshold: 0.01 }
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!active) {
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      return;
+    }
+
+    if (video.getAttribute('src') !== src) {
+      video.src = src;
+    }
+    void video.play().catch(() => {
+      /* autoplay can be blocked; poster stays visible */
+    });
+  }, [active, src]);
+
+  return { containerRef, videoRef };
+}
 
 type MotionTemplateGalleryProps = {
   className?: string;
@@ -94,9 +141,12 @@ function TemplateCard({
   className?: string;
 }) {
   const title = tDynamic(template.titleKey);
+  const previewSrc = getMotionTemplatePreviewSrc(template);
+  const { containerRef, videoRef } = useLazyAutoplayVideo(previewSrc);
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         'group relative block w-full overflow-hidden rounded-lg border border-white/12 bg-black/45 text-left shadow-[0_6px_16px_rgba(0,0,0,0.28)] transition',
         'hover:border-[rgba(204,144,92,0.45)] hover:brightness-105',
@@ -104,22 +154,22 @@ function TemplateCard({
         className
       )}
     >
-      <video
-        className="absolute inset-0 size-full object-cover motion-reduce:hidden"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster={template.poster}
-        aria-hidden
-      >
-        <source src={getMotionTemplatePreviewSrc(template)} type="video/mp4" />
-      </video>
       <img
         src={template.poster}
         alt=""
-        className="absolute inset-0 hidden size-full object-cover motion-reduce:block"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 size-full object-cover"
+      />
+      <video
+        ref={videoRef}
+        className="absolute inset-0 size-full object-cover motion-reduce:hidden"
+        muted
+        loop
+        playsInline
+        preload="none"
+        poster={template.poster}
+        aria-hidden
       />
       <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/45 to-transparent px-1.5 pt-5 pb-1.5">
         <p className="truncate text-[10px] font-semibold text-[rgb(237,234,222)]">
