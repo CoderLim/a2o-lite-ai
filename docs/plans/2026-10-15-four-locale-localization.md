@@ -54,7 +54,9 @@ This script checkpoints each successful batch. It validates message keys and `{c
 Paraglide falls back to English for missing messages. Enabling the four locales while catalogs are incomplete would create misleading localized URLs and `hreflang` annotations, potentially hurting SEO. The branch intentionally introduces real content and repeatable verification without deploying unfinished variants.
 
 
-## Progress audit (2026-10-15, follow-up)
+## Progress audit (2026-10-15, follow-up) — SUPERSEDED
+
+> Historical snapshot only. The missing Terms of Service and three English blog translations listed below **were resolved on 2026-10-16**; the main branch added a fourth English blog post, which is also now translated. Do not use this earlier section as a current blocker list.
 
 - All four `messages/*.json` catalogs now contain 1,751/1,751 source message keys. This indicates key presence, **not certified translation quality**. A token scan found no missing interpolation placeholders in those catalogs.
 - The four localized privacy policy and refund policy MDX files are present.
@@ -74,3 +76,12 @@ Paraglide falls back to English for missing messages. Enabling the four locales 
 - The Rumpelstiltskin editorial page now has per-language long-form copy, translated FAQ and HowTo schema metadata in `src/components/landing/rumpel-seo-i18n.ts`. The published English original remains the fallback for languages without a complete editorial translation.
 - Sitemap restricts `/text-to-image` to English because its interface, SEO metadata and supporting sections remain hardcoded in English; the Rumpelstiltskin route emits alternates only after those languages are activated. Blog sitemap entries are restricted to enabled locales, even when translated MDX drafts exist.
 - **Do not enable ES/PT-BR/FR/DE yet** without verifying hardcoded landing-page UI, correcting contradictory legal/FAQ statements, and passing a full build + visual/browser test.
+
+## Synchronization and strict CI (2026-10-16)
+
+- Merged `main` at `e3db39a3dab32ce753fd8908715b5e0b1723456e` into the Draft PR branch without force-push. This retains its original commit history and includes the latest templates, video files, original Burning Bridges article, and JA/KO editions. After the sync, the branch was 0 commits behind that `main` snapshot. This was a **merge sync, not a rewritten-history rebase**.
+- Added **Burning Bridges** local blog translations (`es`, `pt-BR`, `fr`, `de`), bringing local blog article variants to 16 files across four blogs.
+- New source message keys `site.templates.dog_kick_bottle` and `site.templates.3_meters_above_the_sky` plus the renamed gas-station-dance label were updated in all four translation catalogs: **1,753 / 1,753** keys. No interpolation or asset-reference token mismatches found in cross-language review.
+- Added `.github/workflows/i18n-coverage.yaml` to enforce `check-coverage.mjs --strict` and `check-content.mjs --strict` on pull requests touching translation content. This is a new guard, not a claim that full Vite build or browser smoke tests passed.
+- Revised `translate-messages.mjs` so future model translations must not introduce internal backend engine names into consumer-facing UI. External-provider names may still be appropriate in explicit comparison articles.
+- **Remaining gates:** reconcile the English `site.seo.faq2_a` and legal human-face policies with the actual consent-based model capabilities, then propagate approved English source changes into four languages; audit hardcoded English in `/text-to-image` and remaining specialized routes; manually review legal translations; successfully complete `pnpm build`, unit/E2E tests and per-locale browser SEO smoke tests; only then activate locales, update sitemap/hreflang and consider merge.
