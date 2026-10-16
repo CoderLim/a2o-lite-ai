@@ -41,6 +41,13 @@ test('default prompt uses WaveSpeed spaced asset tags', () => {
   assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Image2\b/);
 });
 
+test('default prompt locks chaser identity across the solo close-up cut', () => {
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /CHARACTER 2/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /5–6\.5 seconds/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /orange motorcycle/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /SAME pursuing rider/);
+});
+
 test('accepts server-template binding with two images', () => {
   assert.doesNotThrow(() => assertCrazyFrogInputs(validOptions));
 });

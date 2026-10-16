@@ -32,12 +32,14 @@ export function isCrazyFrogResolution(
 /**
  * Fixed dual-role chase prompt for Seedance video-edit (WaveSpeed).
  * Asset tags must use a space: @Video 1 / @Image N (not @Video1 / @Image1).
- * @Image 1 = foreground lead facing camera; @Image 2 = chaser on red vehicle.
+ * @Image 1 = lead (plaid shirt, nearest camera); @Image 2 = pursuer (red cap,
+ * dark jacket, orange bike) including the ~5–6.5s solo close-up of that rider.
  */
 export const CRAZY_FROG_DEFAULT_PROMPT = [
-  'Use @Video 1 only for motion, timing, gestures, camera, road, vehicle, and chase staging.',
-  'Change the large foreground rider who faces the camera and points forward in @Video 1 to be the person or character from @Image 1 — do not keep the original foreground rider.',
-  'Change the smaller person chasing behind on the red vehicle in @Video 1 to be the person or character from @Image 2 — do not keep the original chaser.',
-  'Match each Image for face, hair, body, clothing, and species throughout the clip.',
-  'Do not swap @Image 1 and @Image 2 or blend the two identities.',
+  'Edit @Video 1. Replace BOTH original human riders with the characters from the two reference images throughout the entire video.',
+  "CHARACTER 1: Replace the lead rider in the red-and-black plaid shirt, closest to the camera, with @Image 1. Use @Image 1 for the character's complete face, hair, body and clothing.",
+  "CHARACTER 2: Replace the pursuing rider wearing a red cap and dark jacket on the orange motorcycle with @Image 2. Use @Image 2 for the character's complete face, hair, body and clothing, not just accessories or facial details.",
+  'IMPORTANT: Around 5–6.5 seconds, the video cuts to a solo close-up of the original rider leaning forward over the orange motorcycle. This is CHARACTER 2, the SAME pursuing rider, not a new person. Replace this entire close-up rider with @Image 2 as well.',
+  'Both replacement characters inherit every action, pose, movement, camera cut, occlusion, disappearance and reappearance of their corresponding original riders. Apply the replacements consistently in close-ups, wide shots and every other shot.',
+  "@Video 1 provides only the original motion, timing, camera movement, vehicles, road and shot sequence. The original riders' faces, bodies and clothing must not be retained. Preserve everything else in the video.",
 ].join(' ');
