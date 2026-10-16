@@ -31,26 +31,31 @@ const APP_NAME = 'Genjutsu AI';
 /** Visible FAQ + FAQPage JSON-LD must stay character-identical. */
 const FAQ_ITEMS = [
   {
+    id: 'origin',
     question: 'Is the Rumpelstiltskin 1987 clip from a real movie?',
     answer:
       "No. A Rumpelstiltskin film did come out in 1987 — a Cannon Movie Tales musical starring Billy Barty — but this barn scene isn't in it. The clip is AI-generated and first posted to Instagram in August 2026.",
   },
   {
+    id: 'dance',
     question: 'What is the Rumpelstiltskin dance?',
     answer:
       "It's the sly tiptoe routine from the viral clip: a little man in a velvet tuxedo creeps across a hay barn on his toes, shushes the camera, and keeps tiptoeing as straw turns to gold.",
   },
   {
+    id: 'generate',
     question: 'How do I make a Rumpelstiltskin AI video?',
     answer:
-      "Upload one photo of yourself and open the Rumpelstiltskin template. The character, barn and film grade are pre-set, so there's no prompt to write. The clip renders in a few minutes.",
+      "Upload a clear image and open the Rumpelstiltskin template. The character, barn and film grade are pre-set, so there's no prompt to write. The clip renders in a few minutes.",
   },
   {
+    id: 'audio',
     question: 'Can I use the original audio?',
     answer:
       'Only if you hold rights to it. The track that made the trend spread is a commercial release. Use a cleared track, or a licensed template sound.',
   },
   {
+    id: 'year',
     question: "Why does the video say 1987 if it's not from 1987?",
     answer:
       "That's the joke — and also the misinformation. The caption was written to make it look like a lost film. If you make your own, put a made-up title on the card and label it AI.",
@@ -59,14 +64,17 @@ const FAQ_ITEMS = [
 
 const HOW_STEPS = [
   {
-    name: 'Upload one photo',
-    text: 'Full-body works best — the model needs room for the dance steps. Front-facing, face fully visible, no sunglasses or masks, one person only.',
+    id: 'image',
+    name: 'Upload a clear image',
+    text: 'Choose a clear, well-lit image with the subject visible and enough room to show the dance pose. Avoid blur and heavy filters.'
   },
   {
+    id: 'template',
     name: 'Open the Rumpelstiltskin template',
     text: 'The character, the barn, the gold and the 80s film grade are already locked in. Pick this template and you skip prompt writing entirely.',
   },
   {
+    id: 'render',
     name: 'Generate and download',
     text: 'The clip renders in a few minutes in HD, with the tiptoe, the shush and the gold already choreographed. Label the result as AI when you post.',
   },
@@ -74,22 +82,27 @@ const HOW_STEPS = [
 
 const HAND_LOCKS = [
   {
+    id: 'character',
     title: 'Lock the character first',
     text: 'One character sheet — front, side, full body — from an image model. Attach the same sheet to every shot. Face drift between shots is what happens when you skip this.',
   },
   {
+    id: 'set',
     title: 'Lock the set as a still',
     text: 'Generate the barn as a photograph first — night, hay bales, one lantern, deep shadows, film look baked in. If the still looks digital, the video will too.',
   },
   {
+    id: 'beats',
     title: 'Animate in beats of 4–6 seconds',
     text: 'One beat per generation: the tiptoe; the stop and the finger to the lips; the woman turning; the dance. Long takes drift.',
   },
   {
+    id: 'grade',
     title: 'Grade it like a print, not a filter',
     text: 'Name the stock and its flaws in the prompt — "1970s fairy-tale film still, 16mm, visible grain, soft focus, light halation." Then add grain and a hint of vertical jitter in the edit.',
   },
   {
+    id: 'audio',
     title: 'Audio last',
     text: 'And clear it — see the rights section below.',
   },
@@ -97,22 +110,27 @@ const HAND_LOCKS = [
 
 const RULES = [
   {
+    id: 'original',
     ok: true,
     text: "Do build your own version. Rumpelstiltskin is a Brothers Grimm character from 1812 — public domain, no living person's likeness involved. Putting your own photo in it is clean.",
   },
   {
+    id: 'accurate_label',
     ok: false,
     text: "Don't label it a real film. Rumpelstiltskin (1987) exists; the rights sit with Amazon MGM, and the actors and Billy Barty's estate are real people whose work you'd be misattributing. Invent a title — a fake studio and a fake year are funnier and safe.",
   },
   {
+    id: 'consent',
     ok: false,
     text: "Don't put real people in it. Versions starring public figures have circulated, but uploading someone else's likeness without written permission is off the table, full stop. Your photo, a friend's with permission, or nobody.",
   },
   {
+    id: 'music',
     ok: false,
     text: 'Don\'t use the Riff Raff track as your audio unless you have rights to it. "Tip Toe Wing in My Jawwdinz" is a Mad Decent release, and a trending-sounds library is not a licence. Use a cleared track or a template sound you\'re licensed for.',
   },
   {
+    id: 'disclosure',
     ok: true,
     text: 'Do label it AI. Put "AI" on the same title card, not in a comment nobody reads.',
   },
@@ -120,33 +138,33 @@ const RULES = [
 
 function translatedFaqItems() {
   const translations = getRumpelSeoCopy(getLocale())?.faq;
-  return FAQ_ITEMS.map((item, i) => ({
-    question: translations?.[i]?.[0] ?? item.question,
-    answer: translations?.[i]?.[1] ?? item.answer,
+  return FAQ_ITEMS.map((item) => ({
+    question: translations?.[item.id]?.[0] ?? item.question,
+    answer: translations?.[item.id]?.[1] ?? item.answer,
   }));
 }
 
 function translatedHowSteps() {
   const translations = getRumpelSeoCopy(getLocale())?.steps;
-  return HOW_STEPS.map((step, i) => ({
-    name: translations?.[i]?.[0] ?? step.name,
-    text: translations?.[i]?.[1] ?? step.text,
+  return HOW_STEPS.map((step) => ({
+    name: translations?.[step.id]?.[0] ?? step.name,
+    text: translations?.[step.id]?.[1] ?? step.text,
   }));
 }
 
 function translatedHandLocks() {
   const translations = getRumpelSeoCopy(getLocale())?.locks;
-  return HAND_LOCKS.map((lock, i) => ({
-    title: translations?.[i]?.[0] ?? lock.title,
-    text: translations?.[i]?.[1] ?? lock.text,
+  return HAND_LOCKS.map((lock) => ({
+    title: translations?.[lock.id]?.[0] ?? lock.title,
+    text: translations?.[lock.id]?.[1] ?? lock.text,
   }));
 }
 
 function translatedRules() {
   const translations = getRumpelSeoCopy(getLocale())?.rules;
-  return RULES.map((rule, i) => ({
+  return RULES.map((rule) => ({
     ...rule,
-    text: translations?.[i] ?? rule.text,
+    text: translations?.[rule.id] ?? rule.text,
   }));
 }
 
@@ -185,7 +203,7 @@ function articleJsonLd() {
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_MODIFIED,
     about: getRumpelSeoCopy(getLocale())?.sections.articleAbout ?? 'Rumpelstiltskin 1987 tip-toe AI video trend',
-    inLanguage: getLocale(),
+    inLanguage: getRumpelSeoCopy(getLocale()) ? getLocale() : 'en',
     image: coverUrl,
     author: {
       '@type': 'Organization',
