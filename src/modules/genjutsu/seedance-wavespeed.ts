@@ -109,17 +109,28 @@ export function resolveWavespeedSeedanceModel(
   );
 }
 
+/** Envelope ACK from WaveSpeed result polls — not a prediction failure reason. */
+function isWavespeedEnvelopeAckMessage(value: unknown) {
+  return typeof value === 'string' && value.trim().toLowerCase() === 'success';
+}
+
+function isWavespeedEnvelopeAckCode(value: unknown) {
+  return value === 200 || value === '200';
+}
+
 function wavespeedErrorMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== 'object') return fallback;
   const record = payload as Record<string, any>;
   const data = record.data;
+  // Prefer nested prediction errors. Top-level `message: "success"` / `code: 200`
+  // are HTTP envelope ACKs and must not mask data.error on failed jobs.
   const candidates = [
-    record.error?.message,
-    record.error,
-    record.message,
     data?.error?.message,
     data?.error,
     data?.message,
+    record.error?.message,
+    record.error,
+    isWavespeedEnvelopeAckMessage(record.message) ? undefined : record.message,
   ];
   const message = candidates.find(
     (value) => typeof value === 'string' && value.trim()
@@ -130,11 +141,17 @@ function wavespeedErrorMessage(payload: unknown, fallback: string) {
 function wavespeedErrorCode(payload: unknown) {
   if (!payload || typeof payload !== 'object') return undefined;
   const record = payload as Record<string, any>;
-  const code =
-    record.error?.code ??
-    record.code ??
-    record.data?.error?.code ??
-    record.data?.code;
+  const candidates = [
+    record.data?.error?.code,
+    record.data?.code,
+    record.error?.code,
+    isWavespeedEnvelopeAckCode(record.code) ? undefined : record.code,
+  ];
+  const code = candidates.find(
+    (value) =>
+      (typeof value === 'string' && value.trim()) ||
+      (typeof value === 'number' && Number.isFinite(value))
+  );
   if (typeof code === 'string' && code.trim()) return code;
   if (typeof code === 'number' && Number.isFinite(code)) return String(code);
   return undefined;

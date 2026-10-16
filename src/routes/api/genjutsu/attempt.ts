@@ -8,10 +8,6 @@ import {
   A2O_LITE_AI_RESOLUTIONS,
 } from '@/modules/a2o-lite-ai/constants';
 import {
-  A2oLiteAiProviderConfigError,
-  resolveA2oLiteAiProviderTarget,
-} from '@/modules/a2o-lite-ai/provider';
-import {
   CRAZY_FROG_PRODUCT_ID,
   CRAZY_FROG_RESOLUTIONS,
 } from '@/modules/crazy-frog/constants';
@@ -106,9 +102,7 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    const target = isA2oLiteAi
-      ? resolveA2oLiteAiProviderTarget()
-      : resolveProductProviderTarget(product, mode);
+    const target = resolveProductProviderTarget(product, mode);
     const task = await createGenjutsuAttempt({
       generationId,
       userId: session.user.id,
@@ -126,9 +120,6 @@ async function POST({ request }: { request: Request }) {
       model: task.model,
     });
   } catch (error: any) {
-    if (error instanceof A2oLiteAiProviderConfigError) {
-      return respErr(error.message, { status: 500 });
-    }
     if (error instanceof GenjutsuAttemptConflictError) {
       return respJson(-1, error.message, { code: error.code }, { status: 409 });
     }

@@ -152,6 +152,13 @@ export function resolveProductProviderTarget(
   return resolveGenjutsuProviderTarget(mode);
 }
 
+/** Resolve the objects-swap model pair for an already-persisted provider. */
+export function resolveObjectsSwapTargetForProvider(
+  provider: GenjutsuProvider
+): GenjutsuProviderTarget {
+  return resolveGenjutsuProviderTargetForProvider(provider, 'objects-swap');
+}
+
 function resolveGenjutsuProviderTargetForProvider(
   provider: GenjutsuProvider,
   mode: GenjutsuMode

@@ -143,6 +143,27 @@ test('WaveSpeed terminal failures normalize to failed', () => {
   assert.match(task.error || '', /content safety/i);
 });
 
+test('WaveSpeed envelope success ACK does not mask nested prediction failure', () => {
+  const task = normalizeWavespeedSeedanceTask({
+    code: 200,
+    message: 'success',
+    data: {
+      id: '647d12ed0ec74702aefa366307e0f4cf',
+      status: 'failed',
+      outputs: [],
+      code: 1405,
+      error: 'The provider could not complete the request. Please try again.',
+    },
+  });
+
+  assert.equal(task.status, 'failed');
+  assert.equal(task.providerStatus, 'failed');
+  assert.equal(task.videoUrl, null);
+  assert.match(task.error || '', /could not complete the request/i);
+  assert.doesNotMatch(task.error || '', /^success$/i);
+  assert.equal(task.errorCode, '1405');
+});
+
 test('WaveSpeed model resolver picks mode endpoints', () => {
   assert.equal(
     resolveWavespeedSeedanceModel('motion-transfer'),

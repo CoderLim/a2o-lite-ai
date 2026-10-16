@@ -5,91 +5,65 @@ import { envConfigs } from '@/config';
 import {
   CRAZY_FROG_PRODUCT,
   higgsfieldSeedanceObjectsSwapTarget,
+  resolveGenjutsuProviderTarget,
   resolveProductProviderTarget,
   SMALLTOWN_BOY_DANCE_PRODUCT,
 } from '@/modules/genjutsu/workflow';
 
 import {
   A2oLiteAiProviderBindingError,
-  A2oLiteAiProviderConfigError,
   assertA2oLiteAiProviderBinding,
   resolveA2oLiteAiProviderTarget,
 } from './provider';
 
-const original = envConfigs.genjutsu_product_provider;
+const originalProduct = envConfigs.genjutsu_product_provider;
+const originalObjectSwap = envConfigs.genjutsu_object_swap_provider;
 
 function restore() {
-  envConfigs.genjutsu_product_provider = original;
+  envConfigs.genjutsu_product_provider = originalProduct;
+  envConfigs.genjutsu_object_swap_provider = originalObjectSwap;
 }
 
-test('unset product provider uses the Higgsfield Seedance video-edit pair', () => {
+test('A2O follows the shared objects-swap env router', () => {
   envConfigs.genjutsu_product_provider = '';
+  envConfigs.genjutsu_object_swap_provider = 'seedance-wavespeed';
   try {
-    assert.deepEqual(
-      resolveA2oLiteAiProviderTarget(),
-      higgsfieldSeedanceObjectsSwapTarget()
+    const expected = resolveGenjutsuProviderTarget('objects-swap');
+    assert.deepEqual(resolveA2oLiteAiProviderTarget(), expected);
+    assert.equal(
+      resolveA2oLiteAiProviderTarget().provider,
+      'seedance-wavespeed'
     );
-    assert.deepEqual(resolveA2oLiteAiProviderTarget(), {
-      provider: 'seedance-higgsfield',
-      model: 'bytedance/seedance-2.5/video-edit',
-    });
+    assert.equal(
+      resolveA2oLiteAiProviderTarget().model,
+      'bytedance/seedance-2.5/video-edit'
+    );
   } finally {
     restore();
   }
 });
 
-test('explicit seedance-higgsfield stays on the same pair', () => {
+test('GENJUTSU_PRODUCT_PROVIDER overrides A2O like Crazy Frog / Smalltown', () => {
+  envConfigs.genjutsu_object_swap_provider = 'seedance-wavespeed';
   envConfigs.genjutsu_product_provider = 'seedance-higgsfield';
   try {
     assert.deepEqual(
       resolveA2oLiteAiProviderTarget(),
       higgsfieldSeedanceObjectsSwapTarget()
     );
+    assert.deepEqual(
+      resolveA2oLiteAiProviderTarget(),
+      resolveProductProviderTarget(CRAZY_FROG_PRODUCT, 'objects-swap')
+    );
   } finally {
     restore();
   }
 });
 
-test('unsupported and unknown providers are rejected without a silent higgsfield model', () => {
-  for (const value of [
-    'seedance',
-    'higgsfield',
-    'seedance-wavespeed',
-    'seedance-seeapi',
-    'seedance-volcengine',
-    'not-a-provider',
-  ]) {
-    envConfigs.genjutsu_product_provider = value;
-    assert.throws(
-      () => resolveA2oLiteAiProviderTarget(),
-      A2oLiteAiProviderConfigError
-    );
-  }
-  restore();
-});
-
-test('persisted binding must match the video-edit pair', () => {
-  const expected = higgsfieldSeedanceObjectsSwapTarget();
-  assert.doesNotThrow(() =>
-    assertA2oLiteAiProviderBinding(expected.provider, expected.model)
-  );
-  assert.throws(
-    () =>
-      assertA2oLiteAiProviderBinding(
-        'seedance-higgsfield',
-        'higgsfield/genjutsu/object-swap/v1.0'
-      ),
-    A2oLiteAiProviderBindingError
-  );
-  assert.throws(
-    () => assertA2oLiteAiProviderBinding('higgsfield', expected.model),
-    A2oLiteAiProviderBindingError
-  );
-});
-
-test('A2O provider env does not change Crazy Frog or Smalltown routing', () => {
+test('A2O tracks Crazy Frog and Smalltown under the same product override', () => {
   envConfigs.genjutsu_product_provider = 'seedance-wavespeed';
   try {
+    const a2o = resolveA2oLiteAiProviderTarget();
     const crazy = resolveProductProviderTarget(
       CRAZY_FROG_PRODUCT,
       'objects-swap'
@@ -98,11 +72,43 @@ test('A2O provider env does not change Crazy Frog or Smalltown routing', () => {
       SMALLTOWN_BOY_DANCE_PRODUCT,
       'objects-swap'
     );
-    assert.equal(crazy.provider, 'seedance-wavespeed');
-    assert.equal(smalltown.provider, 'seedance-wavespeed');
+    assert.deepEqual(a2o, crazy);
+    assert.deepEqual(a2o, smalltown);
+    assert.equal(a2o.provider, 'seedance-wavespeed');
+  } finally {
+    restore();
+  }
+});
+
+test('persisted Seedance-family bindings stay valid across env switches', () => {
+  envConfigs.genjutsu_object_swap_provider = 'seedance-wavespeed';
+  envConfigs.genjutsu_product_provider = '';
+  try {
+    const higgsfield = higgsfieldSeedanceObjectsSwapTarget();
+    assert.doesNotThrow(() =>
+      assertA2oLiteAiProviderBinding(higgsfield.provider, higgsfield.model)
+    );
+    assert.doesNotThrow(() =>
+      assertA2oLiteAiProviderBinding(
+        'seedance-wavespeed',
+        'bytedance/seedance-2.5/video-edit'
+      )
+    );
     assert.throws(
-      () => resolveA2oLiteAiProviderTarget(),
-      A2oLiteAiProviderConfigError
+      () =>
+        assertA2oLiteAiProviderBinding(
+          'seedance-higgsfield',
+          'higgsfield/genjutsu/object-swap/v1.0'
+        ),
+      A2oLiteAiProviderBindingError
+    );
+    assert.throws(
+      () =>
+        assertA2oLiteAiProviderBinding(
+          'higgsfield',
+          'higgsfield/genjutsu/object-swap/v1.0'
+        ),
+      A2oLiteAiProviderBindingError
     );
   } finally {
     restore();

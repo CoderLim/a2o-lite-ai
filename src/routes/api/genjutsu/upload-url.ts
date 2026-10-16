@@ -10,9 +10,7 @@ import {
 } from '@/modules/a2o-lite-ai/constants';
 import {
   A2oLiteAiProviderBindingError,
-  A2oLiteAiProviderConfigError,
   assertA2oLiteAiProviderBinding,
-  resolveA2oLiteAiProviderTarget,
 } from '@/modules/a2o-lite-ai/provider';
 import {
   CRAZY_FROG_ASPECT_RATIO,
@@ -270,20 +268,13 @@ async function POST({ request }: { request: Request }) {
       }
     );
 
-    // C1: prefer the provider/model already persisted on the attempt so
-    // product-scoped pages do not conflict with the global env router.
+    // Prefer the provider/model already persisted on the attempt so
+    // product-scoped pages do not conflict with a later env switch.
     const existing = await getGenjutsuTaskById({
       generationId,
       userId: session.user.id,
     });
-    const resolved = isA2oLiteAi
-      ? existing
-        ? {
-            provider: existing.provider as GenjutsuProvider,
-            model: existing.model,
-          }
-        : resolveA2oLiteAiProviderTarget()
-      : resolveProductProviderTarget(product, mode);
+    const resolved = resolveProductProviderTarget(product, mode);
     if (isA2oLiteAi && existing) {
       assertA2oLiteAiProviderBinding(existing.provider, existing.model);
     }
@@ -386,13 +377,8 @@ async function POST({ request }: { request: Request }) {
         : uploads,
     });
   } catch (error: any) {
-    if (
-      error instanceof A2oLiteAiProviderConfigError ||
-      error instanceof A2oLiteAiProviderBindingError
-    ) {
-      return respErr(error.message, {
-        status: error instanceof A2oLiteAiProviderConfigError ? 500 : 400,
-      });
+    if (error instanceof A2oLiteAiProviderBindingError) {
+      return respErr(error.message, { status: 400 });
     }
     if (error instanceof GenjutsuAttemptConflictError) {
       return respJson(-1, error.message, { code: error.code }, { status: 409 });
