@@ -157,7 +157,7 @@
   "site.templates.car_drop": "Chute de voiture",
   "site.templates.two_cats_dance": "Deux chats qui dansent",
   "site.templates.dog_two_girl_dance": "Danse des chiens",
-  "site.templates.long_trival": "Long voyage",
+  "site.templates.long_trival": "Danse à la station-service",
   "site.seo.what_title": "Qu’est-ce que Genjutsu AI ?",
   "site.seo.what_description": "Genjutsu est un modèle de transformation vidéo de Higgsfield. Importez un clip existant : ce site utilise le modèle pour transformer les décors, les styles, les produits et les accessoires autour du même sujet, tout en conservant ses mouvements, les déplacements de caméra et le rythme d’origine. Ce n’est ni un générateur texte-vers-vidéo partant de zéro, ni un outil d’échange de visages ou d’identités. La prise d’origine fournit les mouvements ; Genjutsu transforme l’environnement.",
   "site.seo.how_title": "Comment fonctionne Genjutsu",
@@ -1750,5 +1750,7 @@
   "admin.settings.placeholders.creem_test_amount": "Laissez vide pour utiliser le montant réel ; 1 = $0.01",
   "admin.settings.placeholders.paypal_test_amount": "Laissez vide pour utiliser le montant réel ; 1 = $0.01",
   "admin.settings.placeholders.alipay_test_amount": "Laissez vide pour utiliser le montant réel ; 1 = ¥0.01",
-  "admin.settings.placeholders.wechat_test_amount": "Laissez vide pour utiliser le montant réel ; 1 = ¥0.01"
+  "admin.settings.placeholders.wechat_test_amount": "Laissez vide pour utiliser le montant réel ; 1 = ¥0.01",
+  "site.templates.dog_kick_bottle": "Chien qui frappe une bouteille",
+  "site.templates.3_meters_above_the_sky": "Trois mètres au-dessus du ciel"
 }
