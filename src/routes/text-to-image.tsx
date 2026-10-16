@@ -111,7 +111,7 @@ export const Route = createFileRoute('/text-to-image')({
   // A canonical tag alone does not fix mixed-language content or <html lang>.
   beforeLoad: () => {
     if (getLocale() !== 'en') {
-      throw redirect({ href: '/text-to-image', statusCode: 308, reloadDocument: true });
+      throw redirect({ href: '/text-to-image', statusCode: 307, reloadDocument: true });
     }
   },
   loader: () => {
