@@ -35,8 +35,8 @@ export async function checkLocalizedPages(baseUrl) {
       const redirectResponse = await fetch(baseUrl + localPath, {
         redirect: 'manual',
       });
-      assert.equal(redirectResponse.status, 308,
-        localPath + ': expected 308 redirect to English');
+      assert.equal(redirectResponse.status, 307,
+        localPath + ': expected 307 redirect to English');
       assert.equal(
         new URL(redirectResponse.headers.get('location'), baseUrl).pathname,
         path,
