@@ -450,7 +450,7 @@ export const Route = createFileRoute('/bulin-47-ai')({
   // A canonical tag alone does not fix mixed-language content or <html lang>.
   beforeLoad: () => {
     if (getLocale() !== 'en') {
-      throw redirect({ href: '/bulin-47-ai', statusCode: 308, reloadDocument: true });
+      throw redirect({ href: '/bulin-47-ai', statusCode: 307, reloadDocument: true });
     }
   },
   loader: () => {
