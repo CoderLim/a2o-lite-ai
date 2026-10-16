@@ -1,0 +1,114 @@
+{
+  "es": {
+    "FAQ_ITEMS": {
+      "origin": "b8bc2c3f",
+      "dance": "1ff73a4c",
+      "generate": "367a1a11",
+      "audio": "ef26d54d",
+      "year": "07eba890"
+    },
+    "HOW_STEPS": {
+      "image": "3d2ca794",
+      "template": "15ac91bd",
+      "render": "1bdccf86"
+    },
+    "HAND_LOCKS": {
+      "character": "814c9f90",
+      "set": "e4dff99b",
+      "beats": "9c59a041",
+      "grade": "34ed7818",
+      "audio": "2f44899d"
+    },
+    "RULES": {
+      "original": "b8c84b8b",
+      "accurate_label": "9a851085",
+      "consent": "a2b9b118",
+      "music": "8659e3a0",
+      "disclosure": "fabceca5"
+    }
+  },
+  "pt-BR": {
+    "FAQ_ITEMS": {
+      "origin": "b8bc2c3f",
+      "dance": "1ff73a4c",
+      "generate": "367a1a11",
+      "audio": "ef26d54d",
+      "year": "07eba890"
+    },
+    "HOW_STEPS": {
+      "image": "3d2ca794",
+      "template": "15ac91bd",
+      "render": "1bdccf86"
+    },
+    "HAND_LOCKS": {
+      "character": "814c9f90",
+      "set": "e4dff99b",
+      "beats": "9c59a041",
+      "grade": "34ed7818",
+      "audio": "2f44899d"
+    },
+    "RULES": {
+      "original": "b8c84b8b",
+      "accurate_label": "9a851085",
+      "consent": "a2b9b118",
+      "music": "8659e3a0",
+      "disclosure": "fabceca5"
+    }
+  },
+  "fr": {
+    "FAQ_ITEMS": {
+      "origin": "b8bc2c3f",
+      "dance": "1ff73a4c",
+      "generate": "367a1a11",
+      "audio": "ef26d54d",
+      "year": "07eba890"
+    },
+    "HOW_STEPS": {
+      "image": "3d2ca794",
+      "template": "15ac91bd",
+      "render": "1bdccf86"
+    },
+    "HAND_LOCKS": {
+      "character": "814c9f90",
+      "set": "e4dff99b",
+      "beats": "9c59a041",
+      "grade": "34ed7818",
+      "audio": "2f44899d"
+    },
+    "RULES": {
+      "original": "b8c84b8b",
+      "accurate_label": "9a851085",
+      "consent": "a2b9b118",
+      "music": "8659e3a0",
+      "disclosure": "fabceca5"
+    }
+  },
+  "de": {
+    "FAQ_ITEMS": {
+      "origin": "b8bc2c3f",
+      "dance": "1ff73a4c",
+      "generate": "367a1a11",
+      "audio": "ef26d54d",
+      "year": "07eba890"
+    },
+    "HOW_STEPS": {
+      "image": "3d2ca794",
+      "template": "15ac91bd",
+      "render": "1bdccf86"
+    },
+    "HAND_LOCKS": {
+      "character": "814c9f90",
+      "set": "e4dff99b",
+      "beats": "9c59a041",
+      "grade": "34ed7818",
+      "audio": "2f44899d"
+    },
+    "RULES": {
+      "original": "b8c84b8b",
+      "accurate_label": "9a851085",
+      "consent": "a2b9b118",
+      "music": "8659e3a0",
+      "disclosure": "fabceca5"
+    }
+  }
+}
