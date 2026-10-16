@@ -1,21 +1,9 @@
 name: i18n Content Coverage
 
+# Required on every PR commit, including changes to routes, URL rewrites and configuration.
 on:
   pull_request:
-    paths:
-      - 'messages/**'
-      - 'src/content/pages/**'
-      - 'src/content/posts/**'
-      - 'scripts/i18n/**'
-      - 'project.inlang/settings.json'
-      - 'src/routes/sitemap[.]xml.ts'
-      - 'src/routes/text-to-image.tsx'
-      - 'src/routes/bulin-47-ai.tsx'
-      - 'src/routes/ai-zombie-hug.tsx'
-      - 'src/routes/hotel-lobby-ai.tsx'
-      - 'src/routes/ai-rumpelstiltskin.tsx'
-      - 'src/components/landing/rumpel-seo-i18n.ts'
-      - '.github/workflows/i18n-coverage.yaml'
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
