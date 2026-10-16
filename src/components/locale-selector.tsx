@@ -1,6 +1,6 @@
 import { Check, ChevronDown, Globe, Languages } from 'lucide-react';
 
-import { Link, usePathname } from '@/core/i18n/navigation';
+import { usePathname } from '@/core/i18n/navigation';
 import { localeNames } from '@/config/locale';
 import { cn } from '@/lib/utils';
 import { getLocale, locales, localizeUrl, setLocale } from '@/paraglide/runtime.js';
