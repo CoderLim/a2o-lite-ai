@@ -20,7 +20,7 @@ const EXPECTED_ENGLISH_BLOCK_HASHES = {
   "FAQ_ITEMS": "4ee29c39",
   "HOW_STEPS": "4ee719b1",
   "HAND_LOCKS": "1ab13d19",
-  "RULES": "ce52576b"
+  "RULES": "71280fc3"
 };
 const LOCALES = ['es', 'pt-BR', 'fr', 'de'];
 const REQUIRED_SECTIONS = [
