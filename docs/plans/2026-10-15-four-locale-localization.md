@@ -1,6 +1,6 @@
 # ES / PT-BR / FR / DE localization
 
-Status: **work in progress — do NOT merge or enable these locales yet.**
+Status: **Draft release candidate — ES/PT-BR/FR/DE are enabled in this PR branch, NOT yet deployed. Do not merge before the remaining human release gates are cleared.**
 
 ## Verified repository baseline (2026-10-15)
 
@@ -96,3 +96,23 @@ Paraglide falls back to English for missing messages. Enabling the four locales 
 - **CI:** `.github/workflows/i18n-coverage.yaml` now triggers on `src/routes/ai-rumpelstiltskin.tsx` and `src/components/landing/rumpel-seo-i18n.ts`, and executes the editorial guard as well as both existing `--strict` coverage checks.
 - **Main synchronization:** Additional merge-sync performed from `main` commit `0e6c15d7fa4d024116b8b20f38e1e09253d35c2d` without force push; GitHub comparison showed 0 commits behind immediately afterward. This is a merge commit, not an interactive rebase.
 - **Still blocking production:** legal and provider-policy review, hardcoded English/metadata audits on other routes, and successful build/unit/E2E/browser smoke checks. New locales are **still disabled**.
+
+## Current release-candidate status (2026-10-16; supersedes earlier snapshots)
+
+- The four new locales are registered in `project.inlang/settings.json` and in all Vite/Paraglide URL patterns. **This is a branch-only change:** the PR is still Draft; no production deployment has been performed.
+- All four long-form Rumpelstiltskin `rules.consent` strings were synchronized with the English rights/permission rule; the French `personnalités publiques` typo was corrected. CI now requires **per-language and per-item source-review acknowledgements** rather than relying on a single block hash. These acknowledgements still require human translation review.
+- The `/text-to-image` and `/bulin-47-ai` editorial bodies are not localized. Non-English-prefixed requests now **HTTP 308 redirect to the unprefixed English route**, rather than returning mixed English/non-English text with a misleading `html lang`. Their localized variants are excluded from the sitemap and alternate-language links.
+- Hotel Lobby / Zombie Hug HowTo metadata now uses the translated page steps.
+- `scripts/e2e-i18n-smoke.mjs` checks new locale pages' HTML language and canonical, English-only route redirects, and sitemap variants during the existing Genjutsu E2E.
+- Translation CI `validate-translations` executes on **every pull request commit** against main (no paths filter): it checks message coverage, localized MDX and Rumpel source freshness.
+- Synced the 2026-10-16 `main` change for `docs/plans/a2o-lite-ai.md` using a history-preserving merge. Previous out-of-date sync records remain above as historical context.
+
+### Remaining human-only launch gates
+
+1. Verify the English and localized Terms, consent/likeness rules, moderation and actual upstream provider policies. Automated validation is not legal approval.
+2. Review sensitive translated strings for linguistic correctness (rights/consent, prices, purchases/refunds, safety and SEO).
+3. Run **real desktop/mobile browser checks** for language switching, layout truncation, core generator/checkout user journeys, canonical/hreflang and representative trend pages. HTTP SSR E2E is not a browser visual test.
+4. Verify unnecessary upstream provider naming in consumer marketing content while retaining accurate mandatory disclosures.
+5. Check Build, E2E and `validate-translations` green on the **final** branch SHA, then explicitly approve the single four-language production launch.
+
+**Do not call this release complete until these human checks are acknowledged.** When approved, merge and deploy the four locales together. Do not re-enable localized indexes for still-English editorial routes until their translations are actually ready.
