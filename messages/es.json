@@ -157,7 +157,7 @@
   "site.templates.car_drop": "Caída de coche",
   "site.templates.two_cats_dance": "Dos gatos bailando",
   "site.templates.dog_two_girl_dance": "Baile de perros",
-  "site.templates.long_trival": "Viaje largo",
+  "site.templates.long_trival": "Baile en la gasolinera",
   "site.seo.what_title": "¿Qué es Genjutsu AI?",
   "site.seo.what_description": "Genjutsu es un modelo de vídeo a vídeo de Higgsfield. Subes un clip existente y esta web utiliza el modelo para transformar escenarios, estilos, productos y accesorios alrededor del mismo protagonista, conservando los movimientos, la cámara y el ritmo originales. No es un generador de texto a vídeo desde cero ni una herramienta para intercambiar rostros o identidades. El clip original aporta el movimiento; Genjutsu transforma su entorno.",
   "site.seo.how_title": "Cómo funciona Genjutsu",
@@ -1750,5 +1750,7 @@
   "admin.settings.placeholders.creem_test_amount": "Deja vacío para utilizar el importe real; 1 = $0.01",
   "admin.settings.placeholders.paypal_test_amount": "Deja vacío para utilizar el importe real; 1 = $0.01",
   "admin.settings.placeholders.alipay_test_amount": "Deja vacío para utilizar el importe real; 1 = ¥0.01",
-  "admin.settings.placeholders.wechat_test_amount": "Deja vacío para utilizar el importe real; 1 = ¥0.01"
+  "admin.settings.placeholders.wechat_test_amount": "Deja vacío para utilizar el importe real; 1 = ¥0.01",
+  "site.templates.dog_kick_bottle": "Perro patea la botella",
+  "site.templates.3_meters_above_the_sky": "Tres metros sobre el cielo"
 }
