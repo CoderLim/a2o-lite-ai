@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { checkLocalizedPages } from './e2e-i18n-smoke.mjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync, rmSync } from 'node:fs';
@@ -202,6 +203,7 @@ async function main() {
 
   try {
     await waitForServer();
+    await checkLocalizedPages(baseUrl);
 
     console.log('\n[4/7] Creating an authenticated E2E user...');
     const { cookie, email } = await ensureSession();
