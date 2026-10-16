@@ -452,7 +452,7 @@ export const Route = createFileRoute('/bulin-47-ai')({
   },
   head: ({ loaderData }) => {
     const locale = loaderData?.locale ?? 'en';
-    const { canonical, alternates } = localeLinks('/bulin-47-ai', locale);
+    const { canonical, alternates } = localeLinks('/bulin-47-ai', locale, ['en']);
     return {
       meta: [
         { title: m['site.bulin.page_title']() },
