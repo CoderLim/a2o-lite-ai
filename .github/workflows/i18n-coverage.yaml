@@ -7,6 +7,8 @@ on:
       - 'src/content/pages/**'
       - 'src/content/posts/**'
       - 'scripts/i18n/**'
+      - 'src/routes/ai-rumpelstiltskin.tsx'
+      - 'src/components/landing/rumpel-seo-i18n.ts'
       - '.github/workflows/i18n-coverage.yaml'
   workflow_dispatch:
 
@@ -27,3 +29,5 @@ jobs:
         run: node scripts/i18n/check-coverage.mjs --strict
       - name: Check every localized policy and blog article
         run: node scripts/i18n/check-content.mjs --strict
+      - name: Check Rumpelstiltskin editorial IDs, source freshness and schema language
+        run: node scripts/i18n/check-rumpel-seo.mjs
