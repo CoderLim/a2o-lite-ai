@@ -1,8 +1,9 @@
 import { Check, ChevronDown, Globe, Languages } from 'lucide-react';
 
+import { usePathname } from '@/core/i18n/navigation';
 import { localeNames } from '@/config/locale';
 import { cn } from '@/lib/utils';
-import { getLocale, locales, setLocale } from '@/paraglide/runtime.js';
+import { getLocale, locales, localizeUrl, setLocale } from '@/paraglide/runtime.js';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +19,19 @@ export function LocaleSelector({
   className?: string;
 }) {
   const locale = getLocale();
+  const pathname = usePathname();
+  const englishOnlyPage = pathname === '/bulin-47-ai' || pathname === '/text-to-image';
 
   function handleSwitch(newLocale: string) {
+    if (englishOnlyPage && newLocale !== 'en') {
+      // No translated version of this article yet. Open the selected-language
+      // homepage directly instead of hitting the article's 307 fallback.
+      const homeUrl = localizeUrl(new URL('/', window.location.origin), {
+        locale: newLocale as typeof locale,
+      });
+      window.location.assign(homeUrl.href);
+      return;
+    }
     // Writes the locale cookie and reloads on the localized URL.
     setLocale(newLocale as typeof locale);
   }
@@ -49,6 +61,11 @@ export function LocaleSelector({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {englishOnlyPage && (
+          <div className="text-muted-foreground max-w-56 px-2 py-1.5 text-xs leading-relaxed">
+            This page is only available in English. Selecting another language opens the homepage.
+          </div>
+        )}
         {locales.map((loc) => (
           <DropdownMenuItem
             key={loc}

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
@@ -107,6 +107,13 @@ function TextToImagePage() {
 }
 
 export const Route = createFileRoute('/text-to-image')({
+  // English-only editorial content must not render inside a non-English shell.
+  // A canonical tag alone does not fix mixed-language content or <html lang>.
+  beforeLoad: () => {
+    if (getLocale() !== 'en') {
+      throw redirect({ href: '/text-to-image', statusCode: 307, reloadDocument: true });
+    }
+  },
   loader: () => {
     const locale = getLocale();
     return { locale };
@@ -116,7 +123,9 @@ export const Route = createFileRoute('/text-to-image')({
     const title = `AI Text to Image Generator | ${envConfigs.app_name}`;
     const description =
       'Generate images from text with GPT Image 2, Nano Banana 2, Seedream 5, and Seedream 3.5 Pro.';
-    const { canonical, alternates } = localeLinks('/text-to-image', locale);
+    // This route still has hardcoded English UI and SEO; avoid advertising English
+    // fallbacks as translated pages until all sections are localized.
+    const { canonical, alternates } = localeLinks('/text-to-image', locale, ['en']);
     return {
       meta: [
         { title },

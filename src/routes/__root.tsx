@@ -15,6 +15,7 @@ import { ThemeProvider } from 'next-themes';
 import { envConfigs } from '@/config';
 import { getQueryClient } from '@/lib/query-client';
 import { getLocale } from '@/paraglide/runtime.js';
+import { m } from '@/paraglide/messages.js';
 import { Ads } from '@/components/analytics/ads';
 import { GoogleAnalytics } from '@/components/analytics/google-analytics';
 import { Plausible } from '@/components/analytics/plausible';
@@ -147,9 +148,9 @@ function NotFound() {
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-4">
       <h1 className="text-6xl font-bold">404</h1>
-      <p className="text-muted-foreground">Page not found</p>
+      <p className="text-muted-foreground">{m['common.not_found.message']()}</p>
       <a href="/" className="text-sm underline underline-offset-4">
-        Back to home
+        {m['common.not_found.back_home']()}
       </a>
     </div>
   );
@@ -158,9 +159,9 @@ function NotFound() {
 function RootError({ error, reset }: ErrorComponentProps) {
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-4xl font-bold">Oops</h1>
+      <h1 className="text-4xl font-bold">{m['common.error.title']()}</h1>
       <p className="text-muted-foreground">
-        Something went wrong. Please try again.
+        {m['common.error.message']()}
       </p>
       {import.meta.env.DEV && error instanceof Error && (
         <pre className="bg-muted mt-2 max-w-lg overflow-auto rounded p-4 text-xs">
@@ -172,7 +173,7 @@ function RootError({ error, reset }: ErrorComponentProps) {
         onClick={reset}
         className="text-sm underline underline-offset-4"
       >
-        Try again
+        {m['common.error.retry']()}
       </button>
     </div>
   );

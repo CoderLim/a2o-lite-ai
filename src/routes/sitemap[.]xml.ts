@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
+import { RUMPEL_SEO_LOCALES } from '@/components/landing/rumpel-seo-i18n';
 import { baseLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
 import {
   getLocalPostLocales,
@@ -26,8 +27,19 @@ const STATIC_PATHS = [
   '/refund-policy',
 ];
 
-/** English-only SEO bodies — do not emit ja/ko sitemap or hreflang rows. */
-const ENGLISH_ONLY_STATIC_PATHS = new Set(['/ai-rumpelstiltskin']);
+/** Only emit variants with real editorial translations. */
+const LIMITED_STATIC_PATH_LOCALES: Record<string, readonly string[]> = {
+  '/ai-rumpelstiltskin': RUMPEL_SEO_LOCALES,
+  '/text-to-image': [baseLocale],
+  // Bulin 47's visible editorial content is not fully localized yet.
+  '/bulin-47-ai': [baseLocale],
+};
+
+function enabledContentLocales(values: readonly string[]): string[] {
+  return values.filter((locale) =>
+    locales.includes(locale as (typeof locales)[number])
+  );
+}
 
 type Entry = {
   path: string;
@@ -86,9 +98,9 @@ export const Route = createFileRoute('/sitemap.xml')({
       GET: async ({ request }) => {
         const origin = siteOrigin(request);
         const entries: Entry[] = STATIC_PATHS.flatMap((path) => {
-          const pathLocales = ENGLISH_ONLY_STATIC_PATHS.has(path)
-            ? [baseLocale]
-            : [...locales];
+          const pathLocales = enabledContentLocales(
+            LIMITED_STATIC_PATH_LOCALES[path] ?? locales
+          );
           return pathLocales.map((locale) => ({
             path,
             locale,
@@ -112,7 +124,7 @@ export const Route = createFileRoute('/sitemap.xml')({
           const posts = mergePosts(dbPosts, getLocalPosts(baseLocale));
           for (const post of posts) {
             if (post.source === 'local') {
-              const postLocales = getLocalPostLocales(post.slug);
+              const postLocales = enabledContentLocales(getLocalPostLocales(post.slug));
               const localesToEmit =
                 postLocales.length > 0 ? postLocales : [baseLocale];
               for (const locale of localesToEmit) {
@@ -138,7 +150,7 @@ export const Route = createFileRoute('/sitemap.xml')({
           }
         } catch {
           for (const post of getLocalPosts(baseLocale)) {
-            const postLocales = getLocalPostLocales(post.slug);
+            const postLocales = enabledContentLocales(getLocalPostLocales(post.slug));
             const localesToEmit =
               postLocales.length > 0 ? postLocales : [baseLocale];
             for (const locale of localesToEmit) {

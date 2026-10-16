@@ -17,39 +17,45 @@ import { HotelLobbyGeneratorPanel } from '@/components/landing/HotelLobbyGenerat
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SeoJsonLd } from '@/components/seo-json-ld';
+import { getRumpelSeoCopy, RUMPEL_SEO_LOCALES } from '@/components/landing/rumpel-seo-i18n';
 
 const DATE_PUBLISHED = '2026-10-11';
 const DATE_MODIFIED = '2026-10-11';
 const GENERATOR_HREF = '#generator';
 const PAGE_PATH = '/ai-rumpelstiltskin';
-/** English SEO body only — do not advertise ja/ko as translated alternates. */
-const SEO_LOCALES = ['en'] as const;
+/** Only locales with translated article bodies are advertised. */
+const SEO_LOCALES = RUMPEL_SEO_LOCALES;
 const COVER_PATH = '/imgs/blog/how-to-make-rumpelstiltskin-ai-video-cover.jpg';
 const APP_NAME = 'Genjutsu AI';
 
 /** Visible FAQ + FAQPage JSON-LD must stay character-identical. */
 const FAQ_ITEMS = [
   {
+    id: 'origin',
     question: 'Is the Rumpelstiltskin 1987 clip from a real movie?',
     answer:
       "No. A Rumpelstiltskin film did come out in 1987 — a Cannon Movie Tales musical starring Billy Barty — but this barn scene isn't in it. The clip is AI-generated and first posted to Instagram in August 2026.",
   },
   {
+    id: 'dance',
     question: 'What is the Rumpelstiltskin dance?',
     answer:
       "It's the sly tiptoe routine from the viral clip: a little man in a velvet tuxedo creeps across a hay barn on his toes, shushes the camera, and keeps tiptoeing as straw turns to gold.",
   },
   {
+    id: 'generate',
     question: 'How do I make a Rumpelstiltskin AI video?',
     answer:
-      "Upload one photo of yourself and open the Rumpelstiltskin template. The character, barn and film grade are pre-set, so there's no prompt to write. The clip renders in a few minutes.",
+      "Upload a clear image and open the Rumpelstiltskin template. The character, barn and film grade are pre-set, so there's no prompt to write. The clip renders in a few minutes.",
   },
   {
+    id: 'audio',
     question: 'Can I use the original audio?',
     answer:
       'Only if you hold rights to it. The track that made the trend spread is a commercial release. Use a cleared track, or a licensed template sound.',
   },
   {
+    id: 'year',
     question: "Why does the video say 1987 if it's not from 1987?",
     answer:
       "That's the joke — and also the misinformation. The caption was written to make it look like a lost film. If you make your own, put a made-up title on the card and label it AI.",
@@ -58,14 +64,17 @@ const FAQ_ITEMS = [
 
 const HOW_STEPS = [
   {
-    name: 'Upload one photo',
-    text: 'Full-body works best — the model needs room for the dance steps. Front-facing, face fully visible, no sunglasses or masks, one person only.',
+    id: 'image',
+    name: 'Upload a clear image',
+    text: 'Choose a clear, well-lit image with the subject visible and enough room to show the dance pose. Avoid blur and heavy filters.'
   },
   {
+    id: 'template',
     name: 'Open the Rumpelstiltskin template',
     text: 'The character, the barn, the gold and the 80s film grade are already locked in. Pick this template and you skip prompt writing entirely.',
   },
   {
+    id: 'render',
     name: 'Generate and download',
     text: 'The clip renders in a few minutes in HD, with the tiptoe, the shush and the gold already choreographed. Label the result as AI when you post.',
   },
@@ -73,22 +82,27 @@ const HOW_STEPS = [
 
 const HAND_LOCKS = [
   {
+    id: 'character',
     title: 'Lock the character first',
     text: 'One character sheet — front, side, full body — from an image model. Attach the same sheet to every shot. Face drift between shots is what happens when you skip this.',
   },
   {
+    id: 'set',
     title: 'Lock the set as a still',
     text: 'Generate the barn as a photograph first — night, hay bales, one lantern, deep shadows, film look baked in. If the still looks digital, the video will too.',
   },
   {
+    id: 'beats',
     title: 'Animate in beats of 4–6 seconds',
     text: 'One beat per generation: the tiptoe; the stop and the finger to the lips; the woman turning; the dance. Long takes drift.',
   },
   {
+    id: 'grade',
     title: 'Grade it like a print, not a filter',
     text: 'Name the stock and its flaws in the prompt — "1970s fairy-tale film still, 16mm, visible grain, soft focus, light halation." Then add grain and a hint of vertical jitter in the edit.',
   },
   {
+    id: 'audio',
     title: 'Audio last',
     text: 'And clear it — see the rights section below.',
   },
@@ -96,31 +110,68 @@ const HAND_LOCKS = [
 
 const RULES = [
   {
+    id: 'original',
     ok: true,
     text: "Do build your own version. Rumpelstiltskin is a Brothers Grimm character from 1812 — public domain, no living person's likeness involved. Putting your own photo in it is clean.",
   },
   {
+    id: 'accurate_label',
     ok: false,
     text: "Don't label it a real film. Rumpelstiltskin (1987) exists; the rights sit with Amazon MGM, and the actors and Billy Barty's estate are real people whose work you'd be misattributing. Invent a title — a fake studio and a fake year are funnier and safe.",
   },
   {
+    id: 'consent',
     ok: false,
-    text: "Don't put real people in it. Versions starring public figures have circulated, but uploading someone else's likeness without written permission is off the table, full stop. Your photo, a friend's with permission, or nobody.",
+    text: "Do not use images of people without permission. Versions featuring public figures may circulate online, but you must have the rights and any required consent to edit or publish someone's likeness. Use only images you are authorized to edit.",
   },
   {
+    id: 'music',
     ok: false,
     text: 'Don\'t use the Riff Raff track as your audio unless you have rights to it. "Tip Toe Wing in My Jawwdinz" is a Mad Decent release, and a trending-sounds library is not a licence. Use a cleared track or a template sound you\'re licensed for.',
   },
   {
+    id: 'disclosure',
     ok: true,
     text: 'Do label it AI. Put "AI" on the same title card, not in a comment nobody reads.',
   },
 ] as const;
 
+function translatedFaqItems() {
+  const translations = getRumpelSeoCopy(getLocale())?.faq;
+  return FAQ_ITEMS.map((item) => ({
+    question: translations?.[item.id]?.[0] ?? item.question,
+    answer: translations?.[item.id]?.[1] ?? item.answer,
+  }));
+}
+
+function translatedHowSteps() {
+  const translations = getRumpelSeoCopy(getLocale())?.steps;
+  return HOW_STEPS.map((step) => ({
+    name: translations?.[step.id]?.[0] ?? step.name,
+    text: translations?.[step.id]?.[1] ?? step.text,
+  }));
+}
+
+function translatedHandLocks() {
+  const translations = getRumpelSeoCopy(getLocale())?.locks;
+  return HAND_LOCKS.map((lock) => ({
+    title: translations?.[lock.id]?.[0] ?? lock.title,
+    text: translations?.[lock.id]?.[1] ?? lock.text,
+  }));
+}
+
+function translatedRules() {
+  const translations = getRumpelSeoCopy(getLocale())?.rules;
+  return RULES.map((rule) => ({
+    ...rule,
+    text: translations?.[rule.id] ?? rule.text,
+  }));
+}
+
 function faqJsonLd() {
   return {
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: translatedFaqItems().map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -134,8 +185,8 @@ function faqJsonLd() {
 function howToJsonLd() {
   return {
     '@type': 'HowTo',
-    name: 'How to make a Rumpelstiltskin AI video',
-    step: HOW_STEPS.map((step) => ({
+    name: getRumpelSeoCopy(getLocale())?.sections.howToName ?? 'How to make a Rumpelstiltskin AI video',
+    step: translatedHowSteps().map((step) => ({
       '@type': 'HowToStep',
       name: step.name,
       text: step.text,
@@ -148,11 +199,11 @@ function articleJsonLd() {
   const coverUrl = absoluteUrl(COVER_PATH);
   return {
     '@type': 'Article',
-    headline:
-      'AI Rumpelstiltskin: The Tip-Toe Barn Video, and How to Make Your Own',
+    headline: m['site.rumpel.hero_title'](),
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_MODIFIED,
-    about: 'Rumpelstiltskin 1987 tip-toe AI video trend',
+    about: getRumpelSeoCopy(getLocale())?.sections.articleAbout ?? 'Rumpelstiltskin 1987 tip-toe AI video trend',
+    inLanguage: getRumpelSeoCopy(getLocale()) ? getLocale() : 'en',
     image: coverUrl,
     author: {
       '@type': 'Organization',
@@ -181,6 +232,7 @@ function graphJsonLd() {
 }
 
 function AiRumpelstiltskinPage() {
+  const copy = getRumpelSeoCopy(getLocale());
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
       <SeoJsonLd value={graphJsonLd()} />
@@ -213,23 +265,38 @@ function AiRumpelstiltskinPage() {
         <section id="what-is" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              What the Rumpelstiltskin 1987 clip actually is
+              {copy?.sections.whatTitle ?? "What the Rumpelstiltskin 1987 clip actually is"}
             </h2>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-7 sm:text-base">
               <p>
+                {copy?.sections.whatP1 ?? (
+                  <>
+
                 A child-sized man with frizzy ginger hair, painted-on wrinkles,
                 a black velvet tuxedo and a bow tie peeks from behind a hay
                 bale, tiptoes toward the camera, raises a finger to his lips,
                 dances in the straw, and turns it into a pile of gold coins.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.whatP2 ?? (
+                  <>
+
                 The caption says 1987. There is no such scene. The real{' '}
                 <em>Rumpelstiltskin</em> (1987) was a Cannon Movie Tales musical
                 shot in Israel, with Billy Barty in his only lead role — a
                 feathered cap, a brown tunic, and a spinning wheel in a castle
                 room. No barn. No tuxedo.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.whatP3 ?? (
+                  <>
+
                 The clip is AI-generated. Know Your Meme traces it to an August
                 27, 2026 Instagram reel by @stroinaya, whose caption was Russian
                 ad copy for an AI course and named no tool. It sat mostly
@@ -241,12 +308,15 @@ function AiRumpelstiltskinPage() {
                 #tiptoeinginmyjordans. Remixes swapping the imp for other faces
                 arrived within three days, and half the internet went looking
                 for a movie that doesn&apos;t exist.
+              
+                  </>
+                )}
               </p>
             </div>
             <figure className="mt-8 overflow-hidden rounded-2xl border border-white/10">
               <img
                 src={COVER_PATH}
-                alt="Rumpelstiltskin AI tip-toe barn video trend — AI-generated 1987-style clip"
+                alt={copy?.sections.imageAlt ?? 'Rumpelstiltskin AI tip-toe barn video trend — AI-generated 1987-style clip'}
                 className="h-auto w-full object-cover"
                 loading="lazy"
                 decoding="async"
@@ -258,20 +328,32 @@ function AiRumpelstiltskinPage() {
         <section id="lost-film" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              Why people think it&apos;s a lost film
+              {copy?.sections.lostTitle ?? "Why people think it's a lost film"}
             </h2>
             <div className="text-muted-foreground mt-5 space-y-4 text-sm leading-7 sm:text-base">
               <p>
+                {copy?.sections.lostP1 ?? (
+                  <>
+
                 Three things sell the illusion: the grain, the grade and the
                 caption. Soft focus, warm saturated Technicolor, a slight gate
                 weave, and a period-serif title card reading
                 &quot;Rumpelstiltskin (1987)&quot; — on a clip that has no title
                 card, no watermark and no credits in its source version.
+              
+                  </>
+                )}
               </p>
               <p>
+                {copy?.sections.lostP2 ?? (
+                  <>
+
                 The tells are the usual AI ones: the imp&apos;s face geometry
                 shifts between the shush and the grin, the gold arrives as an
                 instant pile, and no spinning wheel ever appears.
+              
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -280,15 +362,15 @@ function AiRumpelstiltskinPage() {
         <section id="how-to" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
-              Three steps
+              {copy?.sections.three ?? "Three steps"}
             </p>
             <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              How to make your own Rumpelstiltskin AI video
+              {copy?.sections.howTitle ?? "How to make your own Rumpelstiltskin AI video"}
             </h2>
           </div>
 
           <div className="mt-9 grid gap-4 md:grid-cols-3">
-            {HOW_STEPS.map((step, index) => {
+            {translatedHowSteps().map((step, index) => {
               const icons = [ImageIcon, Film, Download] as const;
               const Icon = icons[index] ?? Sparkles;
               return (
@@ -323,14 +405,20 @@ function AiRumpelstiltskinPage() {
         <section id="by-hand" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              Doing it by hand: the three locks
+              {copy?.sections.handTitle ?? "Doing it by hand: the three locks"}
             </h2>
             <p className="text-muted-foreground mt-5 text-sm leading-7 sm:text-base">
+                {copy?.sections.handIntro ?? (
+                  <>
+
               If you&apos;d rather build the look yourself in any image-to-video
               model, the reconstructed method is three locks and short beats:
-            </p>
+            
+                  </>
+                )}
+              </p>
             <div className="mt-8 space-y-5">
-              {HAND_LOCKS.map((lock) => (
+              {translatedHandLocks().map((lock) => (
                 <div key={lock.title}>
                   <h3 className="text-foreground text-lg font-semibold">
                     {lock.title}
@@ -342,13 +430,12 @@ function AiRumpelstiltskinPage() {
               ))}
             </div>
             <p className="text-muted-foreground mt-8 text-sm leading-7 sm:text-base">
-              Prefer the homepage Genjutsu flow with your own template upload?
-              See the step-by-step guide:{' '}
+              {copy?.sections.handLinkBefore ?? 'Prefer the homepage Genjutsu flow with your own template upload? See the step-by-step guide:'}{' '}
               <Link
                 href="/blog/how-to-make-rumpelstiltskin-ai-video"
                 className="text-primary underline-offset-2 hover:underline"
               >
-                How to make a Rumpelstiltskin AI video on Genjutsu AI
+                {copy?.sections.handLink ?? 'How to make a Rumpelstiltskin AI video on Genjutsu AI'}
               </Link>
               .
             </p>
@@ -358,10 +445,10 @@ function AiRumpelstiltskinPage() {
         <section id="rules" className="scroll-mt-24 py-14 md:py-20">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-              What you can and can&apos;t do with this trend
+              {copy?.sections.rulesTitle ?? "What you can and can't do with this trend"}
             </h2>
             <ul className="mt-7 space-y-4">
-              {RULES.map((rule) => (
+              {translatedRules().map((rule) => (
                 <li
                   key={rule.text.slice(0, 40)}
                   className="text-muted-foreground flex gap-3 text-sm leading-7 sm:text-base"
@@ -376,12 +463,12 @@ function AiRumpelstiltskinPage() {
               ))}
             </ul>
             <p className="text-muted-foreground mt-6 text-sm leading-7">
-              Full rules are in our{' '}
+              {copy?.sections.rulesBefore ?? 'Full rules are in our'}{' '}
               <Link
                 href="/terms-of-service"
                 className="text-primary underline-offset-2 hover:underline"
               >
-                Acceptable Use Policy
+                {copy?.sections.rulesLink ?? 'Acceptable Use Policy'}
               </Link>
               .
             </p>
@@ -390,10 +477,10 @@ function AiRumpelstiltskinPage() {
 
         <section id="faq" className="scroll-mt-24 py-14 md:py-20">
           <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            Rumpelstiltskin AI FAQ
+            {copy?.sections.faqTitle ?? "Rumpelstiltskin AI FAQ"}
           </h2>
           <div className="border-border/70 bg-card/60 divide-border/60 mt-7 divide-y rounded-2xl border px-5 sm:px-7">
-            {FAQ_ITEMS.map((item) => (
+            {translatedFaqItems().map((item) => (
               <details key={item.question} className="group py-5">
                 <summary className="text-foreground/85 cursor-pointer list-none pr-6 text-sm font-semibold sm:text-base">
                   {item.question}

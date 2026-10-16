@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import {
   CheckCircle2,
   Film,
@@ -446,13 +446,20 @@ function Bulin47AiPage() {
 }
 
 export const Route = createFileRoute('/bulin-47-ai')({
+  // English-only editorial content must not render inside a non-English shell.
+  // A canonical tag alone does not fix mixed-language content or <html lang>.
+  beforeLoad: () => {
+    if (getLocale() !== 'en') {
+      throw redirect({ href: '/bulin-47-ai', statusCode: 307, reloadDocument: true });
+    }
+  },
   loader: () => {
     const locale = getLocale();
     return { locale };
   },
   head: ({ loaderData }) => {
     const locale = loaderData?.locale ?? 'en';
-    const { canonical, alternates } = localeLinks('/bulin-47-ai', locale);
+    const { canonical, alternates } = localeLinks('/bulin-47-ai', locale, ['en']);
     return {
       meta: [
         { title: m['site.bulin.page_title']() },

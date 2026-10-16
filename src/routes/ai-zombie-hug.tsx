@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
   {
     question: 'How do I make an AI zombie hug video?',
     answer:
-      'Upload one clear photo of yourself (the survivor) and one of your loved one, then generate. This page uses a fixed motion-transfer template so you get the cold standoff, lowered gun, and warm embrace in one clip — about 10 minutes.',
+      'Upload two clear images, one for each role, then generate. This page uses a fixed motion-transfer template so you get the cold standoff, lowered gun, and warm embrace in one clip — about 10 minutes.',
   },
   {
     question: 'What app is used for the zombie hug trend?',
@@ -115,26 +115,26 @@ function howToJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to make an AI zombie hug video',
+    name: m['site.zombie.how_title'](),
     totalTime: 'PT10M',
     step: [
       {
         '@type': 'HowToStep',
         position: 1,
-        name: 'Pick your two photos',
-        text: 'One clear front-facing photo of the person who turns, and one of yourself.',
+        name: m['site.zombie.step1_title'](),
+        text: m['site.zombie.step1_desc'](),
       },
       {
         '@type': 'HowToStep',
         position: 2,
-        name: 'Generate with the zombie hug template',
-        text: 'Upload both photos on this page. The motion-transfer template already carries the cold standoff and warm memory beat.',
+        name: m['site.zombie.step2_title'](),
+        text: m['site.zombie.step2_desc'](),
       },
       {
         '@type': 'HowToStep',
         position: 3,
-        name: 'Download and post',
-        text: 'Download the 9:16 MP4 and post to TikTok, Reels, or Shorts. Label it as AI where the platform asks.',
+        name: m['site.zombie.step3_title'](),
+        text: m['site.zombie.step3_desc'](),
       },
     ],
   };
