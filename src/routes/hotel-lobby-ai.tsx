@@ -166,23 +166,26 @@ function howToJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'How to make a Hotel Lobby AI video',
+    name: m['site.hotel.how_title'](),
     totalTime: 'PT2M',
     step: [
       {
         '@type': 'HowToStep',
-        name: 'Upload one or two photos',
-        text: 'Use one clear photo containing both subjects, or one front-facing photo per performer.',
+        position: 1,
+        name: m['site.hotel.step1_title'](),
+        text: m['site.hotel.step1_desc'](),
       },
       {
         '@type': 'HowToStep',
-        name: 'Press generate',
-        text: 'The Hotel Lobby reference performance is already loaded. Press generate; the output duration follows the reference video.',
+        position: 2,
+        name: m['site.hotel.step2_title'](),
+        text: m['site.hotel.step2_desc'](),
       },
       {
         '@type': 'HowToStep',
-        name: 'Add the sound and post',
-        text: 'Download the MP4, upload it to TikTok or Reels, and choose the licensed Hotel Lobby sound from the platform music library.',
+        position: 3,
+        name: m['site.hotel.step3_title'](),
+        text: m['site.hotel.step3_desc'](),
       },
     ],
   };
