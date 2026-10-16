@@ -73,3 +73,6 @@ scripts/.ga-id.json
 
 # Local ops backups (Waffo cutover mappings etc.)
 backups/
+
+# Chrome extension packaging (source in chrome-extension/; do not commit store zips)
+/genjutsu-ai-extension.zip
