@@ -1,0 +1,104 @@
+name: Sync A2O Lite full template to R2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-a2o-lite-r2.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: genjutsu-a2o-lite-r2-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
+      CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+      CF_API_KEY_FALLBACK: ${{ secrets.CF_API_KEY }}
+      CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL || secrets.CF_EMAIL }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || vars.CF_ACCOUNT_ID }}
+      ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Verify the public template is full-length
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE='public/videos/a2o-lite-ai-tpl.mp4'
+          test -s "$SOURCE"
+          DURATION="$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$SOURCE")"
+          echo "Source template duration: ${DURATION}s"
+          awk -v duration="$DURATION" 'BEGIN { exit !(duration >= 14.8 && duration <= 15.2) }'
+          sha256sum "$SOURCE"
+
+      - name: Validate Cloudflare auth and production template key
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CLOUDFLARE_API_KEY:-}" ] && [ -z "${CLOUDFLARE_EMAIL:-}" ]; then
+            export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_KEY"
+            unset CLOUDFLARE_API_KEY
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CF_API_KEY_FALLBACK:-}" ]; then
+            if [ -n "${CLOUDFLARE_EMAIL:-}" ]; then
+              export CLOUDFLARE_API_KEY="${CLOUDFLARE_API_KEY:-$CF_API_KEY_FALLBACK}"
+            else
+              export CLOUDFLARE_API_TOKEN="$CF_API_KEY_FALLBACK"
+            fi
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && { [ -z "${CLOUDFLARE_API_KEY:-}" ] || [ -z "${CLOUDFLARE_EMAIL:-}" ]; }; then
+            echo "Cloudflare authentication is not configured."
+            exit 1
+          fi
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo 'Cloudflare account ID is missing'; exit 1; }
+          if printf '%s\n' "${ENV_PRODUCTION:-}" | grep -q '^A2O_LITE_AI_TEMPLATE_VIDEO_KEY='; then
+            CONFIGURED_KEY="$(printf '%s\n' "$ENV_PRODUCTION" | sed -n 's/^A2O_LITE_AI_TEMPLATE_VIDEO_KEY=//p' | tail -n 1 | tr -d '\r\"\047')"
+            if [ "$CONFIGURED_KEY" != 'genjutsu/templates/a2o-lite-ai-v1.mp4' ]; then
+              echo "Production template key differs from the target. Aborting safely."
+              exit 1
+            fi
+          fi
+
+      - name: Back up old R2 object and sync verified full template
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CF_API_KEY_FALLBACK:-}" ] && [ -z "${CLOUDFLARE_EMAIL:-}" ]; then
+            export CLOUDFLARE_API_TOKEN="$CF_API_KEY_FALLBACK"
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CLOUDFLARE_API_KEY:-}" ] && [ -z "${CLOUDFLARE_EMAIL:-}" ]; then
+            export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_KEY"
+            unset CLOUDFLARE_API_KEY
+          fi
+          if [ -z "${CLOUDFLARE_API_KEY:-}" ] && [ -n "${CF_API_KEY_FALLBACK:-}" ] && [ -n "${CLOUDFLARE_EMAIL:-}" ]; then
+            export CLOUDFLARE_API_KEY="$CF_API_KEY_FALLBACK"
+          fi
+          TARGET='genjutsu-ai/genjutsu/templates/a2o-lite-ai-v1.mp4'
+          BACKUP='genjutsu-ai/genjutsu/templates/a2o-lite-ai-v1-before-full-20261016.mp4'
+          SOURCE='public/videos/a2o-lite-ai-tpl.mp4'
+          npx --yes wrangler@4.98.0 whoami
+          if npx --yes wrangler@4.98.0 r2 object get "$BACKUP" --remote --file /tmp/a2o-template-backup.mp4 >/dev/null 2>&1; then
+            echo 'Existing original-template backup preserved.'
+          else
+            npx --yes wrangler@4.98.0 r2 object get "$TARGET" --remote --file /tmp/a2o-template-original.mp4
+            npx --yes wrangler@4.98.0 r2 object put "$BACKUP" --remote --file /tmp/a2o-template-original.mp4 --content-type video/mp4
+            echo 'Backed up the previous R2 template.'
+          fi
+          npx --yes wrangler@4.98.0 r2 object put "$TARGET" --remote --file "$SOURCE" --content-type video/mp4
+          npx --yes wrangler@4.98.0 r2 object get "$TARGET" --remote --file /tmp/a2o-template-verified.mp4
+          cmp "$SOURCE" /tmp/a2o-template-verified.mp4
+          DURATION="$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/a2o-template-verified.mp4)"
+          echo "Verified remote template duration: ${DURATION}s"
+          awk -v duration="$DURATION" 'BEGIN { exit !(duration >= 14.8 && duration <= 15.2) }'
+          sha256sum /tmp/a2o-template-verified.mp4
+          echo 'R2 A2O Lite full template matches the repository source byte-for-byte.'
