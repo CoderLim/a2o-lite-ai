@@ -955,7 +955,7 @@ export function getCrazyFrogTemplateVideoKey() {
 export function getA2oLiteAiTemplateVideoKey() {
   return (
     envConfigs.a2o_lite_ai_template_video_key?.trim() ||
-    'genjutsu/templates/a2o-lite-ai-v1.mp4'
+    'genjutsu/templates/a2o-lite-ai-v2.mp4'
   );
 }
 

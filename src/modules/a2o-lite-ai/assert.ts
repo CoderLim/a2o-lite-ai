@@ -56,7 +56,7 @@ export function assertA2oLiteAiInputs(options: TaskOptions | null) {
 
   if (options.aspectRatio !== A2O_LITE_AI_ASPECT_RATIO) {
     throw new A2oLiteAiPreflightError(
-      'A2O Lite AI requires a fixed 4:3 aspect ratio'
+      'A2O Lite AI requires a fixed 16:9 aspect ratio'
     );
   }
 

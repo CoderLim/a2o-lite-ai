@@ -211,7 +211,7 @@ export const envConfigs: Record<string, string> = {
   // A2O Lite AI (server-only). Fixed R2 template; client uploads two images.
   a2o_lite_ai_template_video_key:
     procEnv.A2O_LITE_AI_TEMPLATE_VIDEO_KEY ??
-    'genjutsu/templates/a2o-lite-ai-v1.mp4',
+    'genjutsu/templates/a2o-lite-ai-v2.mp4',
 
   // Locale (public)
   locale: publicEnv('VITE_DEFAULT_LOCALE') ?? 'en',

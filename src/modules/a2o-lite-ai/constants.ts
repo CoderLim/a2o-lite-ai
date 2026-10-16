@@ -10,10 +10,10 @@ export const A2O_LITE_AI_TEMPLATE_PATH = '/videos/a2o-lite-ai-tpl.mp4';
 export const A2O_LITE_AI_TEMPLATE_POSTER_PATH =
   '/videos/a2o-lite-ai-tpl-poster.jpg';
 
-/** ffprobe duration of public/videos/a2o-lite-ai-tpl.mp4 */
-export const A2O_LITE_AI_TEMPLATE_DURATION_SECONDS = 14.941016;
+/** ffprobe duration of public/videos/a2o-lite-ai-tpl.mp4 (twins v2) */
+export const A2O_LITE_AI_TEMPLATE_DURATION_SECONDS = 14.959002;
 
-export const A2O_LITE_AI_ASPECT_RATIO: HiggsfieldSeedanceAspectRatio = '4:3';
+export const A2O_LITE_AI_ASPECT_RATIO: HiggsfieldSeedanceAspectRatio = '16:9';
 
 export const A2O_LITE_AI_RESOLUTIONS = ['480p', '720p'] as const;
 export type A2oLiteAiResolution = (typeof A2O_LITE_AI_RESOLUTIONS)[number];

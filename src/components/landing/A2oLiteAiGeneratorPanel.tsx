@@ -942,7 +942,7 @@ export function A2oLiteAiGeneratorPanel({
       <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-[0_30px_90px_-30px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
         <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="flex items-center justify-center border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0">
-            <div className="relative mx-auto aspect-[4/3] max-h-[420px] w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <div className="relative mx-auto aspect-video max-h-[420px] w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
               <video
                 src={A2O_LITE_AI_TEMPLATE_PATH}
                 poster={A2O_LITE_AI_TEMPLATE_POSTER_PATH}
@@ -1214,7 +1214,7 @@ export function A2oLiteAiGeneratorPanel({
                 controls
                 autoPlay
                 playsInline
-                className="mx-auto aspect-[4/3] max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain"
+                className="mx-auto aspect-video max-h-[720px] w-full max-w-full rounded-2xl bg-black object-contain"
               />
             </div>
           ) : null}

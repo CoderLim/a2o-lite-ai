@@ -1828,7 +1828,7 @@
   "site.a2o.seo.faq5_q": "Does the download include the song \"Neon\"?",
   "site.a2o.seo.faq5_a": "No. Videos are silent. Add it from the licensed sounds in the app where you post.",
   "site.a2o.seo.faq6_q": "Can I make a vertical video?",
-  "site.a2o.seo.faq6_a": "This page outputs a fixed 4:3 landscape clip. For Reels or TikTok, crop or letterbox the download in the app where you post.",
+  "site.a2o.seo.faq6_a": "This page outputs a fixed 16:9 landscape clip. For Reels or TikTok, crop or letterbox the download in the app where you post.",
   "site.a2o.seo.faq7_q": "What does it cost?",
   "site.a2o.seo.faq7_a": "You can open the page and pick photos without paying. Starting a generation uses Genjutsu AI credits; the exact amount is shown before you run the clip and scales with 480p or 720p.",
   "site.a2o.seo.faq8_q": "Do I need an account?",
