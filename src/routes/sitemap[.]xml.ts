@@ -31,6 +31,8 @@ const STATIC_PATHS = [
 const LIMITED_STATIC_PATH_LOCALES: Record<string, readonly string[]> = {
   '/ai-rumpelstiltskin': RUMPEL_SEO_LOCALES,
   '/text-to-image': [baseLocale],
+  // Bulin 47's visible editorial content is not fully localized yet.
+  '/bulin-47-ai': [baseLocale],
 };
 
 function enabledContentLocales(values: readonly string[]): string[] {
