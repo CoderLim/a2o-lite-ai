@@ -879,6 +879,7 @@
   "admin.generations.after": "変更後",
   "admin.generations.view": "表示",
   "admin.generations.details": "生成の詳細",
+  "admin.generations.preview_badge": "プレビュー",
   "admin.generations.input_media": "アップロードされたメディア",
   "admin.generations.source_video": "元動画",
   "admin.generations.reference_image": "参照画像 {index}",

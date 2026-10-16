@@ -1400,6 +1400,7 @@
   "admin.generations.after": "Depois",
   "admin.generations.view": "Ver",
   "admin.generations.details": "Detalhes da geração",
+  "admin.generations.preview_badge": "Prévia",
   "admin.generations.input_media": "Arquivos enviados",
   "admin.generations.source_video": "Vídeo de origem",
   "admin.generations.reference_image": "Imagem de referência {index}",

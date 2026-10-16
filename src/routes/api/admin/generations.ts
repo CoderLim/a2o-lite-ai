@@ -330,6 +330,7 @@ async function GET({ request }: { request: Request }) {
           typeof options?.resolution === 'string' ? options.resolution : null,
         aspectRatio:
           typeof options?.aspectRatio === 'string' ? options.aspectRatio : null,
+        preview: options?.preview === true,
         status: row.status,
         attemptStage:
           typeof info?.attemptStage === 'string' ? info.attemptStage : null,

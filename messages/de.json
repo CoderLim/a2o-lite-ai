@@ -1400,6 +1400,7 @@
   "admin.generations.after": "Nachher",
   "admin.generations.view": "Ansehen",
   "admin.generations.details": "Generierungsdetails",
+  "admin.generations.preview_badge": "Vorschau",
   "admin.generations.input_media": "Hochgeladene Medien",
   "admin.generations.source_video": "Quellvideo",
   "admin.generations.reference_image": "Referenzbild {index}",

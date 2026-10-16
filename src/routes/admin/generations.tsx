@@ -59,6 +59,7 @@ interface Generation {
   mode: string | null;
   resolution: string | null;
   aspectRatio: string | null;
+  preview: boolean;
   status: string;
   attemptStage: string | null;
   taskId: string | null;
@@ -756,7 +757,14 @@ function GenerationsPage() {
       >
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-6xl">
           <DialogHeader>
-            <DialogTitle>{m['admin.generations.details']()}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {m['admin.generations.details']()}
+              {detail?.preview ? (
+                <Badge className="border-transparent bg-amber-500! text-xs font-semibold tracking-wide text-black! uppercase">
+                  {m['admin.generations.preview_badge']()}
+                </Badge>
+              ) : null}
+            </DialogTitle>
           </DialogHeader>
 
           {detail ? (

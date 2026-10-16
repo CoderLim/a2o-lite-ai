@@ -879,6 +879,7 @@
   "admin.generations.after": "After",
   "admin.generations.view": "View",
   "admin.generations.details": "Generation Details",
+  "admin.generations.preview_badge": "Preview",
   "admin.generations.input_media": "Uploaded Media",
   "admin.generations.source_video": "Source video",
   "admin.generations.reference_image": "Reference image {index}",
