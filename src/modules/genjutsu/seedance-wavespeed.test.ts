@@ -48,23 +48,36 @@ test('WaveSpeed objects swap uses video-edit endpoint', () => {
   assert.match(String(body.prompt), /Replace the bottle/);
 });
 
-test('WaveSpeed multi-image objects swap restates Image N mappings', () => {
-  const { body } = buildWavespeedSeedancePayload({
+test('WaveSpeed dual-role object swap keeps mappings without repeating replacement rules', () => {
+  const { model, body } = buildWavespeedSeedancePayload({
     mode: 'objects-swap',
     resolution: '480p',
-    prompt: 'Change foreground to @Image 1 and chaser to @Image 2',
+    prompt:
+      'Replace the lead rider with @Image 1. Replace the pursuing rider with @Image 2.',
     videoUrl: 'https://example.com/source.mp4',
     imageUrls: ['https://example.com/ref1.png', 'https://example.com/ref2.png'],
     sourceDurationSeconds: 4,
   });
 
+  const prompt = String(body.prompt);
+  assert.equal(model, 'bytedance/seedance-2.5/video-edit');
+  assert.equal(body.video, 'https://example.com/source.mp4');
+  assert.equal(body.resolution, '480p');
   assert.deepEqual(body.reference_images, [
     'https://example.com/ref1.png',
     'https://example.com/ref2.png',
   ]);
-  assert.match(String(body.prompt), /@Image 1/);
-  assert.match(String(body.prompt), /@Image 2/);
-  assert.match(String(body.prompt), /every @Image N/);
+  assert.match(prompt, /@Video 1/);
+  assert.match(prompt, /@Image 1/);
+  assert.match(prompt, /@Image 2/);
+  assert.doesNotMatch(prompt, /@Image1\b/);
+  assert.match(prompt, /complete visible appearance/);
+  assert.equal(prompt.split('complete visible appearance').length - 1, 1);
+  assert.doesNotMatch(prompt, /Apply every @Image N/);
+  assert.match(
+    prompt,
+    /Replace the lead rider with @Image 1\. Replace the pursuing rider with @Image 2\./
+  );
 });
 
 test('WaveSpeed motion quote bills reference duration only', () => {

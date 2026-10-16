@@ -209,21 +209,25 @@ function referenceMappings(references: string[]) {
     .join(', ');
 }
 
+function referenceMappingLine(references: string[]) {
+  if (references.length <= 1) {
+    return `Reference 1 maps to ${references[0] || '@Image1'}.`;
+  }
+
+  return `Reference labels map to provider images as follows: ${referenceMappings(references)}.`;
+}
+
 function buildReferenceRules(input: {
   video: string;
   references: string[];
   imageCount: number;
 }) {
-  const mappings =
-    referenceMappings(input.references) ||
-    `Reference 1 = ${input.references[0] || '@Image1'}`;
-
   if (input.imageCount <= 1) {
-    return [`Reference 1 maps to ${input.references[0] || '@Image1'}.`];
+    return [referenceMappingLine(input.references)];
   }
 
   return [
-    `Reference labels map to provider images as follows: ${mappings}.`,
+    referenceMappingLine(input.references),
     'The reference images may represent different elements, different roles, or multiple views of the same element.',
     `Use the user instruction to determine how each reference should be used in relation to ${input.video}.`,
     'Do not blend, merge, or transfer visual traits between unrelated references unless the user explicitly asks for that.',
@@ -272,22 +276,28 @@ export function buildSeedanceWorkflowPrompt(input: {
       .join('\n');
   }
 
+  const taskInstruction = userPrompt
+    ? userPrompt
+    : input.imageCount > 1
+      ? 'No explicit mapping was provided. Use visual correspondence conservatively. Only modify targets with a clear match to the references, and do not merge unrelated references.'
+      : `Replace the most prominent matching target in ${video} with Reference 1.`;
+
   return [
-    `Edit ${video} instead of redesigning the whole shot.`,
-    ...referenceRules,
-    input.imageCount === 1
-      ? `Use ${primary} as the replacement reference.`
-      : 'The references may control different requested targets or provide multiple views of the same target.',
-    'Replace only the requested characters, products, wardrobe, props, objects, locations, environments, or other visual elements.',
-    `Preserve everything unrelated to the requested replacements from ${video} as closely as possible: motion, camera movement, timing, framing, composition, background, lighting, unrelated people, and unrelated objects.`,
-    'Integrate every replacement naturally with the original perspective, scale, occlusion, lighting, shadows, reflections, and motion.',
-    `Do not regenerate or alter unrelated parts of ${video}.`,
-    userPrompt
-      ? `Target replacement instruction: ${userPrompt}`
-      : input.imageCount > 1
-        ? 'No explicit mapping was provided. Use visual correspondence conservatively. Only modify targets with a clear match to the references, and do not merge unrelated references.'
-        : `Target replacement instruction: replace the most prominent matching target in ${video} with Reference 1.`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+    `Edit ${video} by replacing only the targets specified in the task instruction with their assigned reference images.`,
+    'REFERENCE MAPPING:',
+    'Use the task instruction to determine which reference image belongs to which target.',
+    'Different references may represent different targets or multiple views of the same target.',
+    'Do not merge unrelated reference identities or assign a reference to an unspecified target.',
+    referenceMappingLine(references),
+    'REPLACEMENT:',
+    'When an entire person, character, animal, or object is requested to be replaced, use the assigned reference for its complete visible appearance, not just selected features or accessories.',
+    'Apply the same replacement consistently whenever that target appears, including different camera angles, close-ups, camera cuts, occlusions, and reappearances.',
+    'When the instruction requests only a specific attribute, such as clothing or a prop, modify only that attribute.',
+    'PRESERVATION:',
+    'Preserve the original motion, timing, camera movement, framing, composition, and all elements that are not designated as replacement targets.',
+    'A subject explicitly assigned to a reference image is a replacement target, not an unrelated element to preserve.',
+    'Integrate replacements with the original perspective, scale, lighting, shadows, reflections, and motion.',
+    'TASK INSTRUCTION:',
+    taskInstruction,
+  ].join('\n');
 }

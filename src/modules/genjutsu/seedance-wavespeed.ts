@@ -205,22 +205,12 @@ function buildWavespeedWorkflowPrompt(input: {
   prompt?: string;
   imageCount: number;
 }) {
-  const workflowPrompt = buildSeedanceWorkflowPrompt({
+  return buildSeedanceWorkflowPrompt({
     mode: input.mode,
     userPrompt: input.prompt,
     imageCount: input.imageCount,
     references: wavespeedReferenceTokens(input.imageCount),
   });
-
-  if (input.mode !== 'objects-swap') return workflowPrompt;
-
-  const parts = [workflowPrompt];
-  if (input.imageCount > 1) {
-    parts.push(
-      'Apply every @Image N→subject mapping completely. Replace each mapped person or object with the matching reference identity (face, hair, body, clothing). Do not leave any mapped subject as the original identity from the source video.'
-    );
-  }
-  return parts.join('\n');
 }
 
 export function estimateWavespeedSeedanceProviderCost(input: {

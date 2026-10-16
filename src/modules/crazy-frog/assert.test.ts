@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { buildWavespeedSeedancePayload } from '@/modules/genjutsu/seedance-wavespeed';
+
 import { assertCrazyFrogInputs, CrazyFrogPreflightError } from './assert';
 import {
   CRAZY_FROG_ASPECT_RATIO,
   CRAZY_FROG_DEFAULT_PROMPT,
+  CRAZY_FROG_MODE,
   CRAZY_FROG_PRODUCT_ID,
+  LEGACY_CRAZY_FROG_PROMPTS,
 } from './constants';
 
 const validOptions = {
@@ -32,27 +36,19 @@ const validPreviewOptions = {
   contentLengths: [500_000, 1000, 1200],
 };
 
-test('default prompt uses WaveSpeed spaced asset tags', () => {
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Video 1/);
+test('default prompt maps both riders with spaced image tags', () => {
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Image 1/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /@Image 2/);
   assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Video1\b/);
   assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Image1\b/);
   assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /@Image2\b/);
-});
-
-test('default prompt locks chaser identity across the solo close-up cut', () => {
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /CHARACTER 2/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /red-and-black plaid shirt/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /red cap and dark jacket/);
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /middle of the video/);
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /solo close-up/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /middle close-up/);
+  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /same pursuing rider/);
   assert.match(CRAZY_FROG_DEFAULT_PROMPT, /orange motorcycle/);
-  assert.match(CRAZY_FROG_DEFAULT_PROMPT, /SAME pursuing rider/);
-  assert.match(
-    CRAZY_FROG_DEFAULT_PROMPT,
-    /Do not leave the pursuing rider as the original person/
-  );
+  assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /complete visible appearance/);
+  assert.doesNotMatch(CRAZY_FROG_DEFAULT_PROMPT, /face, hair, body/);
 });
 
 test('accepts server-template binding with two images', () => {
@@ -122,6 +118,18 @@ test('rejects single image', () => {
   );
 });
 
+test('accepts historical fixed prompts', () => {
+  for (const prompt of LEGACY_CRAZY_FROG_PROMPTS) {
+    assert.notEqual(prompt, CRAZY_FROG_DEFAULT_PROMPT);
+    assert.doesNotThrow(() =>
+      assertCrazyFrogInputs({
+        ...validOptions,
+        prompt,
+      })
+    );
+  }
+});
+
 test('rejects prompt tampering', () => {
   assert.throws(
     () =>
@@ -142,6 +150,38 @@ test('rejects wrong aspect ratio', () => {
       }),
     CrazyFrogPreflightError
   );
+});
+
+test('provider prompt carries both mappings once inside the shared object-swap rules', () => {
+  const { body } = buildWavespeedSeedancePayload({
+    mode: CRAZY_FROG_MODE,
+    resolution: '480p',
+    prompt: CRAZY_FROG_DEFAULT_PROMPT,
+    videoUrl: 'https://example.com/crazy-frog.mp4',
+    imageUrls: [
+      'https://example.com/lead.png',
+      'https://example.com/chaser.png',
+    ],
+    sourceDurationSeconds: 11.4,
+  });
+
+  const prompt = String(body.prompt);
+  assert.deepEqual(body.reference_images, [
+    'https://example.com/lead.png',
+    'https://example.com/chaser.png',
+  ]);
+  assert.match(
+    prompt,
+    /Replace the lead rider wearing a red-and-black plaid shirt, closest to the camera, with @Image 1/
+  );
+  assert.match(
+    prompt,
+    /Replace the pursuing rider wearing a red cap and dark jacket on the orange motorcycle with @Image 2/
+  );
+  assert.match(prompt, /same pursuing rider assigned to @Image 2/);
+  assert.equal(prompt.split('complete visible appearance').length - 1, 1);
+  assert.doesNotMatch(prompt, /Apply every @Image N/);
+  assert.doesNotMatch(prompt, /face, hair, body, clothing/);
 });
 
 test('rejects 1080p', () => {

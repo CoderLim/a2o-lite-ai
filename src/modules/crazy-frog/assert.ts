@@ -3,7 +3,13 @@ import {
   CRAZY_FROG_DEFAULT_PROMPT,
   CRAZY_FROG_PRODUCT_ID,
   isCrazyFrogResolution,
+  LEGACY_CRAZY_FROG_PROMPTS,
 } from './constants';
+
+const ALLOWED_PROMPTS = new Set<string>([
+  ...LEGACY_CRAZY_FROG_PROMPTS,
+  CRAZY_FROG_DEFAULT_PROMPT,
+]);
 
 export class CrazyFrogPreflightError extends Error {
   constructor(message: string) {
@@ -26,7 +32,10 @@ type TaskOptions = {
 };
 
 function assertSharedCrazyFrogLocks(options: TaskOptions) {
-  if (options.prompt !== CRAZY_FROG_DEFAULT_PROMPT) {
+  if (
+    typeof options.prompt !== 'string' ||
+    !ALLOWED_PROMPTS.has(options.prompt)
+  ) {
     throw new CrazyFrogPreflightError(
       'Crazy Frog prompt does not match the fixed product prompt'
     );
