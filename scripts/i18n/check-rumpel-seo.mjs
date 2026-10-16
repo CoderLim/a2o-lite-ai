@@ -68,14 +68,14 @@ if (declaredIds && copies) {
     const blockMatch = route.match(new RegExp('const ' + sourceName + ' = \\[([\\s\\S]*?)\\] as const;'));
     assert(!!blockMatch, 'missing source array ' + sourceName);
     if (!blockMatch) continue;
-    const englishIds = [...blockMatch[1].matchAll(/\\bid:\\s*'([^']+)'/g)].map((m) => m[1]);
+    const englishIds = [...blockMatch[1].matchAll(/\bid:\s*'([^']+)'/g)].map((m) => m[1]);
     const ids = declaredIds[group] ?? [];
     assert(new Set(englishIds).size === englishIds.length, sourceName + ' contains duplicate IDs');
     assert(new Set(ids).size === ids.length, group + ' contains duplicate declared IDs');
     assert(englishIds.length > 0, sourceName + ' has no keyed entries');
     assert(JSON.stringify([...englishIds].sort()) === JSON.stringify([...ids].sort()),
       sourceName + ' IDs differ from translation IDs');
-    const actualHash = fingerprint(blockMatch[1].replace(/\\s+/g, ' '));
+    const actualHash = fingerprint(blockMatch[1].replace(/\s+/g, ' '));
     assert(actualHash === EXPECTED_ENGLISH_BLOCK_HASHES[sourceName],
       sourceName + ' English source changed; review translations and refresh its fingerprint');
     for (const locale of LOCALES) {
