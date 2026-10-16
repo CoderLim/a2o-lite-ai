@@ -692,7 +692,7 @@
   "site.zombie.faq1_q": "Qu’est-ce que la tendance du câlin zombie IA ?",
   "site.zombie.faq1_a": "Un format vidéo IA à deux photos où un proche apparaît comme un zombie, vous ne pouvez pas lui tirer dessus, et la scène grise bascule vers un souvenir chaleureux où vous vous enlacez.",
   "site.zombie.faq2_q": "Comment créer une vidéo de câlin zombie IA ?",
-  "site.zombie.faq2_a": "Importez une photo nette de vous (le survivant) et une de votre proche, puis lancez la génération. Cette page utilise un modèle fixe de transfert de mouvement pour obtenir la confrontation froide, l’arme abaissée et l’étreinte dans un seul clip, en une dizaine de minutes.",
+  "site.zombie.faq2_a": "Importez deux images nettes, une pour chaque rôle, puis lancez la génération. Cette page utilise un modèle fixe de transfert de mouvement pour créer la confrontation, l’arme abaissée et l’étreinte dans une seule vidéo, en environ 10 minutes.",
   "site.zombie.faq3_q": "Quelle application sert à créer cette tendance ?",
   "site.zombie.faq3_a": "Cette page utilise le transfert de mouvement Genjutsu avec un modèle de câlin zombie fixe. Les tutoriels en ligne utilisent également Dreamina, CapCut, Kling et Google Flow (Veo).",
   "site.zombie.faq4_q": "Existe-t-il une méthode gratuite ?",
