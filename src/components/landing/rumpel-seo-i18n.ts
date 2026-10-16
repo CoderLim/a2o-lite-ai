@@ -282,7 +282,7 @@ const copies: Record<string, RumpelSeoCopy> = {
     "rules": {
       "original": "Créez votre propre version. Rumpelstiltskin est un personnage des frères Grimm datant de 1812, dans le domaine public, sans ressemblance avec une personne vivante. Vous pouvez utiliser votre propre photo.",
       "accurate_label": "Ne présentez pas le clip comme un vrai film. Rumpelstiltskin (1987) existe, avec des droits appartenant à Amazon MGM ; lui attribuer cette scène serait trompeur pour les créateurs et l’héritage de Billy Barty. Inventez plutôt un titre, un studio et une année fictifs.",
-      "consent": "N’utilisez pas d’images de personnes sans autorisation. Même si des versions mettant en scène des personnalités públicas circulent, vous devez disposer des droits et des consentements nécessaires pour modifier ou publier l’image d’autrui. Utilisez uniquement des images que vous êtes autorisé à modifier.",
+      "consent": "N’utilisez pas d’images de personnes sans autorisation. Même si des versions mettant en scène des personnalités publiques circulent, vous devez disposer des droits et des consentements nécessaires pour modifier ou publier l’image d’autrui. Utilisez uniquement des images que vous êtes autorisé à modifier.",
       "music": "N’utilisez pas la chanson de Riff Raff sans droits. « Tip Toe Wing in My Jawwdinz » est sorti chez Mad Decent ; une bibliothèque de sons tendance n’est pas en soi une licence. Choisissez une piste autorisée.",
       "disclosure": "Signalez l’IA. Ajoutez « IA » sur la carte de titre elle-même, pas dans un commentaire invisible."
     },
