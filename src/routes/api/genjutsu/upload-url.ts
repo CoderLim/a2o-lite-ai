@@ -88,11 +88,12 @@ async function POST({ request }: { request: Request }) {
     const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
     const isCrazyFrog = product === CRAZY_FROG_PRODUCT_ID;
     const isA2oLiteAi = product === A2O_LITE_AI_PRODUCT_ID;
-    const isCrazyFrogPreview = isCrazyFrog && body.preview === true;
-    // Full Crazy Frog / Smalltown: server template + image-only uploads.
-    // Crazy Frog preview: client uploads trimmed ≤4s clip + two images.
+    const isProductPreview =
+      (isCrazyFrog || isA2oLiteAi) && body.preview === true;
+    // Full fixed templates: server template + image-only uploads.
+    // Preview: client uploads a trimmed ≤4s clip + two images.
     const isFixedTemplateProduct =
-      (isSmalltown || isCrazyFrog || isA2oLiteAi) && !isCrazyFrogPreview;
+      (isSmalltown || isCrazyFrog || isA2oLiteAi) && !isProductPreview;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -124,8 +125,13 @@ async function POST({ request }: { request: Request }) {
         status: 400,
       });
     }
-    if (isCrazyFrogPreview && resolution !== '480p') {
-      return respErr('Crazy Frog preview must use 480p', { status: 400 });
+    if (isProductPreview && resolution !== '480p') {
+      return respErr(
+        isA2oLiteAi
+          ? 'A2O Lite AI preview must use 480p'
+          : 'Crazy Frog preview must use 480p',
+        { status: 400 }
+      );
     }
     if (isA2oLiteAi && mode !== A2O_LITE_AI_MODE) {
       return respErr('A2O Lite AI only supports objects-swap', { status: 400 });
@@ -160,17 +166,18 @@ async function POST({ request }: { request: Request }) {
       ? body.contentLengths.map((value: unknown) => Number(value))
       : [];
 
-    if (isCrazyFrogPreview) {
+    if (isProductPreview) {
+      const productLabel = isA2oLiteAi ? 'A2O Lite AI' : 'Crazy Frog';
       if (contentTypes.length !== 3 || contentLengths.length !== 3) {
         return respErr(
-          'Crazy Frog preview requires one trimmed video plus two reference images',
+          `${productLabel} preview requires one trimmed video plus two reference images`,
           { status: 400 }
         );
       }
       const videoMime =
         contentTypes[0]?.split(';', 1)[0]?.trim().toLowerCase() || '';
       if (!videoMime.startsWith('video/')) {
-        return respErr('Crazy Frog preview first upload must be a video', {
+        return respErr(`${productLabel} preview first upload must be a video`, {
           status: 400,
         });
       }
@@ -179,7 +186,7 @@ async function POST({ request }: { request: Request }) {
           contentTypes[i]?.split(';', 1)[0]?.trim().toLowerCase() || '';
         if (!mime.startsWith('image/')) {
           return respErr(
-            'Crazy Frog preview references must be images (JPG, PNG, WebP, or GIF)',
+            `${productLabel} preview references must be images (JPG, PNG, WebP, or GIF)`,
             { status: 400 }
           );
         }
@@ -324,8 +331,12 @@ async function POST({ request }: { request: Request }) {
         prompt,
         product,
         ...target,
-        preview: isCrazyFrogPreview || undefined,
-        aspectRatio: isCrazyFrogPreview ? CRAZY_FROG_ASPECT_RATIO : undefined,
+        preview: isProductPreview || undefined,
+        aspectRatio: isProductPreview
+          ? isA2oLiteAi
+            ? A2O_LITE_AI_ASPECT_RATIO
+            : CRAZY_FROG_ASPECT_RATIO
+          : undefined,
         videoKey: normalizedInputs[0].key,
         imageKeys: normalizedInputs.slice(1).map((item) => item.key),
         contentTypes: normalizedInputs.map((item) => item.contentType),
