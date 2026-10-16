@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
   {
     question: 'How do I make an AI zombie hug video?',
     answer:
-      'Upload one clear photo of yourself (the survivor) and one of your loved one, then generate. This page uses a fixed motion-transfer template so you get the cold standoff, lowered gun, and warm embrace in one clip — about 10 minutes.',
+      'Upload two clear images, one for each role, then generate. This page uses a fixed motion-transfer template so you get the cold standoff, lowered gun, and warm embrace in one clip — about 10 minutes.',
   },
   {
     question: 'What app is used for the zombie hug trend?',
