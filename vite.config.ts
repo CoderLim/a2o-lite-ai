@@ -81,6 +81,10 @@ export default defineConfig({
             ['en', '/api/:path(.*)?'],
             ['ja', '/api/:path(.*)?'],
             ['ko', '/api/:path(.*)?'],
+            ['es', '/api/:path(.*)?'],
+            ['pt-BR', '/api/:path(.*)?'],
+            ['fr', '/api/:path(.*)?'],
+            ['de', '/api/:path(.*)?'],
           ],
         },
         // Bare locale homes match without a trailing-slash redirect.
@@ -89,15 +93,23 @@ export default defineConfig({
           localized: [
             ['ja', '/ja'],
             ['ko', '/ko'],
+            ['es', '/es'],
+            ['pt-BR', '/pt-BR'],
+            ['fr', '/fr'],
+            ['de', '/de'],
             ['en', '/'],
           ],
         },
-        // "as-needed" prefix: ja/ko under /ja|/ko, en (default) unprefixed.
+        // Non-English locales have explicit prefixes; the default English stays unprefixed.
         {
           pattern: '/:path(.*)?',
           localized: [
             ['ja', '/ja/:path(.*)?'],
             ['ko', '/ko/:path(.*)?'],
+            ['es', '/es/:path(.*)?'],
+            ['pt-BR', '/pt-BR/:path(.*)?'],
+            ['fr', '/fr/:path(.*)?'],
+            ['de', '/de/:path(.*)?'],
             ['en', '/:path(.*)?'],
           ],
         },
