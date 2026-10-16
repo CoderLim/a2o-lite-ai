@@ -960,7 +960,7 @@
   "landing.chips.cms": "CMS",
   "landing.chips.apikeys": "Claves API",
   "landing.nav.blog": "Blog",
-  "genjutsu.safety.face_rejected": "Las imágenes y los vídeos no pueden contener personas reales. Utiliza archivos sin rostros humanos reales.",
+  "genjutsu.safety.face_rejected": "Esta imagen o vídeo no cumple los requisitos de entrada de la herramienta seleccionada. Prueba otra imagen clara o un vídeo compatible.",
   "genjutsu.safety.unavailable": "La comprobación de seguridad no está disponible temporalmente. Inténtalo más tarde.",
   "genjutsu.safety.check_failed": "Falló la comprobación de la referencia. Prueba otra imagen.",
   "genjutsu.safety.upload_hint": "Hasta 8 imágenes",
