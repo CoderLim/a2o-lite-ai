@@ -1,0 +1,29 @@
+name: i18n Content Coverage
+
+on:
+  pull_request:
+    paths:
+      - 'messages/**'
+      - 'src/content/pages/**'
+      - 'src/content/posts/**'
+      - 'scripts/i18n/**'
+      - '.github/workflows/i18n-coverage.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-translations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check every message key and interpolation token
+        run: node scripts/i18n/check-coverage.mjs --strict
+      - name: Check every localized policy and blog article
+        run: node scripts/i18n/check-content.mjs --strict
