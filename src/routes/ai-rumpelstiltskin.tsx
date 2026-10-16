@@ -122,7 +122,7 @@ const RULES = [
   {
     id: 'consent',
     ok: false,
-    text: "Don't put real people in it. Versions starring public figures have circulated, but uploading someone else's likeness without written permission is off the table, full stop. Your photo, a friend's with permission, or nobody.",
+    text: "Do not use images of people without permission. Versions featuring public figures may circulate online, but you must have the rights and any required consent to edit or publish someone's likeness. Use only images you are authorized to edit.",
   },
   {
     id: 'music',
