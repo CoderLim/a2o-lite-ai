@@ -205,8 +205,15 @@ export function KairoBadTimesGeneratorPanel({
         }
 
         if (polled.providerStatus === 'submission_unknown') {
+          if (userId) {
+            localStorage.removeItem(activeGenerationKey(userId));
+          }
           setPhase('locked');
-          setJobError(friendlyKairoGenerationError(polled.error || m['site.generator.pending']()));
+          setJobError(
+            friendlyKairoGenerationError(
+              polled.error || m['site.generator.pending']()
+            )
+          );
           return;
         }
 
@@ -237,7 +244,11 @@ export function KairoBadTimesGeneratorPanel({
             setJobError('');
             return;
           }
-          setJobError(friendlyKairoGenerationError(polled.error || m['site.generator.failed']()));
+          setJobError(
+            friendlyKairoGenerationError(
+              polled.error || m['site.generator.failed']()
+            )
+          );
           void creditsQuery.refetch();
           return;
         }
@@ -246,14 +257,29 @@ export function KairoBadTimesGeneratorPanel({
         void reservedCredits;
       }
 
+      if (userId) {
+        localStorage.removeItem(activeGenerationKey(userId));
+      }
       setPhase('idle');
       setJobError(m['site.generator.failed']());
     },
     [creditGate, creditsQuery, userId]
   );
 
+  const abandonGeneration = useCallback(() => {
+    generationRunRef.current += 1;
+    if (userId) {
+      localStorage.removeItem(activeGenerationKey(userId));
+    }
+    setPhase('idle');
+    setJobError('');
+    setGenerationId(null);
+    setResultUrl(null);
+    setProgressPercent(0);
+  }, [userId]);
+
   useEffect(() => {
-    if (!userId || busy || resultUrl) return;
+    if (!userId || busy || resultUrl || phase === 'locked') return;
     const raw = localStorage.getItem(activeGenerationKey(userId));
     if (!raw) return;
     try {
@@ -274,7 +300,7 @@ export function KairoBadTimesGeneratorPanel({
     } catch {
       localStorage.removeItem(activeGenerationKey(userId));
     }
-  }, [busy, pollUntilComplete, resultUrl, userId]);
+  }, [busy, phase, pollUntilComplete, resultUrl, userId]);
 
   useEffect(() => {
     if (!busy || resultUrl) {
@@ -693,7 +719,7 @@ export function KairoBadTimesGeneratorPanel({
         </div>
       </div>
 
-      {busy || resultUrl ? (
+      {busy || resultUrl || phase === 'locked' ? (
         <div
           ref={resultPanelRef}
           id="generation-result"
@@ -706,14 +732,18 @@ export function KairoBadTimesGeneratorPanel({
                   ? resultKind === 'preview'
                     ? m['site.generator.preview_result']()
                     : m['site.common.your_video']()
-                  : m['site.generator.generating']()}
+                  : phase === 'locked'
+                    ? m['site.generator.failed']()
+                    : m['site.generator.generating']()}
               </p>
               <p className="mt-0.5 truncate text-xs text-white/40">
                 {resultUrl && !busy
                   ? m['site.kairo.result_label']()
                   : phase === 'uploading' || phase === 'starting'
                     ? m['site.generator.starting']()
-                    : m['site.kairo.generating_hint']()}
+                    : phase === 'locked'
+                      ? jobError || m['site.generator.failed']()
+                      : m['site.kairo.generating_hint']()}
               </p>
             </div>
             {resultUrl && !busy ? (
@@ -746,9 +776,20 @@ export function KairoBadTimesGeneratorPanel({
                 </a>
               </div>
             ) : (
-              <span className="shrink-0 text-xs font-medium text-white/45 tabular-nums">
-                {progressPercent}%
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                {busy ? (
+                  <span className="text-xs font-medium text-white/45 tabular-nums">
+                    {progressPercent}%
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={abandonGeneration}
+                  className="inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+                >
+                  {m['site.generator.close']()}
+                </button>
+              </div>
             )}
           </div>
 
