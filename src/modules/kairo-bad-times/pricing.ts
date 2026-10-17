@@ -4,14 +4,27 @@ import { HOTEL_LOBBY_OUTPUT_RATE_USD_PER_SECOND } from '@/modules/hotel-lobby/pr
 import type { KairoBadTimesSubject } from './constants';
 
 /**
- * Fal published rate for Kling V3 Standard Motion Control matches O3 V2V
- * ($0.126 per second of generated video).
+ * Person — 真实花费 & 对外花费（同一单价）。
+ * Fal Kling V3 Standard Motion Control = O3 V2V ($0.126 / s).
+ * Used for both provider COGS and customer credit estimates.
  */
 export const KAIRO_BAD_TIMES_OUTPUT_RATE_USD_PER_SECOND =
   HOTEL_LOBBY_OUTPUT_RATE_USD_PER_SECOND;
 
-/** Fal published rate for DreamActor v2 ($0.05 / s). */
+/**
+ * Pet — 真实花费（Fal COGS only）。
+ * DreamActor v2 published rate: $0.05 / s.
+ * Do not use this for credit estimates — see billing rate below.
+ */
 export const KAIRO_BAD_TIMES_PET_OUTPUT_RATE_USD_PER_SECOND = 0.05;
+
+/**
+ * Pet — 对外花费（客户积分计价）。
+ * Intentionally matched to Person ($0.126 / s) so same-length templates
+ * charge similar credits; real Fal outflow stays at $0.05 / s above.
+ */
+export const KAIRO_BAD_TIMES_PET_BILLING_RATE_USD_PER_SECOND =
+  KAIRO_BAD_TIMES_OUTPUT_RATE_USD_PER_SECOND;
 
 /** Motion Control with `character_orientation: video` accepts 3–30s templates. */
 export const KAIRO_BAD_TIMES_MIN_DURATION_SECONDS = 3;
@@ -31,23 +44,37 @@ export function assertKairoBadTimesDuration(duration: number) {
   }
 }
 
-function rateForSubject(subject?: KairoBadTimesSubject) {
+function providerRateForSubject(subject?: KairoBadTimesSubject) {
   return subject === 'pet'
     ? KAIRO_BAD_TIMES_PET_OUTPUT_RATE_USD_PER_SECOND
     : KAIRO_BAD_TIMES_OUTPUT_RATE_USD_PER_SECOND;
 }
 
+function billingRateForSubject(subject?: KairoBadTimesSubject) {
+  return subject === 'pet'
+    ? KAIRO_BAD_TIMES_PET_BILLING_RATE_USD_PER_SECOND
+    : KAIRO_BAD_TIMES_OUTPUT_RATE_USD_PER_SECOND;
+}
+
+/** 真实花费 USD — Fal COGS for ops / task metadata (not customer price). */
 export function estimateKairoBadTimesProviderCost(input: {
   duration: number;
   subject?: KairoBadTimesSubject;
 }) {
   assertKairoBadTimesDuration(input.duration);
-  return Number((input.duration * rateForSubject(input.subject)).toFixed(6));
+  return Number(
+    (input.duration * providerRateForSubject(input.subject)).toFixed(6)
+  );
 }
 
+/** 对外花费 → 积分 — customer-facing credit estimate (may markup Pet). */
 export function estimateKairoBadTimesCredits(input: {
   duration: number;
   subject?: KairoBadTimesSubject;
 }) {
-  return calculateGenjutsuCredits(estimateKairoBadTimesProviderCost(input));
+  assertKairoBadTimesDuration(input.duration);
+  const billedUsd = Number(
+    (input.duration * billingRateForSubject(input.subject)).toFixed(6)
+  );
+  return calculateGenjutsuCredits(billedUsd);
 }

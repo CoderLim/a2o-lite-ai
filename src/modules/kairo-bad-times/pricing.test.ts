@@ -26,15 +26,19 @@ test('4s paid preview credits', () => {
   assert.equal(estimateKairoBadTimesCredits({ duration: 4 }), 86);
 });
 
-test('pet DreamActor ~29s template credits ($0.05/s)', () => {
+test('pet DreamActor keeps Fal COGS at $0.05/s but bills like Person', () => {
   assert.equal(
     estimateKairoBadTimesProviderCost({ duration: 29, subject: 'pet' }),
     1.45
   );
-  // ceil(1.45 * 100 * 1.7) = 247
+  // Billing rate matches Person $0.126/s → same credits as human 29s
   assert.equal(
     estimateKairoBadTimesCredits({ duration: 29, subject: 'pet' }),
-    247
+    622
+  );
+  assert.equal(
+    estimateKairoBadTimesCredits({ duration: 4, subject: 'pet' }),
+    86
   );
 });
 
