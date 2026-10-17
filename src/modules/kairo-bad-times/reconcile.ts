@@ -7,7 +7,11 @@ import {
   parseKairoBadTimesTask,
   refundKairoBadTimesGeneration,
 } from './billing';
-import { getKairoBadTimesProviderStatus } from './service';
+import {
+  friendlyKairoBadTimesProviderError,
+  getKairoBadTimesProviderStatus,
+  isKairoBadTimesRefundableProviderFailure,
+} from './service';
 import { persistKairoBadTimesResultToR2 } from './storage';
 
 export type KairoBadTimesReconcileResult = {
@@ -59,13 +63,43 @@ export async function reconcileKairoBadTimesGeneration(task: {
   }
 
   if (task.status === 'submission_unknown') {
+    const parkedError =
+      parsed.result?.error ||
+      'Submission result is uncertain. Please contact support before retrying.';
+
+    // Later-classified safe failures (e.g. Fal content_policy on result fetch)
+    // used to park without refund — recover credits on the next status poll.
+    if (isKairoBadTimesRefundableProviderFailure(parkedError)) {
+      const friendly = friendlyKairoBadTimesProviderError(parkedError);
+      const refunded = await refundKairoBadTimesGeneration({
+        generationId,
+        userId,
+        providerStatus: 'submission_unknown',
+        error: friendly,
+      });
+      const refundedParsed = refunded
+        ? parseKairoBadTimesTask(refunded)
+        : { result: null };
+      if (refunded?.status === 'refunded') {
+        console.warn(
+          '[ops] kairo-bad-times recovered refund from submission_unknown',
+          { generationId, userId, reservedCredits }
+        );
+        return {
+          status: 'failed',
+          providerStatus: 'failed',
+          videoUrl: null,
+          error: refundedParsed.result?.error || friendly,
+          refundedCredits: reservedCredits,
+        };
+      }
+    }
+
     return {
       status: 'failed',
       providerStatus: 'submission_unknown',
       videoUrl: null,
-      error:
-        parsed.result?.error ||
-        'Submission result is uncertain. Please contact support before retrying.',
+      error: parkedError,
     };
   }
 

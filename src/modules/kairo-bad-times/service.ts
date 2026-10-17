@@ -17,14 +17,32 @@ import {
 } from './constants';
 import { assertKairoBadTimesDuration } from './pricing';
 
-/** Provider rejected the inputs — safe to refund (job never rendered). */
-export function isKairoBadTimesInputRejection(error: string): boolean {
-  return /input_value_error|input was rejected|no complete upper body|upper body detected/i.test(
+/**
+ * Provider rejected the job before a usable render — safe to auto-refund.
+ * Includes input validation and content-policy blocks (Fal may surface these
+ * as RESULT_FETCH_PERMANENT_ERROR JSON rather than a normal FAILED status).
+ */
+export function isKairoBadTimesRefundableProviderFailure(
+  error: string
+): boolean {
+  return /input_value_error|input was rejected|no complete upper body|upper body detected|content_policy_violation|model_moderated|flagged by a content checker/i.test(
     error
   );
 }
 
+/** @deprecated Prefer isKairoBadTimesRefundableProviderFailure */
+export function isKairoBadTimesInputRejection(error: string): boolean {
+  return isKairoBadTimesRefundableProviderFailure(error);
+}
+
 export function friendlyKairoBadTimesProviderError(error: string): string {
+  if (
+    /content_policy_violation|model_moderated|flagged by a content checker/i.test(
+      error
+    )
+  ) {
+    return 'This photo was blocked by the content checker. Try another photo, or switch to Pet if the subject is an animal.';
+  }
   if (/no complete upper body|upper body detected/i.test(error)) {
     return 'The motion template could not be used. Please try again, or switch version.';
   }
@@ -174,7 +192,7 @@ export async function getKairoBadTimesProviderStatus(
 
     if (
       isFalPermanentQueryFailure(result.taskInfo) &&
-      !isKairoBadTimesInputRejection(error)
+      !isKairoBadTimesRefundableProviderFailure(error)
     ) {
       return {
         status: 'unresolved' as const,

@@ -454,7 +454,13 @@ export async function refundKairoBadTimesGeneration(params: {
           eq(aiTask.id, params.generationId),
           eq(aiTask.userId, params.userId),
           eq(aiTask.scene, KAIRO_BAD_TIMES_SCENE),
-          inArray(aiTask.status, ['reserved', 'submitting', 'submitted'])
+          inArray(aiTask.status, [
+            'reserved',
+            'submitting',
+            'submitted',
+            // Recover parked holds when later classified as refundable (e.g. content policy).
+            'submission_unknown',
+          ])
         )
       );
 
