@@ -1754,7 +1754,7 @@
   "site.kairo.example_caption": "이 생성기로 만든 Bad Times AI 실제 결과 — 사진 1장, 고정 모션 템플릿.",
   "site.kairo.preview_spec": "4초",
   "site.kairo.preview_help": "유료 미리보기: 템플릿 처음 4초로 생성합니다. 최종 크레딧은 서버에서 계산됩니다.",
-  "site.templates.a2o_lite_ai": "A2O LITE AI video generator",
+  "site.templates.a2o_lite_ai": "A2O LITE AI",
   "site.a2o.page_title": "A2O LITE AI Video Generator: Make Your Own NEON Dance",
   "site.a2o.page_description": "Make an A2O LITE NEON-style AI dance video from your photos. Upload two photos you have permission to use, run the fixed duo template, get a clip in minutes.",
   "site.a2o.hero_badge": "A2O LITE · NEON 댄스 · 사진 2장",
