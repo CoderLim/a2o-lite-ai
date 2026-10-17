@@ -6,6 +6,7 @@ import {
   getKairoBadTimesTaskById,
   parseKairoBadTimesTask,
   refundKairoBadTimesGeneration,
+  reopenKairoBadTimesSubmissionUnknown,
 } from './billing';
 import {
   friendlyKairoBadTimesProviderError,
@@ -13,6 +14,10 @@ import {
   isKairoBadTimesRefundableProviderFailure,
 } from './service';
 import { persistKairoBadTimesResultToR2 } from './storage';
+
+function isRecoverableQueryPathError(error: string) {
+  return /request failed with status:\s*405/i.test(error);
+}
 
 export type KairoBadTimesReconcileResult = {
   status: 'completed' | 'failed' | 'processing';
@@ -92,6 +97,21 @@ export async function reconcileKairoBadTimesGeneration(task: {
           error: refundedParsed.result?.error || friendly,
           refundedCredits: reservedCredits,
         };
+      }
+    }
+
+    // Wrong Fal query path (405) falsely parked a still-running job — reopen.
+    if (isRecoverableQueryPathError(parkedError) && task.taskId) {
+      const reopened = await reopenKairoBadTimesSubmissionUnknown({
+        generationId,
+        userId,
+      });
+      if (reopened?.status === 'submitted' && reopened.taskId) {
+        console.warn(
+          '[ops] kairo-bad-times reopened submission_unknown after 405 query path',
+          { generationId, userId }
+        );
+        return reconcileKairoBadTimesGeneration(reopened);
       }
     }
 

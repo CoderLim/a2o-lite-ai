@@ -224,16 +224,30 @@ export function KairoBadTimesGeneratorPanel({
         }
 
         if (polled.providerStatus === 'submission_unknown') {
-          if (userId) {
-            localStorage.removeItem(activeGenerationKey(userId));
+          // Server may reopen false parks (e.g. DreamActor 405 query path) —
+          // probe once more before locking the UI.
+          await sleep(1_500);
+          if (generationRunRef.current !== runId) return;
+          try {
+            polled = await apiGet<GenerationPoll>(
+              `/api/kairo-bad-times/status?generationId=${encodeURIComponent(activeGenerationId)}`
+            );
+          } catch {
+            delayMs = Math.min(8_000, Math.ceil(delayMs * 1.25));
+            continue;
           }
-          setPhase('locked');
-          setJobError(
-            friendlyKairoGenerationError(
-              polled.error || m['site.generator.pending']()
-            )
-          );
-          return;
+          if (polled.providerStatus === 'submission_unknown') {
+            if (userId) {
+              localStorage.removeItem(activeGenerationKey(userId));
+            }
+            setPhase('locked');
+            setJobError(
+              friendlyKairoGenerationError(
+                polled.error || m['site.generator.pending']()
+              )
+            );
+            return;
+          }
         }
 
         if (polled.status === 'completed' && polled.videoUrl) {
@@ -296,6 +310,51 @@ export function KairoBadTimesGeneratorPanel({
     setResultUrl(null);
     setProgressPercent(0);
   }, [userId]);
+
+  // Locked after a false park (e.g. DreamActor 405): keep probing so reopen can resume.
+  useEffect(() => {
+    if (phase !== 'locked' || !generationId || !userId) return;
+    let cancelled = false;
+    const probe = async () => {
+      try {
+        const polled = await apiGet<GenerationPoll>(
+          `/api/kairo-bad-times/status?generationId=${encodeURIComponent(generationId)}`
+        );
+        if (cancelled) return;
+        if (polled.providerStatus === 'submission_unknown') return;
+        if (polled.status === 'completed' && polled.videoUrl) {
+          localStorage.removeItem(activeGenerationKey(userId));
+          setResultUrl(polled.videoUrl);
+          setJobError('');
+          setPhase('idle');
+          void creditsQuery.refetch();
+          return;
+        }
+        if (polled.status === 'failed') {
+          localStorage.removeItem(activeGenerationKey(userId));
+          setPhase('idle');
+          setJobError(
+            friendlyKairoGenerationError(
+              polled.error || m['site.generator.failed']()
+            )
+          );
+          void creditsQuery.refetch();
+          return;
+        }
+        setJobError('');
+        setPhase('generating');
+        void pollUntilComplete(generationId, polled.reservedCredits || 0);
+      } catch {
+        // keep probing
+      }
+    };
+    void probe();
+    const id = window.setInterval(() => void probe(), 4_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [phase, generationId, userId, pollUntilComplete, creditsQuery]);
 
   useEffect(() => {
     if (!userId || busy || resultUrl || phase === 'locked') return;

@@ -358,6 +358,29 @@ export async function markKairoBadTimesSubmissionUnknown(params: {
     );
 }
 
+/** Re-open a false park (e.g. DreamActor status 405 from wrong query path). */
+export async function reopenKairoBadTimesSubmissionUnknown(params: {
+  generationId: string;
+  userId: string;
+}) {
+  const result = await db()
+    .update(aiTask)
+    .set({
+      status: 'submitted',
+      taskResult: null,
+    })
+    .where(
+      and(
+        eq(aiTask.id, params.generationId),
+        eq(aiTask.userId, params.userId),
+        eq(aiTask.scene, KAIRO_BAD_TIMES_SCENE),
+        eq(aiTask.status, 'submission_unknown')
+      )
+    );
+  if (rowsAffectedFromUpdate(result) <= 0) return null;
+  return getKairoBadTimesTaskById(params);
+}
+
 export async function applyKairoBadTimesProviderQueryError(params: {
   generationId: string;
   userId: string;

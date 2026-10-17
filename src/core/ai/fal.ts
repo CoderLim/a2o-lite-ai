@@ -68,17 +68,13 @@ export const FAL_QUERY_PERMANENT_ERROR_THRESHOLD = 3;
 
 /**
  * Fal queue status/result URLs use the app id (`owner/name`) only.
- * Nested submit paths (e.g. `.../video-to-video/edit`, `minimax/h3/...`)
- * return HTTP 405 on GET when the full path is used — verified against
- * `fal-ai/kling-video/o3/standard/video-to-video/edit`.
+ * Nested submit paths (e.g. `.../video-to-video/edit`, `minimax/h3/...`,
+ * `fal-ai/bytedance/dreamactor/v2`) return HTTP 405 on GET when the full
+ * path is used — verified against Kling O3 edit and DreamActor v2.
  */
 export function falQueueQueryModel(model?: string): string {
   if (!model) return '';
   const normalized = model.replace(/^\/+/, '');
-  // DreamActor queue status/result use the full endpoint path (fal docs).
-  if (normalized.startsWith('fal-ai/bytedance/dreamactor/')) {
-    return normalized;
-  }
   const parts = normalized.split('/').filter(Boolean);
   if (parts.length <= 2) {
     return parts.join('/');

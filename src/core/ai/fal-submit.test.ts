@@ -75,6 +75,6 @@ test('queue status/result uses Fal app id, not nested submit path', () => {
   assert.equal(falQueueQueryModel('fal-ai/kling-video'), 'fal-ai/kling-video');
   assert.equal(
     falQueueQueryModel('fal-ai/bytedance/dreamactor/v2'),
-    'fal-ai/bytedance/dreamactor/v2'
+    'fal-ai/bytedance'
   );
 });
