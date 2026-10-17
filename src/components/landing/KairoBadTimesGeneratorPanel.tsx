@@ -660,17 +660,6 @@ export function KairoBadTimesGeneratorPanel({
               {jobError}
             </div>
           ) : null}
-          {templateMetaLoading && !templateMetaError ? (
-            <div
-              className="mb-3 flex items-center justify-end gap-2 text-xs text-white/50"
-              role="status"
-              aria-live="polite"
-            >
-              <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
-              <span>{m['site.kairo.pricing_loading']()}</span>
-            </div>
-          ) : null}
-
           <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
             <div className="flex items-center gap-2">
               <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
