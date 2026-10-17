@@ -59,7 +59,8 @@ export async function prepareKairoReferenceImage(file: File): Promise<File> {
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext('2d');
-    if (!context) throw new Error('Unable to process this photo in your browser');
+    if (!context)
+      throw new Error('Unable to process this photo in your browser');
 
     // Motion Control takes photos; flatten transparency against white.
     context.fillStyle = '#fff';
@@ -88,7 +89,9 @@ export async function prepareKairoReferenceImage(file: File): Promise<File> {
       canvas.width = 0;
       canvas.height = 0;
     }
-    throw new Error('Photo could not be compressed. Please choose a smaller photo.');
+    throw new Error(
+      'Photo could not be compressed. Please choose a smaller photo.'
+    );
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -98,6 +101,12 @@ export async function prepareKairoReferenceImage(file: File): Promise<File> {
 export function friendlyKairoGenerationError(message: string): string {
   if (/image_too_large|image dimensions are too large/i.test(message)) {
     return 'The reference photo is too large for the video model. Please upload the photo again. If credits are missing, contact support.';
+  }
+  if (/no complete upper body|upper body detected/i.test(message)) {
+    return 'The motion template could not be used. Please try again, or switch version.';
+  }
+  if (/input_value_error|input was rejected/i.test(message)) {
+    return 'The photo or template was rejected. Try another photo with a clear subject.';
   }
   if (
     message.length > 240 ||

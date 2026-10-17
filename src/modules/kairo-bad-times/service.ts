@@ -16,6 +16,23 @@ import {
 } from './constants';
 import { assertKairoBadTimesDuration } from './pricing';
 
+/** Provider rejected the inputs — safe to refund (job never rendered). */
+export function isKairoBadTimesInputRejection(error: string): boolean {
+  return /input_value_error|input was rejected|no complete upper body|upper body detected/i.test(
+    error
+  );
+}
+
+export function friendlyKairoBadTimesProviderError(error: string): string {
+  if (/no complete upper body|upper body detected/i.test(error)) {
+    return 'The motion template could not be used. Please try again, or switch version.';
+  }
+  if (/input_value_error|input was rejected/i.test(error)) {
+    return 'The photo or template was rejected. Try another photo with a clear subject.';
+  }
+  return error;
+}
+
 export class KairoBadTimesPreflightError extends Error {
   constructor(message: string) {
     super(message);
@@ -144,7 +161,10 @@ export async function getKairoBadTimesProviderStatus(
       (typeof payload?.message === 'string' && payload.message) ||
       'Video generation failed';
 
-    if (isFalPermanentQueryFailure(result.taskInfo)) {
+    if (
+      isFalPermanentQueryFailure(result.taskInfo) &&
+      !isKairoBadTimesInputRejection(error)
+    ) {
       return {
         status: 'unresolved' as const,
         providerStatus: result.taskInfo?.status || 'QUERY_PERMANENT_ERROR',
@@ -157,7 +177,7 @@ export async function getKairoBadTimesProviderStatus(
       status: 'failed' as const,
       providerStatus: result.taskStatus,
       videoUrl: null,
-      error,
+      error: friendlyKairoBadTimesProviderError(error),
     };
   }
 

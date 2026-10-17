@@ -24,12 +24,23 @@ test('Kairo photo sizes down to 2048 while preserving aspect ratio', () => {
 
 test('Kairo friendly errors do not expose provider URLs or JSON', () => {
   assert.match(
-    friendlyKairoGenerationError('{"type":"image_too_large","details":"Image dimensions are too large"}'),
+    friendlyKairoGenerationError(
+      '{"type":"image_too_large","details":"Image dimensions are too large"}'
+    ),
     /reference photo is too large/i
+  );
+  assert.match(
+    friendlyKairoGenerationError(
+      '{"detail":[{"msg":"The input was rejected, No complete upper body detected in the video","type":"input_value_error"}]}'
+    ),
+    /motion template could not be used/i
   );
   assert.doesNotMatch(
     friendlyKairoGenerationError('https://example.com/?X-Amz-Signature=secret'),
     /Signature/
   );
-  assert.equal(friendlyKairoGenerationError('Insufficient credits'), 'Insufficient credits');
+  assert.equal(
+    friendlyKairoGenerationError('Insufficient credits'),
+    'Insufficient credits'
+  );
 });
