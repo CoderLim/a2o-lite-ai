@@ -71,12 +71,16 @@ export function SiteUserMenu({
             </DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link href="/settings" />}>
+          {/*
+            Use router.push — Base UI Menu.Item + TanStack Link (render prop)
+            can update the address bar without swapping the page outlet.
+          */}
+          <DropdownMenuItem onClick={() => router.push('/settings')}>
             <SettingsIcon className="size-4" />
             {m['common.nav.settings']()}
           </DropdownMenuItem>
           {isAdmin && (
-            <DropdownMenuItem render={<Link href="/admin" />}>
+            <DropdownMenuItem onClick={() => router.push('/admin')}>
               <ShieldIcon className="size-4" />
               {m['common.systems.admin']()}
             </DropdownMenuItem>

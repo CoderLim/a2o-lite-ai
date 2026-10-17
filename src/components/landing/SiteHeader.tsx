@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Flame } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
-import { Link } from '@/core/i18n/navigation';
+import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
@@ -129,6 +129,7 @@ function AuthSlot({ className }: { className?: string }) {
 
 export function SiteHeader() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <section className="text-foreground relative z-[260] py-3">
@@ -148,7 +149,7 @@ export function SiteHeader() {
                   {TRENDING_LINKS.map((item) => (
                     <DropdownMenuItem
                       key={item.href}
-                      render={<Link href={item.href} />}
+                      onClick={() => router.push(item.href)}
                     >
                       {item.label}
                     </DropdownMenuItem>
