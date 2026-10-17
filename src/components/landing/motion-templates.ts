@@ -136,6 +136,17 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     aspect: 'landscape',
   },
   {
+    id: 'unforgettable-ai-car',
+    titleKey: 'site.templates.unforgettable_ai_car',
+    poster: '/videos/unforgettable-ai-car-tpl-poster.jpg',
+    sourceVideo: '/videos/unforgettable-ai-car-tpl.mp4',
+    prompt:
+      'Replace the card-holding person in @Video1 with the adult in @Image1 — face, hair, build, outfit, and accessories. Keep the car, setting, camera path, and reveal timing. Show exactly two cards: 2 and 4, reading 24 left to right — do not mirror. Same identity before and after the lens clears. No duplicates, no new scenes.',
+    mode: 'objects-swap',
+    resolution: DEFAULT_OBJECTS_RESOLUTION,
+    aspect: 'landscape',
+  },
+  {
     id: 'cat-to-dog',
     titleKey: 'site.templates.cat_to_dog',
     poster: '/videos/cat-to-dog-tpl-poster.jpg',
