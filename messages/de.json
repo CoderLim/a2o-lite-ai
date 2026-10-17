@@ -838,6 +838,7 @@
   "site.kairo.image_size": "Das Foto darf höchstens 12 MB groß sein",
   "site.kairo.need_photo": "Lade ein Foto zum Generieren hoch",
   "site.kairo.template_unavailable": "Die Vorlage wird noch geladen. Bitte versuche es gleich erneut.",
+  "site.kairo.pricing_loading": "Vorlagenpreis wird geprüft…",
   "site.kairo.generating_hint": "Dein Clip wird generiert… bei einer langen Vorlage kann es einige Minuten dauern.",
   "site.kairo.result_empty": "Dein generiertes Video erscheint hier.",
   "site.kairo.what_title": "Was ist der Bad-Times-Trend?",

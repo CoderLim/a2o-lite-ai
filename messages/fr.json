@@ -838,6 +838,7 @@
   "site.kairo.image_size": "La photo doit faire 12 Mo maximum",
   "site.kairo.need_photo": "Importez une photo pour générer",
   "site.kairo.template_unavailable": "Le modèle est encore en cours de chargement. Réessayez dans un instant.",
+  "site.kairo.pricing_loading": "Vérification du prix du modèle…",
   "site.kairo.generating_hint": "Génération en cours… un modèle long peut prendre plusieurs minutes.",
   "site.kairo.result_empty": "Votre vidéo générée apparaîtra ici.",
   "site.kairo.what_title": "Qu’est-ce que la tendance Bad Times ?",

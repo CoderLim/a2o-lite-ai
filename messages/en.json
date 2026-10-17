@@ -1662,6 +1662,7 @@
   "site.kairo.image_size": "Photo must be 12 MB or smaller",
   "site.kairo.need_photo": "Upload one photo to generate",
   "site.kairo.template_unavailable": "The template is still loading. Try again in a moment.",
+  "site.kairo.pricing_loading": "Checking template price…",
   "site.kairo.generating_hint": "Generating your clip… this can take a few minutes for a long template.",
   "site.kairo.result_empty": "Your generated video will appear here.",
   "site.kairo.what_title": "What is the Bad Times trend",

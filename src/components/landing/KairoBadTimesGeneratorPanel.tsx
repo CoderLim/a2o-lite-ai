@@ -5,7 +5,7 @@ import {
   useState,
   type ChangeEvent,
 } from 'react';
-import { CircleHelp, Download } from 'lucide-react';
+import { CircleHelp, Download, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
@@ -121,6 +121,7 @@ export function KairoBadTimesGeneratorPanel({
   const [subject, setSubject] = useState<KairoBadTimesSubject>('human');
   const [photo, setPhoto] = useState<MediaItem | null>(null);
   const [templateMeta, setTemplateMeta] = useState<TemplateMeta | null>(null);
+  const [templateMetaLoading, setTemplateMetaLoading] = useState(true);
   const [templateMetaError, setTemplateMetaError] = useState('');
   const [phase, setPhase] = useState<
     'idle' | 'uploading' | 'starting' | 'generating' | 'locked'
@@ -146,6 +147,7 @@ export function KairoBadTimesGeneratorPanel({
     let cancelled = false;
     const paths = getKairoBadTimesPublicPreviewPaths(subject);
     // Swap preview immediately; keep available so we don't flash a false "loading" error.
+    setTemplateMetaLoading(true);
     setTemplateMeta((prev) => ({
       subject,
       durationSeconds: null,
@@ -183,6 +185,9 @@ export function KairoBadTimesGeneratorPanel({
           posterUrl: paths.posterUrl,
         });
         setTemplateMetaError(m['site.kairo.template_unavailable']());
+      })
+      .finally(() => {
+        if (!cancelled) setTemplateMetaLoading(false);
       });
     return () => {
       cancelled = true;
@@ -655,6 +660,16 @@ export function KairoBadTimesGeneratorPanel({
               {jobError}
             </div>
           ) : null}
+          {templateMetaLoading && !templateMetaError ? (
+            <div
+              className="mb-3 flex items-center justify-end gap-2 text-xs text-white/50"
+              role="status"
+              aria-live="polite"
+            >
+              <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
+              <span>{m['site.kairo.pricing_loading']()}</span>
+            </div>
+          ) : null}
 
           <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
             <div className="flex items-center gap-2">
@@ -667,7 +682,9 @@ export function KairoBadTimesGeneratorPanel({
                     ? m['genjutsu.estimate.credits']({
                         count: previewEstimatedCredits.toLocaleString(),
                       })
-                    : '—'}
+                    : templateMetaLoading
+                      ? '…'
+                      : '—'}
                 </span>
               </div>
               <button
@@ -675,13 +692,20 @@ export function KairoBadTimesGeneratorPanel({
                 disabled={!canGenerate}
                 onClick={() => void startGeneration('preview')}
                 className={cn(
-                  'inline-flex h-8 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
+                  'inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition-all duration-200 active:scale-95',
                   canGenerate
                     ? 'cursor-pointer border-[rgba(204,144,92,0.65)] text-[rgb(237,234,222)] hover:bg-white/10'
                     : 'cursor-not-allowed border-white/10 text-[rgb(237,234,222)]/38'
                 )}
-                title={m['site.kairo.preview_help']()}
+                title={
+                  templateMetaLoading
+                    ? m['site.kairo.pricing_loading']()
+                    : m['site.kairo.preview_help']()
+                }
               >
+                {templateMetaLoading ? (
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
+                ) : null}
                 {m['site.generator.preview']()}
               </button>
             </div>
@@ -699,7 +723,9 @@ export function KairoBadTimesGeneratorPanel({
                     ? m['genjutsu.estimate.credits']({
                         count: estimatedCredits.toLocaleString(),
                       })
-                    : '—'}
+                    : templateMetaLoading
+                      ? '…'
+                      : '—'}
                   <TooltipProvider delay={200}>
                     <Tooltip>
                       <TooltipTrigger
@@ -725,15 +751,25 @@ export function KairoBadTimesGeneratorPanel({
                 disabled={!canGenerate}
                 onClick={() => void startGeneration('full')}
                 className={cn(
-                  'relative inline-flex h-8 items-center justify-center rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
+                  'relative inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[rgb(204,144,92)] px-3.5 text-sm font-semibold tracking-wide shadow-none transition-all duration-200 active:scale-95',
                   canGenerate
                     ? 'cursor-pointer text-[rgb(247,246,243)] hover:brightness-105'
                     : 'cursor-not-allowed bg-[rgba(126,128,132,0.28)] text-[rgb(237,234,222)]/38'
                 )}
               >
-                {busy
-                  ? m['site.common.generating']()
-                  : m['site.generator.generate']()}
+                {busy ? (
+                  m['site.common.generating']()
+                ) : templateMetaLoading ? (
+                  <>
+                    <LoaderCircle
+                      className="size-3.5 animate-spin"
+                      aria-hidden
+                    />
+                    {m['site.generator.generate']()}
+                  </>
+                ) : (
+                  m['site.generator.generate']()
+                )}
               </button>
             </div>
           </div>

@@ -838,6 +838,7 @@
   "site.kairo.image_size": "La foto debe tener 12 MB como máximo",
   "site.kairo.need_photo": "Sube una foto para generar",
   "site.kairo.template_unavailable": "La plantilla todavía está cargando. Inténtalo de nuevo en un momento.",
+  "site.kairo.pricing_loading": "Comprobando el precio de la plantilla…",
   "site.kairo.generating_hint": "Generando tu clip… una plantilla larga puede tardar varios minutos.",
   "site.kairo.result_empty": "Tu vídeo generado aparecerá aquí.",
   "site.kairo.what_title": "¿Qué es la tendencia Bad Times?",

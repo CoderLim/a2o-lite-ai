@@ -1662,6 +1662,7 @@
   "site.kairo.image_size": "사진은 12MB 이하여야 합니다",
   "site.kairo.need_photo": "생성하려면 사진을 한 장 업로드하세요",
   "site.kairo.template_unavailable": "템플릿을 불러오는 중입니다. 잠시 후 다시 시도하세요.",
+  "site.kairo.pricing_loading": "템플릿 가격 확인 중…",
   "site.kairo.generating_hint": "생성 중… 긴 템플릿은 몇 분 걸릴 수 있습니다.",
   "site.kairo.result_empty": "생성된 영상이 여기에 표시됩니다.",
   "site.kairo.what_title": "Bad Times 트렌드란",
