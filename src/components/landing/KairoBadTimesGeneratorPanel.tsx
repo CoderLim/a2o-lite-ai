@@ -606,7 +606,7 @@ export function KairoBadTimesGeneratorPanel({
               onChange={onPickPhoto}
             />
             {photo ? (
-              <div className="relative mx-auto aspect-[3/4] w-full max-w-[min(100%,240px)] overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <div className="relative mx-auto aspect-[9/16] w-full max-w-[min(100%,240px)] overflow-hidden rounded-2xl border border-white/10 bg-black">
                 <img
                   src={photo.url}
                   alt={m['site.kairo.photo_label']()}
@@ -629,7 +629,7 @@ export function KairoBadTimesGeneratorPanel({
                 type="button"
                 disabled={busy}
                 onClick={() => photoInputRef.current?.click()}
-                className="mx-auto flex aspect-[3/4] w-full max-w-[min(100%,240px)] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mx-auto flex aspect-[9/16] w-full max-w-[min(100%,240px)] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span className="flex size-11 items-center justify-center rounded-full bg-white/8 text-white/70">
                   <ImageModeIcon className="size-5" />
