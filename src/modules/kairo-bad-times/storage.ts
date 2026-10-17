@@ -19,6 +19,7 @@ import { KAIRO_BAD_TIMES_MAX_IMAGE_BYTES } from './pricing';
 import {
   normalizeKairoBadTimesDuration,
   probeKairoBadTimesDurationSecondsRaw,
+  probeKairoBadTimesLocalFileDurationSecondsRaw,
 } from './video-metadata';
 
 const UPLOAD_EXPIRES_SECONDS = 10 * 60;
@@ -503,11 +504,34 @@ export async function getKairoBadTimesTemplateVideoUrl(
   return createKairoBadTimesR2ReadUrl(key);
 }
 
+function resolveKairoBadTimesLocalTemplatePath(subject: KairoBadTimesSubject) {
+  return subject === 'pet'
+    ? KAIRO_BAD_TIMES_LOCAL_PET_TEMPLATE_PATH
+    : KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH;
+}
+
 export async function getKairoBadTimesTemplateDurationSecondsRaw(
   subject: KairoBadTimesSubject = 'human'
 ) {
-  const url = await getKairoBadTimesTemplateVideoUrl(subject);
-  return probeKairoBadTimesDurationSecondsRaw(url);
+  try {
+    const url = await getKairoBadTimesTemplateVideoUrl(subject);
+    return await probeKairoBadTimesDurationSecondsRaw(url);
+  } catch (error) {
+    // R2 range reads can flake (ECONNRESET); Node can still price from the seed file.
+    if (isCloudflareWorkersRuntime()) throw error;
+    const { existsSync } = await import('node:fs');
+    const path = await import('node:path');
+    const localPath = path.join(
+      process.cwd(),
+      resolveKairoBadTimesLocalTemplatePath(subject)
+    );
+    if (!existsSync(localPath)) throw error;
+    console.warn(
+      'kairo-bad-times: R2 duration probe failed, falling back to local file:',
+      error instanceof Error ? error.message : error
+    );
+    return probeKairoBadTimesLocalFileDurationSecondsRaw(localPath);
+  }
 }
 
 export async function getKairoBadTimesTemplateDurationSeconds(

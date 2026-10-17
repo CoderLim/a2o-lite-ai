@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useSession } from '@/core/auth/client';
 import {
   getKairoBadTimesPublicPreviewPaths,
+  KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
   type KairoBadTimesSubject,
 } from '@/modules/kairo-bad-times/constants';
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
@@ -144,15 +145,16 @@ export function KairoBadTimesGeneratorPanel({
   useEffect(() => {
     let cancelled = false;
     const paths = getKairoBadTimesPublicPreviewPaths(subject);
-    // Swap preview immediately — don't keep the previous subject's URLs while meta loads.
+    // Swap preview immediately; keep available so we don't flash a false "loading" error.
     setTemplateMeta((prev) => ({
       subject,
       durationSeconds: null,
       billedDurationSeconds: null,
       estimatedCredits: null,
-      previewDurationSeconds: prev?.previewDurationSeconds ?? null,
+      previewDurationSeconds:
+        prev?.previewDurationSeconds ?? KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
       previewEstimatedCredits: null,
-      templateAvailable: false,
+      templateAvailable: true,
       previewUrl: paths.previewUrl,
       posterUrl: paths.posterUrl,
     }));
@@ -340,8 +342,14 @@ export function KairoBadTimesGeneratorPanel({
     });
   }, [busy, resultUrl, generationId]);
 
+  // Wait for meta credits so we don't flash the red "still loading" banner
+  // while still allowing Generate only after a successful probe.
   const canGenerate = Boolean(
-    photo && templateAvailable && !busy && !sessionPending
+    photo &&
+    templateAvailable &&
+    estimatedCredits != null &&
+    !busy &&
+    !sessionPending
   );
 
   const setPhotoFile = (file: File | null) => {
@@ -555,7 +563,7 @@ export function KairoBadTimesGeneratorPanel({
           </div>
         </div>
 
-        <div className="grid gap-0 lg:grid-cols-2 lg:items-stretch">
+        <div className="grid gap-0 lg:grid-cols-2 lg:items-start">
           <div className="flex flex-col border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0">
             <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
               {m['site.kairo.template_label']()}
@@ -581,8 +589,8 @@ export function KairoBadTimesGeneratorPanel({
             </p>
           </div>
 
-          <div className="flex min-h-0 flex-col p-4 sm:p-5 lg:h-full">
-            <p className="mb-2 shrink-0 text-xs font-medium tracking-wide text-white/45 uppercase">
+          <div className="flex flex-col p-4 sm:p-5">
+            <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
               {m['site.kairo.photo_label']()}
             </p>
             <input
@@ -593,7 +601,7 @@ export function KairoBadTimesGeneratorPanel({
               onChange={onPickPhoto}
             />
             {photo ? (
-              <div className="relative aspect-[3/4] min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black lg:aspect-auto">
+              <div className="relative mx-auto aspect-[3/4] w-full max-w-[min(100%,240px)] overflow-hidden rounded-2xl border border-white/10 bg-black">
                 <img
                   src={photo.url}
                   alt={m['site.kairo.photo_label']()}
@@ -616,7 +624,7 @@ export function KairoBadTimesGeneratorPanel({
                 type="button"
                 disabled={busy}
                 onClick={() => photoInputRef.current?.click()}
-                className="flex aspect-[3/4] w-full flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50 lg:aspect-auto lg:min-h-[280px]"
+                className="mx-auto flex aspect-[3/4] w-full max-w-[min(100%,240px)] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span className="flex size-11 items-center justify-center rounded-full bg-white/8 text-white/70">
                   <ImageModeIcon className="size-5" />
