@@ -143,6 +143,19 @@ export function KairoBadTimesGeneratorPanel({
 
   useEffect(() => {
     let cancelled = false;
+    const paths = getKairoBadTimesPublicPreviewPaths(subject);
+    // Swap preview immediately — don't keep the previous subject's URLs while meta loads.
+    setTemplateMeta((prev) => ({
+      subject,
+      durationSeconds: null,
+      billedDurationSeconds: null,
+      estimatedCredits: null,
+      previewDurationSeconds: prev?.previewDurationSeconds ?? null,
+      previewEstimatedCredits: null,
+      templateAvailable: false,
+      previewUrl: paths.previewUrl,
+      posterUrl: paths.posterUrl,
+    }));
     setTemplateMetaError('');
     apiGet<TemplateMeta>(
       `/api/kairo-bad-times/template-meta?subject=${encodeURIComponent(subject)}`
@@ -156,7 +169,6 @@ export function KairoBadTimesGeneratorPanel({
       })
       .catch(() => {
         if (cancelled) return;
-        const paths = getKairoBadTimesPublicPreviewPaths(subject);
         setTemplateMeta({
           subject,
           durationSeconds: null,
@@ -485,8 +497,15 @@ export function KairoBadTimesGeneratorPanel({
     }
   };
 
-  const previewUrl = templateMeta?.previewUrl || fallbackPaths.previewUrl;
-  const posterUrl = templateMeta?.posterUrl || fallbackPaths.posterUrl;
+  // Ignore stale meta from the other subject while a fetch is in flight.
+  const previewUrl =
+    templateMeta?.subject === subject && templateMeta.previewUrl
+      ? templateMeta.previewUrl
+      : fallbackPaths.previewUrl;
+  const posterUrl =
+    templateMeta?.subject === subject && templateMeta.posterUrl
+      ? templateMeta.posterUrl
+      : fallbackPaths.posterUrl;
 
   const selectSubject = (next: KairoBadTimesSubject) => {
     if (next === subject || busy) return;
