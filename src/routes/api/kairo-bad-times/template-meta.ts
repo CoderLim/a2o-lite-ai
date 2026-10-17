@@ -30,9 +30,11 @@ async function GET({ request }: { request: Request }) {
       billedDurationSeconds = normalizeKairoBadTimesDuration(durationSeconds);
       estimatedCredits = estimateKairoBadTimesCredits({
         duration: billedDurationSeconds,
+        subject,
       });
       previewEstimatedCredits = estimateKairoBadTimesCredits({
         duration: KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
+        subject,
       });
       templateAvailable = true;
     } catch (error) {

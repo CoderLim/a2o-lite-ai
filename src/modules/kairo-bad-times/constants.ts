@@ -4,12 +4,19 @@ export const KAIRO_BAD_TIMES_PRODUCT_ID = 'kairo-bad-times';
 export const KAIRO_BAD_TIMES_SCENE = 'kairo-bad-times';
 export const KAIRO_BAD_TIMES_PROVIDER = 'fal';
 
-/** Fal Motion Control — server-only model id. */
+/** Human: Kling Motion Control — server-only model id. */
 export const KAIRO_BAD_TIMES_MODEL =
   'fal-ai/kling-video/v3/standard/motion-control';
 
+/** Pet: DreamActor accepts animal driving videos (Kling rejects them). */
+export const KAIRO_BAD_TIMES_PET_MODEL = 'fal-ai/bytedance/dreamactor/v2';
+
 /** Person vs pet motion templates (different masters + durations). */
 export type KairoBadTimesSubject = 'human' | 'pet';
+
+export function getKairoBadTimesModel(subject: KairoBadTimesSubject) {
+  return subject === 'pet' ? KAIRO_BAD_TIMES_PET_MODEL : KAIRO_BAD_TIMES_MODEL;
+}
 
 export const KAIRO_BAD_TIMES_SUBJECTS = ['human', 'pet'] as const;
 

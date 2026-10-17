@@ -16,9 +16,9 @@ import {
 } from '@/modules/kairo-bad-times/billing';
 import {
   assertKairoBadTimesSubject,
+  getKairoBadTimesModel,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-  KAIRO_BAD_TIMES_MODEL,
 } from '@/modules/kairo-bad-times/constants';
 import {
   estimateKairoBadTimesCredits,
@@ -125,8 +125,11 @@ async function POST({ request }: { request: Request }) {
       providerInput.videoUrl
     );
 
-    const providerCostUsd = estimateKairoBadTimesProviderCost({ duration });
-    const credits = estimateKairoBadTimesCredits({ duration });
+    const providerCostUsd = estimateKairoBadTimesProviderCost({
+      duration,
+      subject,
+    });
+    const credits = estimateKairoBadTimesCredits({ duration, subject });
 
     const matchSnapshot = {
       imageKey: sealed.imageKey,
@@ -135,7 +138,7 @@ async function POST({ request }: { request: Request }) {
       subject,
       characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
       keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-      model: KAIRO_BAD_TIMES_MODEL,
+      model: getKairoBadTimesModel(subject),
     };
 
     const existing = await getKairoBadTimesTaskById({

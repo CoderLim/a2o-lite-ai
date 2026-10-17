@@ -12,9 +12,9 @@ import { getUuid } from '@/lib/hash';
 
 import {
   getKairoBadTimesFixedPrompt,
+  getKairoBadTimesModel,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-  KAIRO_BAD_TIMES_MODEL,
   KAIRO_BAD_TIMES_PROVIDER,
   KAIRO_BAD_TIMES_SCENE,
   type KairoBadTimesSubject,
@@ -185,6 +185,7 @@ export async function reserveKairoBadTimesGeneration(params: {
   creditDescription?: string;
 }) {
   const subject = params.subject ?? 'human';
+  const model = getKairoBadTimesModel(subject);
   const matchParams = {
     imageKey: params.imageKey,
     templateVideoKey: params.templateVideoKey,
@@ -192,7 +193,7 @@ export async function reserveKairoBadTimesGeneration(params: {
     subject,
     characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
     keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-    model: KAIRO_BAD_TIMES_MODEL,
+    model,
   };
 
   const existing = await getKairoBadTimesTaskById({
@@ -232,7 +233,7 @@ export async function reserveKairoBadTimesGeneration(params: {
         'Reserve credits for Kairo Bad Times generation',
       metadata: JSON.stringify({
         generationId: params.generationId,
-        model: KAIRO_BAD_TIMES_MODEL,
+        model,
         duration: params.duration,
         providerCostUsd: params.providerCostUsd,
       }),
@@ -248,7 +249,7 @@ export async function reserveKairoBadTimesGeneration(params: {
       userId: params.userId,
       mediaType: 'video',
       provider: KAIRO_BAD_TIMES_PROVIDER,
-      model: KAIRO_BAD_TIMES_MODEL,
+      model,
       prompt: getKairoBadTimesFixedPrompt(subject),
       options: JSON.stringify({
         imageKey: params.imageKey,
@@ -258,7 +259,7 @@ export async function reserveKairoBadTimesGeneration(params: {
         kind: params.kind || 'full',
         characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
         keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-        model: KAIRO_BAD_TIMES_MODEL,
+        model,
       }),
       status: 'reserved',
       taskId: null,

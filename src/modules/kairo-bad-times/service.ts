@@ -9,6 +9,7 @@ import { getConfig } from '@/modules/config/service';
 
 import {
   getKairoBadTimesFixedPrompt,
+  getKairoBadTimesModel,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
   KAIRO_BAD_TIMES_MODEL,
@@ -93,19 +94,29 @@ export async function submitKairoBadTimes(input: {
   const provider = await getFalProvider();
   const callbackUrl = getKairoBadTimesWebhookUrl() ?? undefined;
   const subject = input.subject ?? 'human';
+  const model = getKairoBadTimesModel(subject);
+
+  const options =
+    subject === 'pet'
+      ? {
+          image_url: input.imageUrl,
+          video_url: input.videoUrl,
+          trim_first_second: true,
+        }
+      : {
+          image_url: input.imageUrl,
+          video_url: input.videoUrl,
+          character_orientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
+          keep_original_sound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
+        };
 
   const result = await provider.generate({
     params: {
       mediaType: AIMediaType.VIDEO,
-      model: KAIRO_BAD_TIMES_MODEL,
+      model,
       prompt: getKairoBadTimesFixedPrompt(subject),
       callbackUrl,
-      options: {
-        image_url: input.imageUrl,
-        video_url: input.videoUrl,
-        character_orientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
-        keep_original_sound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
-      },
+      options,
     },
   });
 

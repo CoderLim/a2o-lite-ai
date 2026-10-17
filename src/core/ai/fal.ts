@@ -75,6 +75,10 @@ export const FAL_QUERY_PERMANENT_ERROR_THRESHOLD = 3;
 export function falQueueQueryModel(model?: string): string {
   if (!model) return '';
   const normalized = model.replace(/^\/+/, '');
+  // DreamActor queue status/result use the full endpoint path (fal docs).
+  if (normalized.startsWith('fal-ai/bytedance/dreamactor/')) {
+    return normalized;
+  }
   const parts = normalized.split('/').filter(Boolean);
   if (parts.length <= 2) {
     return parts.join('/');
@@ -406,6 +410,11 @@ export class FalProvider implements AIProvider {
     }
 
     input = { ...input, ...options };
+
+    // DreamActor schema has no prompt; FalProvider still requires one for generate().
+    if (model.includes('/dreamactor/')) {
+      delete input.prompt;
+    }
 
     if (options.image_input && Array.isArray(options.image_input)) {
       if (['fal-ai/kling-video/o1/video-to-video/edit'].includes(model)) {

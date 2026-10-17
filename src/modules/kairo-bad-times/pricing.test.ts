@@ -26,10 +26,20 @@ test('4s paid preview credits', () => {
   assert.equal(estimateKairoBadTimesCredits({ duration: 4 }), 86);
 });
 
-test('pet-v1 15s template credits', () => {
+test('pet DreamActor 15s template credits ($0.05/s)', () => {
+  assert.equal(
+    estimateKairoBadTimesProviderCost({ duration: 15, subject: 'pet' }),
+    0.75
+  );
+  // ceil(0.75 * 100 * 1.7) = 128
+  assert.equal(
+    estimateKairoBadTimesCredits({ duration: 15, subject: 'pet' }),
+    128
+  );
+});
+
+test('human rate unchanged when subject omitted', () => {
   assert.equal(estimateKairoBadTimesProviderCost({ duration: 15 }), 1.89);
-  // ceil(1.89 * 100 * 1.7) = 322
-  assert.equal(estimateKairoBadTimesCredits({ duration: 15 }), 322);
 });
 
 test('3s template clip matches Fal rate plus Genjutsu credit markup', () => {
