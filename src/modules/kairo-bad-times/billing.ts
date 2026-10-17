@@ -11,12 +11,13 @@ import {
 import { getUuid } from '@/lib/hash';
 
 import {
+  getKairoBadTimesFixedPrompt,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
-  KAIRO_BAD_TIMES_FIXED_PROMPT,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
   KAIRO_BAD_TIMES_MODEL,
   KAIRO_BAD_TIMES_PROVIDER,
   KAIRO_BAD_TIMES_SCENE,
+  type KairoBadTimesSubject,
 } from './constants';
 
 export { KAIRO_BAD_TIMES_SCENE, KAIRO_BAD_TIMES_PROVIDER };
@@ -127,14 +128,20 @@ function assertTaskMatches(
     imageKey: string;
     templateVideoKey: string;
     duration: number;
+    subject: KairoBadTimesSubject;
     characterOrientation: typeof KAIRO_BAD_TIMES_CHARACTER_ORIENTATION;
     keepOriginalSound: boolean;
     model: string;
   }
 ) {
   const options = parseJson(task.options);
+  const subject =
+    options?.subject === 'pet' || options?.subject === 'human'
+      ? (options.subject as KairoBadTimesSubject)
+      : 'human';
   const matches =
-    (task.prompt || '') === KAIRO_BAD_TIMES_FIXED_PROMPT &&
+    (task.prompt || '') === getKairoBadTimesFixedPrompt(params.subject) &&
+    subject === params.subject &&
     options?.imageKey === params.imageKey &&
     options?.templateVideoKey === params.templateVideoKey &&
     options?.duration === params.duration &&
@@ -155,6 +162,7 @@ export function assertKairoBadTimesTaskMatches(
     imageKey: string;
     templateVideoKey: string;
     duration: number;
+    subject: KairoBadTimesSubject;
     characterOrientation: typeof KAIRO_BAD_TIMES_CHARACTER_ORIENTATION;
     keepOriginalSound: boolean;
     model: string;
@@ -170,15 +178,18 @@ export async function reserveKairoBadTimesGeneration(params: {
   imageKey: string;
   templateVideoKey: string;
   duration: number;
+  subject?: KairoBadTimesSubject;
   kind?: 'preview' | 'full';
   providerCostUsd: number;
   credits: number;
   creditDescription?: string;
 }) {
+  const subject = params.subject ?? 'human';
   const matchParams = {
     imageKey: params.imageKey,
     templateVideoKey: params.templateVideoKey,
     duration: params.duration,
+    subject,
     characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
     keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
     model: KAIRO_BAD_TIMES_MODEL,
@@ -238,11 +249,12 @@ export async function reserveKairoBadTimesGeneration(params: {
       mediaType: 'video',
       provider: KAIRO_BAD_TIMES_PROVIDER,
       model: KAIRO_BAD_TIMES_MODEL,
-      prompt: KAIRO_BAD_TIMES_FIXED_PROMPT,
+      prompt: getKairoBadTimesFixedPrompt(subject),
       options: JSON.stringify({
         imageKey: params.imageKey,
         templateVideoKey: params.templateVideoKey,
         duration: params.duration,
+        subject,
         kind: params.kind || 'full',
         characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
         keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,

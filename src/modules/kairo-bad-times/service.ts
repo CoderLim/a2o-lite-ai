@@ -8,10 +8,11 @@ import { envConfigs } from '@/config';
 import { getConfig } from '@/modules/config/service';
 
 import {
+  getKairoBadTimesFixedPrompt,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
-  KAIRO_BAD_TIMES_FIXED_PROMPT,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
   KAIRO_BAD_TIMES_MODEL,
+  type KairoBadTimesSubject,
 } from './constants';
 import { assertKairoBadTimesDuration } from './pricing';
 
@@ -69,16 +70,18 @@ export async function submitKairoBadTimes(input: {
   duration: number;
   imageUrl: string;
   videoUrl: string;
+  subject?: KairoBadTimesSubject;
 }) {
   validateKairoBadTimesInput(input);
   const provider = await getFalProvider();
   const callbackUrl = getKairoBadTimesWebhookUrl() ?? undefined;
+  const subject = input.subject ?? 'human';
 
   const result = await provider.generate({
     params: {
       mediaType: AIMediaType.VIDEO,
       model: KAIRO_BAD_TIMES_MODEL,
-      prompt: KAIRO_BAD_TIMES_FIXED_PROMPT,
+      prompt: getKairoBadTimesFixedPrompt(subject),
       callbackUrl,
       options: {
         image_url: input.imageUrl,

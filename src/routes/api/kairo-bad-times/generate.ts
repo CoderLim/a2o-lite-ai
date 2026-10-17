@@ -15,6 +15,7 @@ import {
   reserveKairoBadTimesGeneration,
 } from '@/modules/kairo-bad-times/billing';
 import {
+  assertKairoBadTimesSubject,
   KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
   KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
   KAIRO_BAD_TIMES_MODEL,
@@ -99,6 +100,7 @@ async function POST({ request }: { request: Request }) {
     }
 
     const kind: 'preview' | 'full' = body.preview === true ? 'preview' : 'full';
+    const subject = assertKairoBadTimesSubject(body.subject ?? 'human');
 
     const sealed = await sealKairoBadTimesInput({
       userId,
@@ -110,8 +112,8 @@ async function POST({ request }: { request: Request }) {
 
     const templateVideoKey =
       kind === 'preview'
-        ? await ensureKairoBadTimesPreviewTemplateInR2()
-        : await ensureKairoBadTimesTemplateInR2();
+        ? await ensureKairoBadTimesPreviewTemplateInR2(subject)
+        : await ensureKairoBadTimesTemplateInR2(subject);
     const providerInput = await resolveKairoBadTimesInputUrls({
       userId,
       generationId,
@@ -130,6 +132,7 @@ async function POST({ request }: { request: Request }) {
       imageKey: sealed.imageKey,
       templateVideoKey,
       duration,
+      subject,
       characterOrientation: KAIRO_BAD_TIMES_CHARACTER_ORIENTATION,
       keepOriginalSound: KAIRO_BAD_TIMES_KEEP_ORIGINAL_SOUND,
       model: KAIRO_BAD_TIMES_MODEL,
@@ -154,8 +157,8 @@ async function POST({ request }: { request: Request }) {
       credits,
       creditDescription:
         kind === 'preview'
-          ? 'Reserve credits for Kairo Bad Times preview'
-          : 'Reserve credits for Kairo Bad Times generation',
+          ? `Reserve credits for Kairo Bad Times ${subject} preview`
+          : `Reserve credits for Kairo Bad Times ${subject} generation`,
     });
 
     if (task.status !== 'reserved') {
@@ -178,6 +181,7 @@ async function POST({ request }: { request: Request }) {
         duration,
         imageUrl: providerInput.imageUrl,
         videoUrl: providerInput.videoUrl,
+        subject,
       });
       requestId = result.requestId;
     } catch (error: unknown) {

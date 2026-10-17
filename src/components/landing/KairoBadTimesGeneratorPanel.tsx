@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
 import {
-  KAIRO_BAD_TIMES_POSTER_PATH,
-  KAIRO_BAD_TIMES_PREVIEW_PATH,
+  getKairoBadTimesPublicPreviewPaths,
+  type KairoBadTimesSubject,
 } from '@/modules/kairo-bad-times/constants';
 import { ApiError, apiGet, apiPost, uploadToSignedUrl } from '@/lib/api-client';
 import {
@@ -67,6 +67,7 @@ type GenerationPoll = {
 };
 
 type TemplateMeta = {
+  subject?: KairoBadTimesSubject;
   durationSeconds: number | null;
   billedDurationSeconds: number | null;
   estimatedCredits: number | null;
@@ -116,6 +117,7 @@ export function KairoBadTimesGeneratorPanel({
     email: session?.user?.email,
   });
 
+  const [subject, setSubject] = useState<KairoBadTimesSubject>('human');
   const [photo, setPhoto] = useState<MediaItem | null>(null);
   const [templateMeta, setTemplateMeta] = useState<TemplateMeta | null>(null);
   const [templateMetaError, setTemplateMetaError] = useState('');
@@ -137,29 +139,41 @@ export function KairoBadTimesGeneratorPanel({
   const templateAvailable = templateMeta?.templateAvailable === true;
   const estimatedCredits = templateMeta?.estimatedCredits ?? null;
   const previewEstimatedCredits = templateMeta?.previewEstimatedCredits ?? null;
+  const fallbackPaths = getKairoBadTimesPublicPreviewPaths(subject);
 
   useEffect(() => {
-    apiGet<TemplateMeta>('/api/kairo-bad-times/template-meta')
+    let cancelled = false;
+    setTemplateMetaError('');
+    apiGet<TemplateMeta>(
+      `/api/kairo-bad-times/template-meta?subject=${encodeURIComponent(subject)}`
+    )
       .then((data) => {
+        if (cancelled) return;
         setTemplateMeta(data);
         setTemplateMetaError(
           data.templateAvailable ? '' : m['site.kairo.template_unavailable']()
         );
       })
       .catch(() => {
+        if (cancelled) return;
+        const paths = getKairoBadTimesPublicPreviewPaths(subject);
         setTemplateMeta({
+          subject,
           durationSeconds: null,
           billedDurationSeconds: null,
           estimatedCredits: null,
           previewDurationSeconds: null,
           previewEstimatedCredits: null,
           templateAvailable: false,
-          previewUrl: KAIRO_BAD_TIMES_PREVIEW_PATH,
-          posterUrl: KAIRO_BAD_TIMES_POSTER_PATH,
+          previewUrl: paths.previewUrl,
+          posterUrl: paths.posterUrl,
         });
         setTemplateMetaError(m['site.kairo.template_unavailable']());
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [subject]);
 
   useEffect(() => {
     photoUrlRef.current = photo?.url ?? null;
@@ -382,6 +396,7 @@ export function KairoBadTimesGeneratorPanel({
           imageKey: upload.storageKey,
           contentTypes,
           contentLengths,
+          subject,
           preview: kind === 'preview' || undefined,
         }
       );
@@ -444,12 +459,57 @@ export function KairoBadTimesGeneratorPanel({
     }
   };
 
-  const previewUrl = templateMeta?.previewUrl || KAIRO_BAD_TIMES_PREVIEW_PATH;
-  const posterUrl = templateMeta?.posterUrl || KAIRO_BAD_TIMES_POSTER_PATH;
+  const previewUrl = templateMeta?.previewUrl || fallbackPaths.previewUrl;
+  const posterUrl = templateMeta?.posterUrl || fallbackPaths.posterUrl;
+
+  const selectSubject = (next: KairoBadTimesSubject) => {
+    if (next === subject || busy) return;
+    setSubject(next);
+    setJobError('');
+    creditGate.clear();
+  };
 
   return (
     <div className={cn('mx-auto w-full max-w-[1120px]', className)}>
       <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(30,23,19,0.92)] shadow-[0_30px_90px_-30px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+        <div className="border-b border-white/8 px-4 py-3 sm:px-5">
+          <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
+            {m['site.kairo.subject_label']()}
+          </p>
+          <div
+            className="inline-flex rounded-xl border border-white/12 bg-black/25 p-1"
+            role="group"
+            aria-label={m['site.kairo.subject_label']()}
+          >
+            {(
+              [
+                ['human', m['site.kairo.subject_human']()],
+                ['pet', m['site.kairo.subject_pet']()],
+              ] as const
+            ).map(([value, label]) => {
+              const active = subject === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={busy}
+                  aria-pressed={active}
+                  onClick={() => selectSubject(value)}
+                  className={cn(
+                    'min-w-[88px] rounded-lg px-3.5 py-1.5 text-sm font-semibold transition',
+                    active
+                      ? 'bg-[rgb(204,144,92)] text-[rgb(247,246,243)]'
+                      : 'text-white/60 hover:bg-white/5 hover:text-white/85',
+                    busy && 'cursor-not-allowed opacity-50'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid gap-0 lg:grid-cols-2 lg:items-stretch">
           <div className="flex flex-col border-b border-white/8 p-4 sm:p-5 lg:border-r lg:border-b-0">
             <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
@@ -470,7 +530,9 @@ export function KairoBadTimesGeneratorPanel({
               />
             </div>
             <p className="mt-2 text-center text-xs text-white/38">
-              {m['site.kairo.template_note']()}
+              {subject === 'pet'
+                ? m['site.kairo.template_note_pet']()
+                : m['site.kairo.template_note']()}
             </p>
           </div>
 
@@ -519,7 +581,9 @@ export function KairoBadTimesGeneratorPanel({
                     {m['site.kairo.upload_photo']()}
                   </span>
                   <span className="mt-1 block text-xs text-white/38">
-                    {m['site.kairo.photo_note']()}
+                    {subject === 'pet'
+                      ? m['site.kairo.photo_note_pet']()
+                      : m['site.kairo.photo_note']()}
                   </span>
                 </span>
               </button>

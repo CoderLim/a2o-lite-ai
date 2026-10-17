@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import {
-  KAIRO_BAD_TIMES_POSTER_PATH,
-  KAIRO_BAD_TIMES_PREVIEW_PATH,
+  getKairoBadTimesPublicPreviewPaths,
   KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
+  parseKairoBadTimesSubject,
 } from '@/modules/kairo-bad-times/constants';
 import { estimateKairoBadTimesCredits } from '@/modules/kairo-bad-times/pricing';
 import { KairoBadTimesPreflightError } from '@/modules/kairo-bad-times/service';
@@ -11,8 +11,13 @@ import { getKairoBadTimesTemplateDurationSecondsRaw } from '@/modules/kairo-bad-
 import { normalizeKairoBadTimesDuration } from '@/modules/kairo-bad-times/video-metadata';
 import { respData, respErr } from '@/lib/resp';
 
-async function GET() {
+async function GET({ request }: { request: Request }) {
   try {
+    const subject = parseKairoBadTimesSubject(
+      new URL(request.url).searchParams.get('subject')
+    );
+    const paths = getKairoBadTimesPublicPreviewPaths(subject);
+
     let durationSeconds: number | null = null;
     let billedDurationSeconds: number | null = null;
     let estimatedCredits: number | null = null;
@@ -20,7 +25,8 @@ async function GET() {
     let templateAvailable = false;
 
     try {
-      durationSeconds = await getKairoBadTimesTemplateDurationSecondsRaw();
+      durationSeconds =
+        await getKairoBadTimesTemplateDurationSecondsRaw(subject);
       billedDurationSeconds = normalizeKairoBadTimesDuration(durationSeconds);
       estimatedCredits = estimateKairoBadTimesCredits({
         duration: billedDurationSeconds,
@@ -35,14 +41,15 @@ async function GET() {
     }
 
     return respData({
+      subject,
       durationSeconds,
       billedDurationSeconds,
       estimatedCredits,
       previewDurationSeconds: KAIRO_BAD_TIMES_SHORT_PREVIEW_SECONDS,
       previewEstimatedCredits,
       templateAvailable,
-      previewUrl: KAIRO_BAD_TIMES_PREVIEW_PATH,
-      posterUrl: KAIRO_BAD_TIMES_POSTER_PATH,
+      previewUrl: paths.previewUrl,
+      posterUrl: paths.posterUrl,
     });
   } catch (error) {
     console.error('kairo-bad-times template-meta failed:', error);

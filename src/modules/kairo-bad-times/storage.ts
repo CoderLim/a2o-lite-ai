@@ -5,10 +5,15 @@ import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
 
 import {
+  KAIRO_BAD_TIMES_DEFAULT_PET_PREVIEW_TEMPLATE_VIDEO_KEY,
+  KAIRO_BAD_TIMES_DEFAULT_PET_TEMPLATE_VIDEO_KEY,
   KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY,
   KAIRO_BAD_TIMES_DEFAULT_TEMPLATE_VIDEO_KEY,
+  KAIRO_BAD_TIMES_LOCAL_PET_PREVIEW_TEMPLATE_PATH,
+  KAIRO_BAD_TIMES_LOCAL_PET_TEMPLATE_PATH,
   KAIRO_BAD_TIMES_LOCAL_PREVIEW_TEMPLATE_PATH,
   KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH,
+  type KairoBadTimesSubject,
 } from './constants';
 import { KAIRO_BAD_TIMES_MAX_IMAGE_BYTES } from './pricing';
 import {
@@ -343,18 +348,28 @@ async function copyR2Object(params: {
   }
 }
 
-export function resolveKairoBadTimesTemplateVideoKey() {
+export function resolveKairoBadTimesTemplateVideoKey(
+  subject: KairoBadTimesSubject = 'human'
+) {
   const key =
-    envConfigs.kairo_bad_times_template_video_key?.trim() ||
-    KAIRO_BAD_TIMES_DEFAULT_TEMPLATE_VIDEO_KEY;
+    subject === 'pet'
+      ? envConfigs.kairo_bad_times_pet_template_video_key?.trim() ||
+        KAIRO_BAD_TIMES_DEFAULT_PET_TEMPLATE_VIDEO_KEY
+      : envConfigs.kairo_bad_times_template_video_key?.trim() ||
+        KAIRO_BAD_TIMES_DEFAULT_TEMPLATE_VIDEO_KEY;
   assertKairoBadTimesKeyPrefix(key);
   return key;
 }
 
-export function resolveKairoBadTimesPreviewTemplateVideoKey() {
+export function resolveKairoBadTimesPreviewTemplateVideoKey(
+  subject: KairoBadTimesSubject = 'human'
+) {
   const key =
-    envConfigs.kairo_bad_times_preview_template_video_key?.trim() ||
-    KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY;
+    subject === 'pet'
+      ? envConfigs.kairo_bad_times_pet_preview_template_video_key?.trim() ||
+        KAIRO_BAD_TIMES_DEFAULT_PET_PREVIEW_TEMPLATE_VIDEO_KEY
+      : envConfigs.kairo_bad_times_preview_template_video_key?.trim() ||
+        KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY;
   assertKairoBadTimesKeyPrefix(key);
   return key;
 }
@@ -439,19 +454,31 @@ async function ensureKairoBadTimesObjectInR2(params: {
   return key;
 }
 
-export async function ensureKairoBadTimesTemplateInR2() {
+export async function ensureKairoBadTimesTemplateInR2(
+  subject: KairoBadTimesSubject = 'human'
+) {
+  const isPet = subject === 'pet';
   return ensureKairoBadTimesObjectInR2({
-    key: resolveKairoBadTimesTemplateVideoKey(),
-    localRelative: KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH,
-    label: 'Kairo Bad Times template',
+    key: resolveKairoBadTimesTemplateVideoKey(subject),
+    localRelative: isPet
+      ? KAIRO_BAD_TIMES_LOCAL_PET_TEMPLATE_PATH
+      : KAIRO_BAD_TIMES_LOCAL_TEMPLATE_PATH,
+    label: isPet ? 'Kairo Bad Times pet template' : 'Kairo Bad Times template',
   });
 }
 
-export async function ensureKairoBadTimesPreviewTemplateInR2() {
+export async function ensureKairoBadTimesPreviewTemplateInR2(
+  subject: KairoBadTimesSubject = 'human'
+) {
+  const isPet = subject === 'pet';
   return ensureKairoBadTimesObjectInR2({
-    key: resolveKairoBadTimesPreviewTemplateVideoKey(),
-    localRelative: KAIRO_BAD_TIMES_LOCAL_PREVIEW_TEMPLATE_PATH,
-    label: 'Kairo Bad Times preview template',
+    key: resolveKairoBadTimesPreviewTemplateVideoKey(subject),
+    localRelative: isPet
+      ? KAIRO_BAD_TIMES_LOCAL_PET_PREVIEW_TEMPLATE_PATH
+      : KAIRO_BAD_TIMES_LOCAL_PREVIEW_TEMPLATE_PATH,
+    label: isPet
+      ? 'Kairo Bad Times pet preview template'
+      : 'Kairo Bad Times preview template',
   });
 }
 
@@ -465,8 +492,10 @@ export async function createKairoBadTimesR2ReadUrl(key: string) {
   return signed.url;
 }
 
-export async function getKairoBadTimesTemplateVideoUrl() {
-  const key = await ensureKairoBadTimesTemplateInR2();
+export async function getKairoBadTimesTemplateVideoUrl(
+  subject: KairoBadTimesSubject = 'human'
+) {
+  const key = await ensureKairoBadTimesTemplateInR2(subject);
   const metadata = await headR2Object(key);
   if (!VIDEO_CONTENT_TYPES[metadata.contentType]) {
     throw new Error('Kairo Bad Times template must be MP4 or MOV');
@@ -474,14 +503,18 @@ export async function getKairoBadTimesTemplateVideoUrl() {
   return createKairoBadTimesR2ReadUrl(key);
 }
 
-export async function getKairoBadTimesTemplateDurationSecondsRaw() {
-  const url = await getKairoBadTimesTemplateVideoUrl();
+export async function getKairoBadTimesTemplateDurationSecondsRaw(
+  subject: KairoBadTimesSubject = 'human'
+) {
+  const url = await getKairoBadTimesTemplateVideoUrl(subject);
   return probeKairoBadTimesDurationSecondsRaw(url);
 }
 
-export async function getKairoBadTimesTemplateDurationSeconds() {
+export async function getKairoBadTimesTemplateDurationSeconds(
+  subject: KairoBadTimesSubject = 'human'
+) {
   return normalizeKairoBadTimesDuration(
-    await getKairoBadTimesTemplateDurationSecondsRaw()
+    await getKairoBadTimesTemplateDurationSecondsRaw(subject)
   );
 }
 
