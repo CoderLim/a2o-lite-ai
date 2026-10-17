@@ -69,7 +69,7 @@ export const KAIRO_BAD_TIMES_PREVIEW_PATH = '/videos/kairo-bad-times-tpl.mp4';
 export const KAIRO_BAD_TIMES_POSTER_PATH =
   '/videos/kairo-bad-times-tpl-poster.jpg';
 
-/** Pet master — ~15s driving clip (bad-times-pet-tpl-15s). */
+/** Pet master — ~29s driving clip (bad-times-pet-tpl-v2). */
 export const KAIRO_BAD_TIMES_LOCAL_PET_TEMPLATE_PATH =
   'public/videos/kairo-bad-times-tpl-pet.mp4';
 export const KAIRO_BAD_TIMES_LOCAL_PET_PREVIEW_TEMPLATE_PATH =
@@ -85,11 +85,11 @@ export const KAIRO_BAD_TIMES_DEFAULT_TEMPLATE_VIDEO_KEY =
 export const KAIRO_BAD_TIMES_DEFAULT_PREVIEW_TEMPLATE_VIDEO_KEY =
   'kairo-bad-times/templates/v2-preview.mp4';
 
-/** Pet R2 keys — bump when the pet master changes. */
+/** Pet R2 keys — bump when the pet master changes (v3 = ~29s). */
 export const KAIRO_BAD_TIMES_DEFAULT_PET_TEMPLATE_VIDEO_KEY =
-  'kairo-bad-times/templates/pet-v2.mp4';
+  'kairo-bad-times/templates/pet-v3.mp4';
 export const KAIRO_BAD_TIMES_DEFAULT_PET_PREVIEW_TEMPLATE_VIDEO_KEY =
-  'kairo-bad-times/templates/pet-v2-preview.mp4';
+  'kairo-bad-times/templates/pet-v3-preview.mp4';
 
 export function getKairoBadTimesPublicPreviewPaths(
   subject: KairoBadTimesSubject

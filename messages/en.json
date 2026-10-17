@@ -1651,7 +1651,7 @@
   "site.kairo.subject_pet": "Pet",
   "site.kairo.template_label": "Motion template",
   "site.kairo.template_note": "Fixed ~29s vertical clip. Length and audio stay locked to this template.",
-  "site.kairo.template_note_pet": "Fixed ~15s pet motion clip. Paws stay paws — length and audio stay locked.",
+  "site.kairo.template_note_pet": "Fixed ~29s pet motion clip. Paws stay paws — length and audio stay locked.",
   "site.kairo.photo_label": "Your photo",
   "site.kairo.photo_note": "One person · face visible · waist-up or full body works best.",
   "site.kairo.photo_note_pet": "One pet · face and body visible · standing pose works best.",

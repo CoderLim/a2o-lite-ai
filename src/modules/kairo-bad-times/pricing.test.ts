@@ -26,15 +26,15 @@ test('4s paid preview credits', () => {
   assert.equal(estimateKairoBadTimesCredits({ duration: 4 }), 86);
 });
 
-test('pet DreamActor 15s template credits ($0.05/s)', () => {
+test('pet DreamActor ~29s template credits ($0.05/s)', () => {
   assert.equal(
-    estimateKairoBadTimesProviderCost({ duration: 15, subject: 'pet' }),
-    0.75
+    estimateKairoBadTimesProviderCost({ duration: 29, subject: 'pet' }),
+    1.45
   );
-  // ceil(0.75 * 100 * 1.7) = 128
+  // ceil(1.45 * 100 * 1.7) = 247
   assert.equal(
-    estimateKairoBadTimesCredits({ duration: 15, subject: 'pet' }),
-    128
+    estimateKairoBadTimesCredits({ duration: 29, subject: 'pet' }),
+    247
   );
 });
 

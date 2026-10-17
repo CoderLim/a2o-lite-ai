@@ -191,10 +191,10 @@ export const envConfigs: Record<string, string> = {
     'kairo-bad-times/templates/v2-preview.mp4',
   kairo_bad_times_pet_template_video_key:
     procEnv.KAIRO_BAD_TIMES_PET_TEMPLATE_VIDEO_KEY ??
-    'kairo-bad-times/templates/pet-v2.mp4',
+    'kairo-bad-times/templates/pet-v3.mp4',
   kairo_bad_times_pet_preview_template_video_key:
     procEnv.KAIRO_BAD_TIMES_PET_PREVIEW_TEMPLATE_VIDEO_KEY ??
-    'kairo-bad-times/templates/pet-v2-preview.mp4',
+    'kairo-bad-times/templates/pet-v3-preview.mp4',
 
   // AI Zombie Hug preset (server-only). Motion-transfer source clips in R2.
   zombie_hug_template_video_key:
