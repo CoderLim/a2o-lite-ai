@@ -147,7 +147,7 @@ export function RaphaelLogo({
   return (
     <img
       src="/logo-64.webp"
-      alt="Genjutsu AI"
+      alt="A2O LITE AI"
       width={size}
       height={size}
       className={className}

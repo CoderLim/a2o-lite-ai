@@ -19,7 +19,7 @@ export const envConfigs: Record<string, string> = {
   app_name: publicEnv('VITE_APP_NAME') ?? 'A2O LITE AI',
   app_description:
     publicEnv('VITE_APP_DESCRIPTION') ??
-    'Genjutsu AI restyles any video without changing who or what is in it — new scenes, styles, and objects while keeping the original motion.',
+    'A2O LITE AI turns two photos into a NEON-style dance video with a fixed duo template.',
   app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.webp',
   app_support_email:
     publicEnv('VITE_APP_SUPPORT_EMAIL') ?? 'support@a2oliteai.com',

@@ -32,6 +32,11 @@ export function socialMeta(opts: {
   ];
 }
 
+/** Auth / account surfaces — keep out of the public index. */
+export function noIndexMeta() {
+  return [{ name: 'robots', content: 'noindex, nofollow' }];
+}
+
 /**
  * Canonical + hreflang alternate links for a locale-free path.
  * Limit supportedLocales to real translated versions for content-backed pages.
@@ -46,26 +51,29 @@ export function localeLinks(
   const available = locales.filter((loc) => supportedLocales.includes(loc));
   const canonicalLocale = available.includes(locale as (typeof locales)[number])
     ? locale
-    : available.includes('en') ? 'en' : (available[0] ?? 'en');
+    : available.includes('en')
+      ? 'en'
+      : (available[0] ?? 'en');
   const urlFor = (loc: string) =>
     localizeUrl(absoluteUrl(path || '/'), {
       locale: loc as (typeof locales)[number],
     }).href;
   return {
     canonical: urlFor(canonicalLocale),
-    alternates: available.length > 1
-      ? [
-          ...available.map((loc) => ({
-            rel: 'alternate' as const,
-            hrefLang: loc,
-            href: urlFor(loc),
-          })),
-          {
-            rel: 'alternate' as const,
-            hrefLang: 'x-default',
-            href: urlFor(available.includes('en') ? 'en' : available[0]!),
-          },
-        ]
-      : [],
+    alternates:
+      available.length > 1
+        ? [
+            ...available.map((loc) => ({
+              rel: 'alternate' as const,
+              hrefLang: loc,
+              href: urlFor(loc),
+            })),
+            {
+              rel: 'alternate' as const,
+              hrefLang: 'x-default',
+              href: urlFor(available.includes('en') ? 'en' : available[0]!),
+            },
+          ]
+        : [],
   };
 }

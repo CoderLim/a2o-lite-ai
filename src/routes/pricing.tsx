@@ -1,12 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { localeLinks, socialMeta } from '@/lib/seo';
-import { getLocale } from '@/paraglide/runtime.js';
+import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { Pricing } from '@/blocks/pricing';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 
+const OG_IMAGE = '/imgs/generated/a2o-lite-ai-og.png';
 
 export const Route = createFileRoute('/pricing')({
   loader: () => {
@@ -16,14 +17,17 @@ export const Route = createFileRoute('/pricing')({
   head: ({ loaderData }) => {
     const locale = loaderData?.locale ?? 'en';
     const { canonical, alternates } = localeLinks('/pricing', locale);
+    const title = m['site.pricing.standalone_meta_title']({}, { locale });
+    const description = m['site.pricing.standalone_meta_desc']({}, { locale });
     return {
       meta: [
-        { title: m['site.pricing.standalone_meta_title']() },
-        { name: 'description', content: m['site.pricing.standalone_meta_desc']() },
+        { title },
+        { name: 'description', content: description },
         ...socialMeta({
-          title: m['site.pricing.standalone_meta_title'](),
-          description: m['site.pricing.standalone_meta_desc'](),
+          title,
+          description,
           url: canonical,
+          image: absoluteUrl(OG_IMAGE),
         }),
       ],
       links: [{ rel: 'canonical', href: canonical }, ...alternates],

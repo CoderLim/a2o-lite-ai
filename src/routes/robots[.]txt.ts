@@ -2,10 +2,18 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
 
+function siteOrigin(request: Request): string {
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    return envConfigs.app_url || 'http://localhost:3000';
+  }
+}
+
 export const Route = createFileRoute('/robots.txt')({
   server: {
     handlers: {
-      GET: () => {
+      GET: ({ request }) => {
         // OAI-SearchBot = ChatGPT Search crawl (allow). GPTBot = model-training
         // crawl (disallow). Specific user-agent groups do not inherit from `*`,
         // so OAI-SearchBot repeats the same public-path Disallows.
@@ -13,6 +21,7 @@ export const Route = createFileRoute('/robots.txt')({
         const publicDisallows = [
           'Disallow: /admin',
           'Disallow: /settings',
+          'Disallow: /creations',
           'Disallow: /api/',
           'Disallow: /sign-in',
           'Disallow: /sign-up',
@@ -21,7 +30,6 @@ export const Route = createFileRoute('/robots.txt')({
           'Disallow: /reset-password',
           'Disallow: /auth-callback',
           'Disallow: /redeem-invite',
-          'Disallow: /h3-lab',
           'Disallow: /*?*',
         ];
 
@@ -37,7 +45,7 @@ export const Route = createFileRoute('/robots.txt')({
           'Allow: /',
           ...publicDisallows,
           '',
-          `Sitemap: ${envConfigs.app_url}/sitemap.xml`,
+          `Sitemap: ${siteOrigin(request)}/sitemap.xml`,
           '',
         ].join('\n');
         return new Response(body, {

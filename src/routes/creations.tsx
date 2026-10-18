@@ -592,12 +592,13 @@ function CreationsPage() {
 export const Route = createFileRoute('/creations')({
   head: () => ({
     meta: [
-      { title: 'My Creations — Genjutsu AI' },
+      { title: 'My Creations — A2O LITE AI' },
       {
         name: 'description',
         content:
-          'View your Genjutsu AI video generations and their current status.',
+          'View your A2O LITE AI video generations and their current status.',
       },
+      { name: 'robots', content: 'noindex, nofollow' },
     ],
   }),
   component: CreationsPage,

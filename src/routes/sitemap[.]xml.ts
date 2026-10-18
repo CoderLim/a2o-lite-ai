@@ -3,13 +3,18 @@ import { createFileRoute } from '@tanstack/react-router';
 import { envConfigs } from '@/config';
 import { locales, localizeUrl } from '@/paraglide/runtime.js';
 
-const STATIC_PATHS = [
-  '',
-  '/pricing',
-  '/what-is-a2o-lite-ai',
-  '/privacy-policy',
-  '/terms-of-service',
-  '/refund-policy',
+/**
+ * Per-path locale lists. Only advertise language versions that have real
+ * translated content (not English fallbacks under a locale prefix).
+ * Homepage / what-is are EN-only until a2o copy is translated.
+ */
+const STATIC_PATHS: { path: string; locales: readonly string[] }[] = [
+  { path: '', locales: ['en'] },
+  { path: '/pricing', locales },
+  { path: '/what-is-a2o-lite-ai', locales: ['en'] },
+  { path: '/privacy-policy', locales },
+  { path: '/terms-of-service', locales },
+  { path: '/refund-policy', locales },
 ];
 
 type Entry = {
@@ -39,7 +44,7 @@ function urlFor(origin: string, path: string, locale: string): string {
 function entryXml(origin: string, e: Entry): string {
   const alternateLocales = e.alternateLocales ?? [];
   const alternates =
-    alternateLocales.length === 0
+    alternateLocales.length <= 1
       ? ''
       : [
           ...alternateLocales.map(
@@ -57,6 +62,7 @@ function entryXml(origin: string, e: Entry): string {
     `    <changefreq>${e.changeFrequency}</changefreq>`,
     `    <priority>${e.priority}</priority>`,
     '  </url>',
+    '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -67,13 +73,13 @@ export const Route = createFileRoute('/sitemap.xml')({
     handlers: {
       GET: async ({ request }) => {
         const origin = siteOrigin(request);
-        const entries: Entry[] = STATIC_PATHS.flatMap((path) =>
-          locales.map((locale) => ({
-            path,
+        const entries: Entry[] = STATIC_PATHS.flatMap((item) =>
+          item.locales.map((locale) => ({
+            path: item.path,
             locale,
-            alternateLocales: [...locales],
+            alternateLocales: [...item.locales],
             changeFrequency: 'weekly',
-            priority: path === '' ? 1 : 0.8,
+            priority: item.path === '' ? 1 : 0.8,
           }))
         );
 

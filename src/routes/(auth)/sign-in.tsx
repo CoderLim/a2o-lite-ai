@@ -7,6 +7,7 @@ import { authClient, signIn, useSession } from '@/core/auth/client';
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { resolveAfterAuthUrl, safeInternalPath } from '@/lib/redirect';
+import { noIndexMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { localizeHref } from '@/paraglide/runtime.js';
 import { usePublicConfig } from '@/hooks/use-public-config';
@@ -314,5 +315,6 @@ function SignInPage() {
 }
 
 export const Route = createFileRoute('/(auth)/sign-in')({
+  head: () => ({ meta: noIndexMeta() }),
   component: SignInPage,
 });

@@ -16,7 +16,7 @@ test('SeeAPI motion transfer uses adaptive duration from source length', () => {
     videoUrl: 'https://example.com/source.mp4',
     imageUrls: ['https://example.com/reference.png'],
     sourceDurationSeconds: 8,
-    callbackUrl: 'https://genjutsuai.net/api/genjutsu/webhook',
+    callbackUrl: 'https://a2oliteai.com/api/genjutsu/webhook',
   });
 
   assert.equal(payload.model, 'seedance-2-5');
@@ -35,7 +35,7 @@ test('SeeAPI motion transfer uses adaptive duration from source length', () => {
   assert.match(payload.input.prompt, /@Image1/);
   assert.equal(
     payload.callback_url,
-    'https://genjutsuai.net/api/genjutsu/webhook'
+    'https://a2oliteai.com/api/genjutsu/webhook'
   );
 });
 

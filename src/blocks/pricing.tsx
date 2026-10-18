@@ -3,13 +3,13 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages.js';
 
 import { useSession } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { listVisibleCreditPacks } from '@/modules/genjutsu/pricing';
 import { apiPost } from '@/lib/api-client';
 import { currentPathWithQuery } from '@/lib/redirect';
+import { m } from '@/paraglide/messages.js';
 import { usePublicConfig } from '@/hooks/use-public-config';
 import {
   PaymentProviderModal,
@@ -59,7 +59,9 @@ export function Pricing({ title }: { title?: string } = {}) {
         return {
           id: pack.id,
           name: pack.name,
-          description: m['site.pricing.pack_description']({ count: pack.credits.toLocaleString() }),
+          description: m['site.pricing.pack_description']({
+            count: pack.credits.toLocaleString(),
+          }),
           price: priceLabel,
           featured: pack.highlighted,
           badge:
@@ -69,7 +71,9 @@ export function Pricing({ title }: { title?: string } = {}) {
                 ? m['site.pricing.popular']()
                 : undefined,
           features: [
-            m['site.pricing.credits_genjutsu']({ count: pack.credits.toLocaleString() }),
+            m['site.pricing.credits_genjutsu']({
+              count: pack.credits.toLocaleString(),
+            }),
             m['site.pricing.purchase_once'](),
             m['site.pricing.no_subscription'](),
             m['site.pricing.modes'](),
@@ -134,9 +138,7 @@ export function Pricing({ title }: { title?: string } = {}) {
         : undefined) || enabledProviders[0];
 
     if (!defaultProvider) {
-      toast.error(
-        m['site.pricing.no_provider']()
-      );
+      toast.error(m['site.pricing.no_provider']());
       return;
     }
 
@@ -161,9 +163,9 @@ export function Pricing({ title }: { title?: string } = {}) {
     >
       <div className="mx-auto max-w-6xl">
         <div className="mb-16 text-center">
-          <h2 className="font-serif text-4xl font-normal tracking-tight sm:text-5xl">
+          <h1 className="font-serif text-4xl font-normal tracking-tight sm:text-5xl">
             {title ?? m['site.pricing.standalone_title']()}
-          </h2>
+          </h1>
           <p className="text-muted-foreground mx-auto mt-5 max-w-2xl">
             {m['site.pricing.standalone_description']()}
           </p>

@@ -580,7 +580,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How can I provide feedback or report issues?',
     answer:
-      'We welcome your feedback! You can reach our support team at support@genjutsuai.net.',
+      'We welcome your feedback! You can reach our support team at support@a2oliteai.com.',
   },
   {
     question: 'What AI models does Raphael AI support?',
@@ -1238,14 +1238,14 @@ export const GENJUTSU_VS_ROWS = [
 
 export const GENJUTSU_FAQS: FaqItem[] = [
   {
-    question: 'What is Genjutsu AI?',
+    question: 'What is A2O LITE AI?',
     answer:
       'Genjutsu is a Higgsfield video-to-video model. This site uses it to restyle scenes, styles, products, and props around the same subject while keeping the original camera movement and timing — without changing who or what is in the shot.',
   },
   {
-    question: 'Does Genjutsu AI support face swapping?',
+    question: 'Does A2O LITE AI support face swapping?',
     answer:
-      'No. Genjutsu AI does not support face swapping or identity replacement. If a reference image contains a real human face, it is rejected before generation. Anime, cartoon, illustration, and 3D characters are allowed. See our Terms of Service (/terms-of-service) for prohibited categories, detection, reporting, and enforcement.',
+      'No. A2O LITE AI does not support face swapping or identity replacement. If a reference image contains a real human face, it is rejected before generation. Anime, cartoon, illustration, and 3D characters are allowed. See our Terms of Service (/terms-of-service) for prohibited categories, detection, reporting, and enforcement.',
   },
   {
     question: 'How is this different from text-to-video?',

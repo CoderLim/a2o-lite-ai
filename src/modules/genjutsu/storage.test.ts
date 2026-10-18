@@ -235,12 +235,9 @@ test('Genjutsu upload sizes enforce the business limits', () => {
 });
 
 test('Genjutsu proxy upload descriptor is same-origin and sized', () => {
-  const request = new Request(
-    'https://genjutsuai.net/api/genjutsu/upload-url',
-    {
-      method: 'POST',
-    }
-  );
+  const request = new Request('https://a2oliteai.com/api/genjutsu/upload-url', {
+    method: 'POST',
+  });
   const descriptor = createGenjutsuProxyUploadDescriptor(request, {
     userId: 'user-123',
     generationId: 'gen-456789',
@@ -251,7 +248,7 @@ test('Genjutsu proxy upload descriptor is same-origin and sized', () => {
 
   assert.equal(
     descriptor.uploadUrl,
-    'https://genjutsuai.net/api/genjutsu/upload/gen-456789/0'
+    'https://a2oliteai.com/api/genjutsu/upload/gen-456789/0'
   );
   assert.equal(descriptor.uploadHeaders['Content-Type'], 'video/mp4');
   assert.equal(descriptor.uploadMode, 'proxy');

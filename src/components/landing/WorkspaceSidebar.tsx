@@ -352,7 +352,7 @@ export function WorkspaceSidebar({ className }: { className?: string }) {
         >
           <img
             src="/logo.webp"
-            alt="Genjutsu AI"
+            alt="A2O LITE AI"
             width={24}
             height={24}
             className="h-6 w-6 shrink-0"

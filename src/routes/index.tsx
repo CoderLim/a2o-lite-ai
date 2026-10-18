@@ -157,7 +157,8 @@ export const Route = createFileRoute('/')({
     const locale = loaderData?.locale ?? 'en';
     const title = m['site.a2o.page_title']({}, { locale });
     const description = m['site.a2o.page_description']({}, { locale });
-    const { canonical, alternates } = localeLinks(PAGE_PATH, locale);
+    // EN-only until site.a2o.* copy is translated — avoid hollow hreflang.
+    const { canonical, alternates } = localeLinks(PAGE_PATH, locale, ['en']);
     return {
       meta: [
         { title },

@@ -17,7 +17,7 @@ test('Volcengine motion transfer maps to Seedance 2.5 reference task', () => {
     imageUrls: ['https://example.com/reference.png'],
     sourceDurationSeconds: 8,
     safetyIdentifier: 'user-hash',
-    callbackUrl: 'https://genjutsuai.net/api/genjutsu/webhook',
+    callbackUrl: 'https://a2oliteai.com/api/genjutsu/webhook',
   });
 
   assert.equal(payload.omni_reference_task_type, 'reference');

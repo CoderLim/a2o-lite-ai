@@ -30,7 +30,7 @@ function translatedFooterText(value: string) {
   }
 }
 
-const GITHUB_REPO_URL = 'https://github.com/limbuilder/a2o-lite-ai';
+const GITHUB_REPO_URL = 'https://github.com/CoderLim/a2o-lite-ai';
 
 const isExternalHref = (href: string) => /^https?:\/\//.test(href);
 
@@ -98,7 +98,7 @@ export function SiteFooter() {
                   href={GITHUB_REPO_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Genjutsu AI on GitHub"
+                  aria-label="A2O LITE AI on GitHub"
                   title="GitHub"
                   className="text-muted-foreground hover:text-foreground mt-5 inline-flex size-9 items-center justify-center rounded-md transition-colors"
                 >

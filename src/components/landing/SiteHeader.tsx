@@ -134,7 +134,7 @@ export function SiteHeader() {
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger
                 aria-label={m['site.header.menu']()}
-                className="text-foreground hover:bg-accent inline-flex size-9 items-center justify-center rounded-md transition-colors"
+                className="text-foreground hover:bg-accent inline-flex size-10 items-center justify-center rounded-md transition-colors"
               >
                 <MenuIcon className="size-5" />
               </SheetTrigger>

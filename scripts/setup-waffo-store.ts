@@ -36,7 +36,7 @@ import {
 import { pricingCatalog } from '../src/config/pricing.js';
 import { PaymentInterval, PaymentType } from '../src/core/payment/types.js';
 
-const STORE_NAME = 'genjutsu-ai';
+const STORE_NAME = 'a2o-lite-ai';
 const ENV_PATH = resolve('.env.development');
 
 const WEBHOOK_EVENTS = [
@@ -257,7 +257,7 @@ async function main() {
     };
 
     const name = product.productName;
-    const description = `${product.credits.toLocaleString()} Genjutsu credits — one-time purchase`;
+    const description = `${product.credits.toLocaleString()} A2O LITE AI credits — one-time purchase`;
 
     console.log(`Creating ${catalogId} (${product.type}, ${currency})...`);
 
@@ -295,11 +295,15 @@ async function main() {
           `Waffo V2 price mismatch for ${catalogId}: expected ${currency} ${expected}, returned ${String(actual)}. Mapping was not published.`
         );
       }
-      console.log(`✓ ${catalogId} created with verified response price ${currency} ${expected}`);
+      console.log(
+        `✓ ${catalogId} created with verified response price ${currency} ${expected}`
+      );
     }
 
     const ok = await verifyCheckoutAvailable(client, productId, currency);
-    console.log(`  -> ${productId} (checkout availability: ${ok ? 'ok' : 'FAILED'})`);
+    console.log(
+      `  -> ${productId} (checkout availability: ${ok ? 'ok' : 'FAILED'})`
+    );
     if (!ok) {
       throw new Error(
         `Created ${productId} but checkout availability failed — inspect Waffo environment and product status`
@@ -325,6 +329,8 @@ async function main() {
       default_payment_provider: 'waffo',
       waffo_environment: environmentName,
       waffo_store_id: storeId,
+      waffo_merchant_id: merchantId,
+      waffo_private_key: privateKey,
     });
     console.log('Updated DB-backed Waffo app config.');
   }
