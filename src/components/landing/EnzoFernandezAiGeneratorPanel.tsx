@@ -333,6 +333,7 @@ function PhotoSlot({
   disabled,
   label,
   hint,
+  hideCopy = false,
   onPick,
   onRemove,
 }: {
@@ -341,6 +342,7 @@ function PhotoSlot({
   disabled: boolean;
   label: string;
   hint: string;
+  hideCopy?: boolean;
   onPick: (file: File) => void;
   onRemove: () => void;
 }) {
@@ -375,17 +377,24 @@ function PhotoSlot({
           type="button"
           disabled={disabled}
           onClick={() => inputRef.current?.click()}
+          aria-label={label}
           className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/18 bg-white/[0.03] text-center transition hover:border-white/35 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="flex size-11 items-center justify-center rounded-full bg-white/8 text-white/70">
             <ImageModeIcon className="size-5" />
           </span>
-          <span>
-            <span className="block text-sm font-medium text-white/78">
-              {label}
+          {!hideCopy && (label || hint) ? (
+            <span>
+              {label ? (
+                <span className="block text-sm font-medium text-white/78">
+                  {label}
+                </span>
+              ) : null}
+              {hint ? (
+                <span className="mt-1 block text-xs text-white/38">{hint}</span>
+              ) : null}
             </span>
-            <span className="mt-1 block text-xs text-white/38">{hint}</span>
-          </span>
+          ) : null}
         </button>
       )}
     </div>
@@ -948,15 +957,13 @@ export function EnzoFernandezAiGeneratorPanel({
 
           <div className="flex items-center justify-center p-4 sm:p-5">
             <div className="mx-auto w-full max-w-xs">
-              <p className="mb-2 text-xs font-medium tracking-wide text-white/45 uppercase">
-                {m['site.enzo.photo']()}
-              </p>
               <PhotoSlot
                 item={photo}
                 inputRef={photoInputRef}
                 disabled={busy}
                 label={m['site.enzo.photo']()}
-                hint={m['site.enzo.photo_note']()}
+                hint=""
+                hideCopy
                 onPick={(file) => setPhotoFile(file)}
                 onRemove={() => clearPhoto()}
               />

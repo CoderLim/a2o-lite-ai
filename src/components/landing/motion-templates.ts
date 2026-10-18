@@ -82,19 +82,19 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     aspect: 'portrait',
   },
   {
-    id: 'a2o-lite-ai',
-    titleKey: 'site.templates.a2o_lite_ai',
-    poster: A2O_LITE_AI_TEMPLATE_POSTER_PATH,
-    sourceVideo: A2O_LITE_AI_TEMPLATE_PATH,
-    href: '/a2o-lite-ai',
-    aspect: 'landscape',
-  },
-  {
     id: 'enzo-fernandez-ai',
     titleKey: 'site.templates.enzo_fernandez_ai',
     poster: ENZO_FERNANDEZ_AI_TEMPLATE_POSTER_PATH,
     sourceVideo: ENZO_FERNANDEZ_AI_TEMPLATE_PATH,
     href: '/enzo-fernandez-ai',
+    aspect: 'landscape',
+  },
+  {
+    id: 'a2o-lite-ai',
+    titleKey: 'site.templates.a2o_lite_ai',
+    poster: A2O_LITE_AI_TEMPLATE_POSTER_PATH,
+    sourceVideo: A2O_LITE_AI_TEMPLATE_PATH,
+    href: '/a2o-lite-ai',
     aspect: 'landscape',
   },
   {
