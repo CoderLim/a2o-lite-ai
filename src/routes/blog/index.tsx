@@ -4,9 +4,10 @@ import { envConfigs } from '@/config';
 import { localeLinks, socialMeta } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
+import { BlogBreadcrumb } from '@/components/blog-breadcrumb';
+import { BlogCard } from '@/components/blog-card';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
-import { BlogCard } from '@/components/blog-card';
 import { formatPostDate } from '@/content/posts';
 import { getBlogPostsFn } from '@/content/posts/server';
 
@@ -41,6 +42,7 @@ function BlogPage() {
       <SiteHeader />
       <main className="flex-1 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-5xl">
+          <BlogBreadcrumb className="mb-8" />
           <div className="mb-16 text-center">
             <h1 className="font-serif text-4xl font-normal tracking-tight sm:text-5xl">
               {m['blog.title']()}

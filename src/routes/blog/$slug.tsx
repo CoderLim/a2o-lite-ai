@@ -1,17 +1,20 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { MDXProvider } from '@mdx-js/react';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
-import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { absoluteUrl, localeLinks, socialMeta } from '@/lib/seo';
-import { m } from '@/paraglide/messages.js';
 import { baseLocale, getLocale } from '@/paraglide/runtime.js';
+import { BlogBreadcrumb } from '@/components/blog-breadcrumb';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { MarkdownContent } from '@/components/markdown-content';
 import { mdxComponents } from '@/components/mdx-components';
-import { formatPostDate, getLocalPostLocales, loadLocalPost } from '@/content/posts';
+import {
+  formatPostDate,
+  getLocalPostLocales,
+  loadLocalPost,
+} from '@/content/posts';
 import { getBlogPostFn } from '@/content/posts/server';
 
 export const Route = createFileRoute('/blog/$slug')({
@@ -96,15 +99,9 @@ function BlogPostPage() {
       <SiteHeader />
       <main className="flex-1 px-6 py-12 md:px-8 md:py-16">
         <article className="mx-auto max-w-3xl">
-          <Link
-            href="/blog"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium transition-colors"
-          >
-            <ArrowLeft className="size-4" />
-            {m['blog.back_to_blog']()}
-          </Link>
+          <BlogBreadcrumb postTitle={post.title} className="mb-8" />
 
-          <header className="border-border mt-8 mb-6 border-b pb-6">
+          <header className="border-border mb-6 border-b pb-6">
             <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
               {post.title}
             </h1>
