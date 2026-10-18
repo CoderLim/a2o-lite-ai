@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { consumeAdminRecreate } from '@/lib/admin-recreate';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
 import {
@@ -28,6 +29,7 @@ export function Hero({ className }: { className?: string }) {
     null
   );
   const requestIdRef = useRef(0);
+  const adminRecreateConsumedRef = useRef(false);
 
   const handleSelectTemplate = useCallback((template: MotionTemplate) => {
     if (!isMotionTemplateApply(template)) return;
@@ -56,6 +58,29 @@ export function Hero({ className }: { className?: string }) {
     },
     []
   );
+
+  useEffect(() => {
+    if (adminRecreateConsumedRef.current) return;
+    adminRecreateConsumedRef.current = true;
+    const payload = consumeAdminRecreate();
+    if (!payload) return;
+
+    const requestId = ++requestIdRef.current;
+    setTemplateRequest({
+      requestId,
+      template: {
+        mode: payload.mode,
+        prompt: payload.prompt,
+        resolution: payload.resolution,
+        sourceVideo: payload.videoUrl ?? undefined,
+        imageUrls: payload.imageUrls,
+        replaceImages: true,
+      },
+    });
+    document
+      .getElementById('hero-generator')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   return (
     <section

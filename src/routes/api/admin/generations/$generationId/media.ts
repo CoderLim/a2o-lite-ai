@@ -48,6 +48,29 @@ function redirectResponse(url: string) {
   });
 }
 
+/**
+ * Same-origin body for browser `fetch` → File (admin recreate).
+ * Default remains 302 to signed R2 so <video>/<img> preview stays cheap.
+ */
+async function deliverMedia(url: string, proxy: boolean) {
+  if (!proxy) return redirectResponse(url);
+
+  const upstream = await fetch(url);
+  if (!upstream.ok || !upstream.body) {
+    return errorResponse('Upstream media fetch failed', 502);
+  }
+
+  const headers = new Headers({
+    'Cache-Control': 'private, no-store, max-age=0',
+  });
+  const contentType = upstream.headers.get('Content-Type');
+  if (contentType) headers.set('Content-Type', contentType);
+  const contentLength = upstream.headers.get('Content-Length');
+  if (contentLength) headers.set('Content-Length', contentLength);
+
+  return new Response(upstream.body, { status: 200, headers });
+}
+
 function parseOptions(value: string | null | undefined) {
   if (!value) return null;
   try {
@@ -75,9 +98,10 @@ async function GET({
   const genjutsuTask = hotelTask
     ? null
     : await getGenjutsuTaskByGenerationId(params.generationId);
-  const kairoTask = hotelTask || genjutsuTask
-    ? null
-    : await getKairoBadTimesTaskByGenerationId(params.generationId);
+  const kairoTask =
+    hotelTask || genjutsuTask
+      ? null
+      : await getKairoBadTimesTaskByGenerationId(params.generationId);
   const task = hotelTask ?? genjutsuTask ?? kairoTask;
   if (!task) return errorResponse('Generation not found', 404);
 
@@ -106,6 +130,7 @@ async function GET({
   if (!Number.isInteger(index) || index < 0 || index > imageKeys.length) {
     return errorResponse('Invalid media index', 400);
   }
+  const proxy = searchParams.get('proxy') === '1';
 
   if (task.scene === KAIRO_BAD_TIMES_SCENE) {
     if (
@@ -125,7 +150,7 @@ async function GET({
     }
     const key = index === 0 ? videoKey : imageKeys[index - 1];
     if (!key) return errorResponse('Generation input not found', 404);
-    return redirectResponse(await createKairoBadTimesR2ReadUrl(key));
+    return deliverMedia(await createKairoBadTimesR2ReadUrl(key), proxy);
   }
 
   if (task.scene === HOTEL_LOBBY_SCENE) {
@@ -142,7 +167,7 @@ async function GET({
 
     const storageKey = index === 0 ? videoKey : imageKeys[index - 1];
     if (!storageKey) return errorResponse('Generation input not found', 404);
-    return redirectResponse(await createHotelLobbyR2ReadUrl(storageKey));
+    return deliverMedia(await createHotelLobbyR2ReadUrl(storageKey), proxy);
   }
 
   if (task.scene !== GENJUTSU_SCENE) {
@@ -181,11 +206,11 @@ async function GET({
   if (isGenjutsuE2EMockEnabled()) {
     const mockUrl = getGenjutsuE2EUrlForStorageKey(storageKey);
     return mockUrl
-      ? redirectResponse(mockUrl)
+      ? deliverMedia(mockUrl, proxy)
       : errorResponse('E2E input object not found', 404);
   }
 
-  return redirectResponse(await createGenjutsuR2ReadUrl(storageKey));
+  return deliverMedia(await createGenjutsuR2ReadUrl(storageKey), proxy);
 }
 
 export const Route = createFileRoute(

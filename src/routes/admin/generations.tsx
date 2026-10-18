@@ -1,17 +1,23 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { Crown, Eye, Film, ImageIcon, Play } from 'lucide-react';
+import { Crown, Eye, Film, ImageIcon, Play, RotateCcw } from 'lucide-react';
 
 import {
   calculateGenjutsuCredits,
   estimateGenjutsuCredits,
   type GenjutsuBillableResolution,
 } from '@/modules/genjutsu/pricing';
+import {
+  writeAdminRecreate,
+  type AdminRecreateMode,
+  type AdminRecreateResolution,
+} from '@/lib/admin-recreate';
 import { apiGet, type PageResult } from '@/lib/api-client';
 import { formatDateTime } from '@/lib/time';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
+import { localizeHref } from '@/paraglide/runtime.js';
 import { DataTable, type Column } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,6 +155,42 @@ function statusVariant(status: string) {
 
 function preferredThumbUrl(g: Generation) {
   return g.videoUrl || g.sourceVideoUrl || null;
+}
+
+function isAdminRecreateMode(value: string | null): value is AdminRecreateMode {
+  return value === 'motion-transfer' || value === 'objects-swap';
+}
+
+function isAdminRecreateResolution(
+  value: string | null
+): value is AdminRecreateResolution {
+  return value === '480p' || value === '720p' || value === '1080p';
+}
+
+/** Same-origin proxy so homepage fetch→File avoids R2 CORS. */
+function withAdminMediaProxy(url: string) {
+  const next = new URL(url, window.location.origin);
+  next.searchParams.set('proxy', '1');
+  return `${next.pathname}${next.search}`;
+}
+
+function openRecreateOnHomepage(detail: Generation) {
+  const videoUrl =
+    detail.inputMedia.find((media) => media.kind === 'video')?.url ?? null;
+  const imageUrls = detail.inputMedia
+    .filter((media) => media.kind === 'image')
+    .map((media) => media.url);
+
+  writeAdminRecreate({
+    mode: isAdminRecreateMode(detail.mode) ? detail.mode : 'motion-transfer',
+    prompt: detail.prompt || '',
+    resolution: isAdminRecreateResolution(detail.resolution)
+      ? detail.resolution
+      : '720p',
+    videoUrl: videoUrl ? withAdminMediaProxy(videoUrl) : null,
+    imageUrls: imageUrls.map(withAdminMediaProxy),
+  });
+  window.location.assign(`${localizeHref('/')}#hero-generator`);
 }
 
 function openPreviewFor(g: Generation): VideoPreview | null {
@@ -756,7 +798,7 @@ function GenerationsPage() {
         }}
       >
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-6xl">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pr-8">
             <DialogTitle className="flex items-center gap-2">
               {m['admin.generations.details']()}
               {detail?.preview ? (
@@ -765,6 +807,24 @@ function GenerationsPage() {
                 </Badge>
               ) : null}
             </DialogTitle>
+            {detail ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                disabled={detail.scene !== 'genjutsu'}
+                title={
+                  detail.scene !== 'genjutsu'
+                    ? m['admin.generations.recreate_disabled']()
+                    : undefined
+                }
+                onClick={() => openRecreateOnHomepage(detail)}
+              >
+                <RotateCcw className="mr-1 size-3.5" />
+                {m['admin.generations.recreate']()}
+              </Button>
+            ) : null}
           </DialogHeader>
 
           {detail ? (

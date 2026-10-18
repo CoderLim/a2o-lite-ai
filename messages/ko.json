@@ -878,6 +878,8 @@
   "admin.generations.before": "변경 전",
   "admin.generations.after": "변경 후",
   "admin.generations.view": "보기",
+  "admin.generations.recreate": "다시 만들기",
+  "admin.generations.recreate_disabled": "다시 만들기는 홈페이지 Genjutsu 생성에만 사용할 수 있습니다.",
   "admin.generations.details": "생성 상세 정보",
   "admin.generations.preview_badge": "미리보기",
   "admin.generations.input_media": "업로드한 미디어",

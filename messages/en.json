@@ -878,6 +878,8 @@
   "admin.generations.before": "Before",
   "admin.generations.after": "After",
   "admin.generations.view": "View",
+  "admin.generations.recreate": "Recreate",
+  "admin.generations.recreate_disabled": "Recreate is only available for Genjutsu homepage generations.",
   "admin.generations.details": "Generation Details",
   "admin.generations.preview_badge": "Preview",
   "admin.generations.input_media": "Uploaded Media",

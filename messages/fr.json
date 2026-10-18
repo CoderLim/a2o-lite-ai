@@ -1406,6 +1406,8 @@
   "admin.generations.before": "Avant",
   "admin.generations.after": "Après",
   "admin.generations.view": "Voir",
+  "admin.generations.recreate": "Recréer",
+  "admin.generations.recreate_disabled": "Recréer n'est disponible que pour les générations Genjutsu de la page d'accueil.",
   "admin.generations.details": "Détails de la génération",
   "admin.generations.preview_badge": "Aperçu",
   "admin.generations.input_media": "Médias importés",

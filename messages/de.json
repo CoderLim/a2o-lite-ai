@@ -1406,6 +1406,8 @@
   "admin.generations.before": "Vorher",
   "admin.generations.after": "Nachher",
   "admin.generations.view": "Ansehen",
+  "admin.generations.recreate": "Erneut erstellen",
+  "admin.generations.recreate_disabled": "Erneut erstellen ist nur für Genjutsu-Homepage-Generierungen verfügbar.",
   "admin.generations.details": "Generierungsdetails",
   "admin.generations.preview_badge": "Vorschau",
   "admin.generations.input_media": "Hochgeladene Medien",

@@ -55,7 +55,15 @@ export type GeneratorTemplateRequest = {
     mode: GeneratorMode;
     prompt: string;
     resolution: '480p' | '720p' | '1080p';
-    sourceVideo: string;
+    /** When omitted, existing video is left unchanged (or cleared if replaceImages). */
+    sourceVideo?: string;
+    /** Reference image URLs to fetch as Files when replaceImages is true. */
+    imageUrls?: string[];
+    /**
+     * When true, replace reference images (and clear them if imageUrls is empty).
+     * Motion template gallery leaves images unchanged; admin recreate sets this.
+     */
+    replaceImages?: boolean;
   };
 };
 
@@ -66,7 +74,7 @@ type GeneratorPanelProps = {
   hidePromo?: boolean;
   /** Controlled mode — when set with onModeChange, parent owns the toggle */
   onModeChange?: (mode: GeneratorMode) => void;
-  /** One-shot motion template apply: fetch video + set prompt (images unchanged). */
+  /** One-shot apply: fetch video (+ optional images) and set prompt/resolution. */
   templateRequest?: GeneratorTemplateRequest | null;
   onTemplateSettled?: (result: { requestId: number; ok: boolean }) => void;
 };
@@ -1224,31 +1232,68 @@ export function GeneratorPanel({
 
     void (async () => {
       let nextVideo: MediaItem | null = null;
+      let nextImages: MediaItem[] = [];
       try {
-        const videoFile = await fetchPublicAssetAsFile(
-          template.sourceVideo,
-          'video',
-          abort.signal
-        );
-        nextVideo = await buildValidatedVideoItem(videoFile);
+        if (template.sourceVideo) {
+          const videoFile = await fetchPublicAssetAsFile(
+            template.sourceVideo,
+            'video',
+            abort.signal
+          );
+          nextVideo = await buildValidatedVideoItem(videoFile);
+        }
+
+        if (template.replaceImages) {
+          const urls = (template.imageUrls ?? []).slice(0, IMAGE_MAX);
+          const files = await Promise.all(
+            urls.map((url) =>
+              fetchPublicAssetAsFile(url, 'image', abort.signal)
+            )
+          );
+          for (const file of files) {
+            if (file.size <= 0 || file.size > MAX_REFERENCE_IMAGE_BYTES) {
+              throw new Error(
+                m['site.generator.image_size_error']({ name: file.name })
+              );
+            }
+            nextImages.push(createMediaItem(file));
+          }
+        }
 
         if (abort.signal.aborted) {
           revokeItem(nextVideo);
+          revokeAll(nextImages);
           return;
         }
 
-        const prevVideo = videoRef.current;
         setMode(template.mode);
         setPrompt(template.prompt);
         setResolution(template.resolution);
-        setVideo(nextVideo);
         setError('');
         creditGate.clear();
-        revokeItem(prevVideo);
-        nextVideo = null;
+
+        if (nextVideo) {
+          const prevVideo = videoRef.current;
+          setVideo(nextVideo);
+          revokeItem(prevVideo);
+          nextVideo = null;
+        } else if (template.replaceImages && !template.sourceVideo) {
+          const prevVideo = videoRef.current;
+          setVideo(null);
+          revokeItem(prevVideo);
+        }
+
+        if (template.replaceImages) {
+          const prevImages = imagesRef.current;
+          setImages(nextImages);
+          revokeAll(prevImages);
+          nextImages = [];
+        }
+
         onTemplateSettled?.({ requestId, ok: true });
       } catch (cause) {
         revokeItem(nextVideo);
+        revokeAll(nextImages);
         if (abort.signal.aborted) return;
         toast.error(
           cause instanceof Error

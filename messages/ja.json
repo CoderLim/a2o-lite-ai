@@ -878,6 +878,8 @@
   "admin.generations.before": "変更前",
   "admin.generations.after": "変更後",
   "admin.generations.view": "表示",
+  "admin.generations.recreate": "再作成",
+  "admin.generations.recreate_disabled": "再作成はホームページの Genjutsu 生成のみ利用できます。",
   "admin.generations.details": "生成の詳細",
   "admin.generations.preview_badge": "プレビュー",
   "admin.generations.input_media": "アップロードされたメディア",
