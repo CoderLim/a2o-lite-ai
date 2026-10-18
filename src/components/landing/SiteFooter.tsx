@@ -30,7 +30,7 @@ function translatedFooterText(value: string) {
   }
 }
 
-const GITHUB_REPO_URL = 'https://github.com/limbuilder/genjutsu-ai';
+const GITHUB_REPO_URL = 'https://github.com/limbuilder/a2o-lite-ai';
 
 const isExternalHref = (href: string) => /^https?:\/\//.test(href);
 

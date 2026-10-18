@@ -5,7 +5,7 @@
 // the generated .output/server/wrangler.json; deploy with `pnpm cf:deploy`.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "genjutsu-ai",
+  "name": "a2o-lite-ai",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
@@ -14,14 +14,14 @@
     "DATABASE_PROVIDER": "d1",
     // Server-side runtime fallbacks for the build-time VITE_* values — keep in
     // sync with .env.production (better-auth trustedOrigins, payment callbacks).
-    "VITE_APP_URL": "https://genjutsuai.net",
-    "VITE_APP_NAME": "Genjutsu AI",
-    "VITE_APP_SUPPORT_EMAIL": "support@genjutsuai.net",
+    "VITE_APP_URL": "https://a2oliteai.com",
+    "VITE_APP_NAME": "A2O LITE AI",
+    "VITE_APP_SUPPORT_EMAIL": "support@a2oliteai.com",
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "genjutsu-ai-db",
+      "database_name": "a2o-lite-ai-db",
       "database_id": "REPLACE_WITH_OUTPUT_OF_WRANGLER_D1_CREATE",
       "migrations_dir": "drizzle",
     },
@@ -42,7 +42,7 @@
   "r2_buckets": [
     {
       "binding": "R2_BUCKET",
-      "bucket_name": "genjutsu-ai",
+      "bucket_name": "a2o-lite-ai",
     },
   ],
 }

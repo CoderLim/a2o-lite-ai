@@ -710,7 +710,7 @@ export function A2oLiteAiGeneratorPanel({
 
   const generate = async (kind: 'preview' | 'full' = 'full') => {
     if (!session?.user) {
-      window.location.href = `/sign-in?callbackUrl=${encodeURIComponent('/a2o-lite-ai#generator')}`;
+      window.location.href = `/sign-in?callbackUrl=${encodeURIComponent('/#generator')}`;
       return;
     }
     if (busy) return;

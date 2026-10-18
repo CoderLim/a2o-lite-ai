@@ -16,13 +16,13 @@ const publicEnv = (key: string) => metaEnv[key] ?? procEnv[key];
 export const envConfigs: Record<string, string> = {
   // App (public)
   app_url: publicEnv('VITE_APP_URL') ?? 'http://localhost:3000',
-  app_name: publicEnv('VITE_APP_NAME') ?? 'Genjutsu AI',
+  app_name: publicEnv('VITE_APP_NAME') ?? 'A2O LITE AI',
   app_description:
     publicEnv('VITE_APP_DESCRIPTION') ??
     'Genjutsu AI restyles any video without changing who or what is in it — new scenes, styles, and objects while keeping the original motion.',
   app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.webp',
   app_support_email:
-    publicEnv('VITE_APP_SUPPORT_EMAIL') ?? 'support@genjutsuai.net',
+    publicEnv('VITE_APP_SUPPORT_EMAIL') ?? 'support@a2oliteai.com',
   hotel_lobby_example_video_url:
     publicEnv('VITE_HOTEL_LOBBY_EXAMPLE_VIDEO_URL') ?? '',
   hotel_lobby_example_thumbnail_url:

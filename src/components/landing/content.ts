@@ -633,10 +633,8 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: 'About',
     links: [
-      { label: 'Features', href: '/#feature' },
+      { label: 'Features', href: '/#how-to' },
       { label: 'Pricing', href: '/pricing' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'Partners', href: '/partners' },
     ],
   },
   {
@@ -644,47 +642,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     links: [
       {
         label: 'A2O LITE AI',
-        href: '/a2o-lite-ai',
-      },
-      {
-        label: 'Enzo Fernandez AI',
-        href: '/enzo-fernandez-ai',
-      },
-      {
-        label: 'Crazy Frog AI',
-        href: '/crazy-frog-ai',
-      },
-      {
-        label: 'Bad Times AI',
-        href: '/kairo-bad-times',
-      },
-      {
-        label: 'Smalltown Boy Dance',
-        href: '/smalltown-boy-dance',
-      },
-      {
-        label: 'Rumpelstiltskin AI',
-        href: '/ai-rumpelstiltskin',
-      },
-      {
-        label: 'Bulin 47 AI',
-        href: '/bulin-47-ai',
-      },
-      {
-        label: 'Hotel Lobby AI',
-        href: '/hotel-lobby-ai',
-      },
-      {
-        label: 'AI Zombie Hug',
-        href: '/ai-zombie-hug',
-      },
-      {
-        label: 'Person Remover',
-        href: 'https://personremover.org',
-      },
-      {
-        label: 'Video Text Remover',
-        href: 'https://videotextremover.org',
+        href: '/',
       },
     ],
   },

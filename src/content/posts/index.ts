@@ -13,13 +13,7 @@ import { baseLocale } from '@/paraglide/runtime.js';
  *
  * Local MDX slugs registered for the blog list, detail loader and sitemap.
  */
-export const BLOG_POST_SLUGS: readonly string[] = [
-  'higgsfield-genjutsu-alternative',
-  'how-to-make-bulin-47-ai-video',
-  'how-to-make-rumpelstiltskin-ai-video',
-  'how-to-make-burning-bridges-ai-video',
-  'how-to-make-unforgettable-ai-car-video',
-];
+export const BLOG_POST_SLUGS: readonly string[] = [];
 
 export type BlogPostMeta = {
   title: string;

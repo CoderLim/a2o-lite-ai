@@ -1,19 +1,19 @@
 {
-  "domain": "genjutsuai.net",
+  "domain": "a2oliteai.com",
   "site": {
-    "name": "Genjutsu AI",
-    "canonicalUrl": "https://genjutsuai.net"
+    "name": "A2O LITE AI",
+    "canonicalUrl": "https://a2oliteai.com"
   },
   "repository": {
     "owner": "CoderLim",
-    "name": "genjutsu-ai",
+    "name": "a2o-lite-ai",
     "visibility": "public",
     "template": "git@github.com:shipany-ai/shipany-tanstack.git"
   },
   "hosting": {
     "provider": "cloudflare",
     "type": "workers",
-    "projectName": "genjutsu-ai",
+    "projectName": "a2o-lite-ai",
     "productionBranch": "main",
     "deployCommand": "pnpm cf:deploy"
   },

@@ -3,6 +3,21 @@ import type { ReactNode } from 'react';
 import { Link } from '@/core/i18n/navigation';
 import { m } from '@/paraglide/messages.js';
 
+const FAQ_KEYS = [
+  { q: 'site.a2o.seo.faq1_q', a: 'site.a2o.seo.faq1_a' },
+  { q: 'site.a2o.seo.faq2_q', a: 'site.a2o.seo.faq2_a' },
+  { q: 'site.a2o.seo.faq3_q', a: 'site.a2o.seo.faq3_a' },
+  { q: 'site.a2o.seo.faq4_q', a: 'site.a2o.seo.faq4_a' },
+  { q: 'site.a2o.seo.faq5_q', a: 'site.a2o.seo.faq5_a' },
+  { q: 'site.a2o.seo.faq6_q', a: 'site.a2o.seo.faq6_a' },
+  { q: 'site.a2o.seo.faq7_q', a: 'site.a2o.seo.faq7_a' },
+  { q: 'site.a2o.seo.faq8_q', a: 'site.a2o.seo.faq8_a' },
+  { q: 'site.a2o.seo.faq9_q', a: 'site.a2o.seo.faq9_a' },
+  { q: 'site.a2o.seo.faq10_q', a: 'site.a2o.seo.faq10_a' },
+  { q: 'site.a2o.seo.faq11_q', a: 'site.a2o.seo.faq11_a' },
+  { q: 'site.a2o.seo.faq12_q', a: 'site.a2o.seo.faq12_a' },
+] as const;
+
 const HOW_STEPS = [
   {
     title: () => m['site.a2o.seo.step1_title'](),
@@ -18,80 +33,82 @@ const HOW_STEPS = [
   },
 ] as const;
 
-const ROUTINE_BEATS = [
-  { time: '0:02', body: () => m['site.a2o.seo.beat1']() },
-  { time: '0:05', body: () => m['site.a2o.seo.beat2']() },
-  { time: '0:09', body: () => m['site.a2o.seo.beat3']() },
-  { time: '0:14', body: () => m['site.a2o.seo.beat4']() },
+const MEANING_ITEMS = [
+  {
+    title: () => m['site.a2o.seo.mean_parody_title'](),
+    body: () => m['site.a2o.seo.mean_parody_body'](),
+  },
+  {
+    title: () => m['site.a2o.seo.mean_voice_title'](),
+    body: () => m['site.a2o.seo.mean_voice_body'](),
+  },
+  {
+    title: () => m['site.a2o.seo.mean_faceswap_title'](),
+    body: () => m['site.a2o.seo.mean_faceswap_body'](),
+  },
 ] as const;
 
-const FAQ_KEYS = [
-  { q: 'site.a2o.seo.faq1_q', a: 'site.a2o.seo.faq1_a' },
-  { q: 'site.a2o.seo.faq2_q', a: 'site.a2o.seo.faq2_a' },
-  { q: 'site.a2o.seo.faq3_q', a: 'site.a2o.seo.faq3_a' },
-  { q: 'site.a2o.seo.faq4_q', a: 'site.a2o.seo.faq4_a' },
-  { q: 'site.a2o.seo.faq5_q', a: 'site.a2o.seo.faq5_a' },
-  { q: 'site.a2o.seo.faq6_q', a: 'site.a2o.seo.faq6_a' },
-  { q: 'site.a2o.seo.faq7_q', a: 'site.a2o.seo.faq7_a' },
-  { q: 'site.a2o.seo.faq8_q', a: 'site.a2o.seo.faq8_a' },
-  { q: 'site.a2o.seo.faq9_q', a: 'site.a2o.seo.faq9_a' },
-  { q: 'site.a2o.seo.faq10_q', a: 'site.a2o.seo.faq10_a' },
+const ROUTINE_ITEMS = [
   {
-    q: 'site.a2o.seo.faq11_q',
-    a: 'site.a2o.seo.faq11_a',
-    privacyLink: true as const,
+    title: () => m['site.a2o.seo.routines_kpop_title'](),
+    body: () => m['site.a2o.seo.routines_kpop_body'](),
   },
-  { q: 'site.a2o.seo.faq12_q', a: 'site.a2o.seo.faq12_a' },
-  { q: 'site.a2o.seo.faq13_q', a: 'site.a2o.seo.faq13_a' },
+  {
+    title: () => m['site.a2o.seo.routines_random_title'](),
+    body: () => m['site.a2o.seo.routines_random_body'](),
+  },
+  {
+    title: () => m['site.a2o.seo.routines_tiktok_title'](),
+    body: () => m['site.a2o.seo.routines_tiktok_body'](),
+  },
 ] as const;
 
-const EXPLORE_LINKS = [
+const IDEA_ITEMS = [
   {
-    label: () => m['site.a2o.seo.more_crazy'](),
-    href: '/crazy-frog-ai',
+    title: () => m['site.a2o.seo.ideas_friends_title'](),
+    body: () => m['site.a2o.seo.ideas_friends_body'](),
   },
   {
-    label: () => m['site.a2o.seo.more_smalltown'](),
-    href: '/smalltown-boy-dance',
+    title: () => m['site.a2o.seo.ideas_pet_title'](),
+    body: () => m['site.a2o.seo.ideas_pet_body'](),
   },
   {
-    label: () => m['site.a2o.seo.more_hotel'](),
-    href: '/hotel-lobby-ai',
+    title: () => m['site.a2o.seo.ideas_couple_title'](),
+    body: () => m['site.a2o.seo.ideas_couple_body'](),
   },
-  {
-    label: () => m['site.a2o.seo.more_zombie'](),
-    href: '/ai-zombie-hug',
-  },
-  { label: () => m['site.a2o.seo.more_home'](), href: '/' },
-  { label: () => m['site.a2o.seo.more_pricing'](), href: '/pricing' },
 ] as const;
 
-const IDEA_KEYS = [
-  'site.a2o.seo.idea1',
-  'site.a2o.seo.idea2',
-  'site.a2o.seo.idea3',
-  'site.a2o.seo.idea4',
+const PHOTO_KEYS = [
+  'site.a2o.seo.photos_li1',
+  'site.a2o.seo.photos_li2',
+  'site.a2o.seo.photos_li3',
+  'site.a2o.seo.photos_li4',
+  'site.a2o.seo.photos_li5',
+] as const;
+
+const RELATED_LINKS = [
+  {
+    label: () => m['site.a2o.seo.more_genjutsu'](),
+    href: '/#generator',
+  },
+  {
+    label: () => m['site.a2o.seo.more_kpop'](),
+    href: '/#more-routines',
+  },
+  {
+    label: () => m['site.a2o.seo.more_pricing'](),
+    href: '/pricing',
+  },
+  {
+    label: () => m['site.a2o.seo.more_whatis'](),
+    href: '/what-is-a2o-lite-ai',
+  },
 ] as const;
 
 export function getA2oLiteAiFaqItems() {
-  return FAQ_KEYS.map((item) => {
-    const base = m[item.a]();
-    const answer =
-      'privacyLink' in item && item.privacyLink
-        ? `${base} ${m['site.a2o.seo.faq11_privacy']()}.`
-        : base;
-    return {
-      question: m[item.q](),
-      answer,
-      privacyLink: 'privacyLink' in item ? item.privacyLink : false,
-    };
-  });
-}
-
-export function getA2oLiteAiHowToSteps() {
-  return HOW_STEPS.map((step) => ({
-    name: step.title(),
-    text: step.body(),
+  return FAQ_KEYS.map((item) => ({
+    question: m[item.q](),
+    answer: m[item.a](),
   }));
 }
 
@@ -128,101 +145,110 @@ function Section({
   return <section id={id}>{inner}</section>;
 }
 
+function SubBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="mt-8 first:mt-0">
+      <h3 className="text-lg font-semibold text-white/88 sm:text-xl">
+        {title}
+      </h3>
+      <div className="mt-3 space-y-3 text-sm leading-7 text-white/45 sm:text-base">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function A2oLiteAiSeoSections() {
   return (
     <div className="text-left">
-      <Section title={m['site.a2o.seo.what_title']()} tone="band">
-        <p>{m['site.a2o.seo.what_p1']()}</p>
-        <p>{m['site.a2o.seo.what_p2']()}</p>
-        <div className="mt-8 rounded-2xl border border-white/8 bg-white/[0.02] p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-white/88 sm:text-xl">
-            {m['site.a2o.seo.clarify_title']()}
-          </h3>
-          <p className="mt-3 text-sm leading-7 text-white/45 sm:text-base">
-            {m['site.a2o.seo.clarify_intro']()}
-          </p>
-          <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-white/45 sm:text-base">
-            <li>{m['site.a2o.seo.clarify_li1']()}</li>
-            <li>{m['site.a2o.seo.clarify_li2']()}</li>
-            <li>{m['site.a2o.seo.clarify_li3']()}</li>
-          </ul>
-          <p className="mt-4 text-sm leading-7 text-white/45 sm:text-base">
-            {m['site.a2o.seo.clarify_outro']()}
-          </p>
-        </div>
-      </Section>
-
-      <Section id="how-to" title={m['site.a2o.seo.howto_title']()}>
+      <Section id="how-to" title={m['site.a2o.seo.howto_title']()} tone="band">
         <p>{m['site.a2o.seo.howto_intro']()}</p>
-        <ol className="mt-8 space-y-6">
-          {HOW_STEPS.map((step, index) => (
-            <li key={step.title()} className="list-none">
-              <p className="text-xs font-semibold tracking-[0.16em] text-[rgb(204,144,92)] uppercase">
-                {m['site.a2o.seo.step_label']({ n: String(index + 1) })}
-              </p>
-              <h3 className="mt-2 text-lg font-semibold text-white/88">
-                {step.title()}
-              </h3>
-              <p className="mt-2 text-sm leading-7 text-white/45">
-                {step.body()}
-              </p>
-            </li>
-          ))}
-        </ol>
+        {HOW_STEPS.map((step) => (
+          <SubBlock key={step.title()} title={step.title()}>
+            <p>{step.body()}</p>
+          </SubBlock>
+        ))}
       </Section>
 
-      <Section title={m['site.a2o.seo.routine_title']()} tone="band">
-        <p>{m['site.a2o.seo.routine_intro']()}</p>
-        <ul className="mt-6 space-y-3">
-          {ROUTINE_BEATS.map((beat) => (
-            <li
-              key={beat.time}
-              className="flex gap-4 rounded-xl border border-white/8 bg-black/20 px-4 py-3"
-            >
-              <span className="shrink-0 font-mono text-sm font-semibold text-[rgb(220,155,99)]">
-                {beat.time}
-              </span>
-              <span className="text-sm leading-7 text-white/55">
-                {beat.body()}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 text-sm text-white/35 italic">
-          {m['site.a2o.seo.routine_note']()}
+      <Section title={m['site.a2o.seo.what_title']()}>
+        <p>{m['site.a2o.seo.what_intro']()}</p>
+        <SubBlock title={m['site.a2o.seo.what_group_title']()}>
+          <p>{m['site.a2o.seo.what_group_body']()}</p>
+        </SubBlock>
+        <SubBlock title={m['site.a2o.seo.what_ai_title']()}>
+          <p>{m['site.a2o.seo.what_ai_body']()}</p>
+          <p>{m['site.a2o.seo.what_ai_not']()}</p>
+        </SubBlock>
+        <SubBlock title={m['site.a2o.seo.what_search_title']()}>
+          <p>{m['site.a2o.seo.what_search_body']()}</p>
+        </SubBlock>
+        <p className="mt-8">
+          {m['site.a2o.seo.what_explainer_before']()}{' '}
+          <Link
+            href="/what-is-a2o-lite-ai"
+            className="font-medium text-[rgb(220,155,99)] underline-offset-4 hover:underline"
+          >
+            {m['site.a2o.seo.what_explainer_link']()}
+          </Link>{' '}
+          {m['site.a2o.seo.what_explainer_after']()}
         </p>
       </Section>
 
-      <Section title={m['site.a2o.seo.photos_title']()}>
-        <ul className="list-disc space-y-2 pl-5">
-          <li>{m['site.a2o.seo.photos_li1']()}</li>
-          <li>{m['site.a2o.seo.photos_li2']()}</li>
-          <li>{m['site.a2o.seo.photos_li3']()}</li>
-          <li>{m['site.a2o.seo.photos_li4']()}</li>
-          <li>{m['site.a2o.seo.photos_li5']()}</li>
-        </ul>
+      <Section title={m['site.a2o.seo.mean_title']()} tone="band">
+        <p>{m['site.a2o.seo.mean_intro']()}</p>
+        {MEANING_ITEMS.map((item) => (
+          <SubBlock key={item.title()} title={item.title()}>
+            <p>{item.body()}</p>
+          </SubBlock>
+        ))}
+        <p className="mt-8">{m['site.a2o.seo.mean_outro']()}</p>
       </Section>
 
-      <Section title={m['site.a2o.seo.permission_title']()} tone="band">
-        <p>{m['site.a2o.seo.permission_intro']()}</p>
-        <ul className="list-disc space-y-2 pl-5">
-          <li>{m['site.a2o.seo.permission_li1']()}</li>
-          <li>{m['site.a2o.seo.permission_li2']()}</li>
-          <li>{m['site.a2o.seo.permission_li3']()}</li>
-          <li>{m['site.a2o.seo.permission_li4']()}</li>
-        </ul>
+      <Section id="more-routines" title={m['site.a2o.seo.routines_title']()}>
+        <p>{m['site.a2o.seo.routines_intro']()}</p>
+        {ROUTINE_ITEMS.map((item) => (
+          <SubBlock key={item.title()} title={item.title()}>
+            <p>{item.body()}</p>
+          </SubBlock>
+        ))}
+        <p className="mt-8">
+          {m['site.a2o.seo.routines_outro_before']()}{' '}
+          <Link
+            href="/pricing"
+            className="font-medium text-[rgb(220,155,99)] underline-offset-4 hover:underline"
+          >
+            {m['site.a2o.seo.routines_outro_link']()}
+          </Link>{' '}
+          {m['site.a2o.seo.routines_outro_after']()}
+        </p>
       </Section>
 
-      <Section title={m['site.a2o.seo.music_title']()}>
-        <p>{m['site.a2o.seo.music_body']()}</p>
+      <Section title={m['site.a2o.seo.distinct_title']()} tone="band">
+        <p>{m['site.a2o.seo.distinct_p1']()}</p>
+        <p>{m['site.a2o.seo.distinct_p2']()}</p>
       </Section>
 
-      <Section title={m['site.a2o.seo.ideas_title']()} tone="band">
+      <Section title={m['site.a2o.seo.ideas_title']()}>
+        <p>{m['site.a2o.seo.ideas_intro']()}</p>
+        {IDEA_ITEMS.map((item) => (
+          <SubBlock key={item.title()} title={item.title()}>
+            <p>{item.body()}</p>
+          </SubBlock>
+        ))}
+      </Section>
+
+      <Section title={m['site.a2o.seo.photos_title']()} tone="band">
         <ul className="list-disc space-y-2 pl-5">
-          {IDEA_KEYS.map((key) => (
+          {PHOTO_KEYS.map((key) => (
             <li key={key}>{m[key]()}</li>
           ))}
         </ul>
+        <p>{m['site.a2o.seo.photos_outro']()}</p>
+      </Section>
+
+      <Section title={m['site.a2o.seo.permission_title']()}>
+        <p>{m['site.a2o.seo.permission_p1']()}</p>
+        <p>{m['site.a2o.seo.permission_p2']()}</p>
       </Section>
 
       <section className="border-y border-white/7 bg-white/[0.018]">
@@ -237,20 +263,7 @@ export function A2oLiteAiSeoSections() {
                   {item.question}
                 </summary>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-white/45">
-                  {item.privacyLink ? (
-                    <>
-                      {m['site.a2o.seo.faq11_a']()}{' '}
-                      <Link
-                        href="/privacy-policy"
-                        className="font-medium text-[rgb(220,155,99)] underline-offset-4 hover:underline"
-                      >
-                        {m['site.a2o.seo.faq11_privacy']()}
-                      </Link>
-                      .
-                    </>
-                  ) : (
-                    item.answer
-                  )}
+                  {item.answer}
                 </p>
               </details>
             ))}
@@ -266,17 +279,18 @@ export function A2oLiteAiSeoSections() {
           <p className="mt-3 max-w-3xl text-sm leading-7 text-white/45">
             {m['site.a2o.seo.more_intro']()}
           </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            {EXPLORE_LINKS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/70 transition hover:border-[rgba(204,144,92,0.35)] hover:text-[rgb(220,155,99)]"
-              >
-                {item.label()}
-              </Link>
+          <ul className="mt-5 space-y-3 text-sm leading-7 text-white/55">
+            {RELATED_LINKS.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="font-medium text-[rgb(220,155,99)] underline-offset-4 hover:underline"
+                >
+                  {item.label()}
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
     </div>
