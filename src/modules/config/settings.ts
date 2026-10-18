@@ -773,7 +773,7 @@ export function getSettings(): Setting[] {
       name: 'resend_sender_email',
       title: 'Sender Email',
       type: 'text',
-      placeholder: 'hello@example.com',
+      placeholder: 'no-reply@genjutsuai.net',
       group: 'resend',
       tab: 'email',
     },
