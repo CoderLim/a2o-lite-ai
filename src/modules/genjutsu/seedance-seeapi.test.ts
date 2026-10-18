@@ -39,7 +39,7 @@ test('SeeAPI motion transfer uses adaptive duration from source length', () => {
   );
 });
 
-test('SeeAPI objects swap uses BytePlus edit mode with adaptive/-1', () => {
+test('SeeAPI objects swap uses adaptive/-1 on the shared upstream', () => {
   const payload = buildSeeapiSeedancePayload({
     model: 'seedance-2-5',
     mode: 'objects-swap',
@@ -51,15 +51,34 @@ test('SeeAPI objects swap uses BytePlus edit mode with adaptive/-1', () => {
     callbackUrl: null,
   });
 
-  assert.equal(payload.provider, 'byteplus');
+  assert.equal(payload.provider, 'seeapi');
   assert.equal(payload.input.duration_seconds, -1);
   assert.equal(payload.input.aspect_ratio, 'adaptive');
-  assert.equal(payload.input.omni_reference_task_type, 'edit');
-  assert.equal(payload.input.nsfw_checker, undefined);
+  assert.equal(payload.input.omni_reference_task_type, undefined);
+  assert.equal(payload.input.nsfw_checker, true);
   assert.match(String(payload.input.prompt), /编辑视频/);
   assert.match(String(payload.input.prompt), /Edit @Video1/);
   assert.match(String(payload.input.prompt), /Replace the bottle/);
   assert.equal(payload.callback_url, undefined);
+});
+
+test('SeeAPI objects swap can force BytePlus edit task type via upstream override', () => {
+  const payload = buildSeeapiSeedancePayload({
+    model: 'seedance-2-5',
+    mode: 'objects-swap',
+    resolution: '720p',
+    prompt: 'Replace the bottle with Reference 1',
+    videoUrl: 'https://example.com/source.mp4',
+    imageUrls: ['https://example.com/reference.png'],
+    sourceDurationSeconds: 8,
+    callbackUrl: null,
+    upstreamProvider: 'byteplus',
+  });
+
+  assert.equal(payload.provider, 'byteplus');
+  assert.equal(payload.input.duration_seconds, -1);
+  assert.equal(payload.input.omni_reference_task_type, 'edit');
+  assert.equal(payload.input.nsfw_checker, undefined);
 });
 
 test('SeeAPI multi-image objects swap restates every ImageN mapping', () => {
@@ -74,8 +93,8 @@ test('SeeAPI multi-image objects swap restates every ImageN mapping', () => {
     callbackUrl: null,
   });
 
-  assert.equal(payload.provider, 'byteplus');
-  assert.equal(payload.input.omni_reference_task_type, 'edit');
+  assert.equal(payload.provider, 'seeapi');
+  assert.equal(payload.input.duration_seconds, -1);
   assert.deepEqual(payload.input.reference_images, [
     'https://example.com/ref1.png',
     'https://example.com/ref2.png',

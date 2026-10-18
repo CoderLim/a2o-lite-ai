@@ -12,13 +12,13 @@ import { buildSeedanceWorkflowPrompt } from './workflow';
 const DEFAULT_SEEAPI_API_BASE_URL = 'https://api.seeapi.com';
 const DEFAULT_SEEAPI_MODEL = 'seedance-2-5';
 const DEFAULT_SEEAPI_ENDPOINT = 'reference-to-video';
-const DEFAULT_SEEAPI_UPSTREAM_PROVIDER = 'seeapi';
 /**
- * Objects Swap needs explicit edit mode. BytePlus exposes
- * `omni_reference_task_type=edit`; the default SeeAPI upstream only has the
- * soft `duration_seconds=-1` signal and often only applies the primary subject.
+ * Gateway upstream for all Seedance 2.5 modes (motion + objects-swap).
+ * `byteplus` exposes `omni_reference_task_type`; `seeapi` uses soft edit
+ * signals (`duration_seconds=-1` + prompt prefix) and `nsfw_checker`.
+ * Override with SEEDANCE_SEEAPI_UPSTREAM_PROVIDER.
  */
-const DEFAULT_SEEAPI_EDIT_UPSTREAM_PROVIDER = 'byteplus';
+const DEFAULT_SEEAPI_UPSTREAM_PROVIDER = 'seeapi';
 /** SeeAPI public USD estimate per credit (docs, not an extra charge). */
 const DEFAULT_SEEAPI_USD_PER_CREDIT = 0.0037;
 
@@ -35,23 +35,10 @@ function normalizeUpstreamProvider(
 }
 
 function resolveSeeapiUpstreamProvider(
-  mode: GenjutsuMode,
   override?: string
 ): SeeapiUpstreamProvider {
-  if (override?.trim()) {
-    return normalizeUpstreamProvider(
-      override,
-      DEFAULT_SEEAPI_UPSTREAM_PROVIDER
-    );
-  }
-  if (mode === 'objects-swap') {
-    return normalizeUpstreamProvider(
-      envConfigs.seedance_seeapi_edit_upstream_provider,
-      DEFAULT_SEEAPI_EDIT_UPSTREAM_PROVIDER
-    );
-  }
   return normalizeUpstreamProvider(
-    envConfigs.seedance_seeapi_upstream_provider,
+    override?.trim() || envConfigs.seedance_seeapi_upstream_provider,
     DEFAULT_SEEAPI_UPSTREAM_PROVIDER
   );
 }
@@ -337,10 +324,7 @@ export function buildSeeapiSeedancePayload(input: {
     ? -1
     : Math.min(30, Math.max(4, Math.round(input.sourceDurationSeconds)));
 
-  const upstream = resolveSeeapiUpstreamProvider(
-    input.mode,
-    input.upstreamProvider
-  );
+  const upstream = resolveSeeapiUpstreamProvider(input.upstreamProvider);
 
   const providerInput: Record<string, unknown> = {
     prompt,
