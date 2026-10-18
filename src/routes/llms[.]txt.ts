@@ -24,6 +24,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
       'Two-photo A2O LITE NEON-style AI dance video generator (fixed duo template)',
   },
   {
+    path: '/enzo-fernandez-ai',
+    title: 'Enzo Fernandez AI Video',
+    description:
+      'One-photo stadium celebration AI video generator (fixed template)',
+  },
+  {
     path: '/crazy-frog-ai',
     title: 'Crazy Frog AI Video',
     description: 'Two-photo Crazy Frog chase AI video generator',

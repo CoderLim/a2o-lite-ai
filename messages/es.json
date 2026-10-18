@@ -1762,5 +1762,18 @@
   "admin.settings.placeholders.alipay_test_amount": "Deja vacío para utilizar el importe real; 1 = ¥0.01",
   "admin.settings.placeholders.wechat_test_amount": "Deja vacío para utilizar el importe real; 1 = ¥0.01",
   "site.templates.dog_kick_bottle": "Perro patea la botella",
-  "site.templates.3_meters_above_the_sky": "Tres metros sobre el cielo"
+  "site.templates.3_meters_above_the_sky": "Tres metros sobre el cielo",
+  "site.templates.enzo_fernandez_ai": "Enzo Fernandez AI",
+  "site.enzo.page_title": "Enzo Fernandez AI Video: Put Yourself on the Pitch",
+  "site.enzo.page_description": "Upload one photo to replace the celebrating woman in the stadium clip. Fixed template, one photo, download in minutes.",
+  "site.enzo.hero_badge": "Enzo Fernandez · stadium clip · 1 photo",
+  "site.enzo.updated": "Updated October 2026",
+  "site.enzo.hero_title": "Enzo Fernandez AI Video: Put Yourself on the Pitch",
+  "site.enzo.hero_description": "Upload a photo you have permission to use. We swap the celebrating woman in the sequined dress into the fixed stadium template — the Argentina player and crowd stay put.",
+  "site.enzo.photo": "Your photo",
+  "site.enzo.photo_note": "Required · replaces the woman in the sequined dress",
+  "site.enzo.upload_required": "Add a photo to continue",
+  "site.enzo.image_type": "Please upload a JPG, PNG, WebP, or GIF image",
+  "site.enzo.image_size": "Images must be 12 MB or smaller",
+  "site.enzo.provider_label": "Stadium celebration swap"
 }

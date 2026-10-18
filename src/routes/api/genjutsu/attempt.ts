@@ -11,6 +11,12 @@ import {
   CRAZY_FROG_PRODUCT_ID,
   CRAZY_FROG_RESOLUTIONS,
 } from '@/modules/crazy-frog/constants';
+import { isAllowedEnzoFernandezAiPrompt } from '@/modules/enzo-fernandez-ai/assert';
+import {
+  ENZO_FERNANDEZ_AI_MODE,
+  ENZO_FERNANDEZ_AI_PRODUCT_ID,
+  ENZO_FERNANDEZ_AI_RESOLUTIONS,
+} from '@/modules/enzo-fernandez-ai/constants';
 import {
   assertGenerationId,
   createGenjutsuAttempt,
@@ -96,6 +102,30 @@ async function POST({ request }: { request: Request }) {
     if (isA2oLiteAi && !isAllowedA2oLiteAiPrompt(prompt)) {
       return respErr(
         'A2O Lite AI prompt does not match the fixed product prompt',
+        {
+          status: 400,
+        }
+      );
+    }
+    const isEnzoFernandezAi = product === ENZO_FERNANDEZ_AI_PRODUCT_ID;
+    if (isEnzoFernandezAi && mode !== ENZO_FERNANDEZ_AI_MODE) {
+      return respErr('Enzo Fernandez AI only supports objects-swap', {
+        status: 400,
+      });
+    }
+    if (
+      isEnzoFernandezAi &&
+      !ENZO_FERNANDEZ_AI_RESOLUTIONS.includes(
+        resolution as (typeof ENZO_FERNANDEZ_AI_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Enzo Fernandez AI only supports 480p and 720p', {
+        status: 400,
+      });
+    }
+    if (isEnzoFernandezAi && !isAllowedEnzoFernandezAiPrompt(prompt)) {
+      return respErr(
+        'Enzo Fernandez AI prompt does not match the fixed product prompt',
         {
           status: 400,
         }

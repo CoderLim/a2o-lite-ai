@@ -217,6 +217,11 @@ export const envConfigs: Record<string, string> = {
     procEnv.A2O_LITE_AI_TEMPLATE_VIDEO_KEY ??
     'genjutsu/templates/a2o-lite-ai-v2.mp4',
 
+  // Enzo Fernandez AI (server-only). Fixed R2 template; client uploads one image.
+  enzo_fernandez_ai_template_video_key:
+    procEnv.ENZO_FERNANDEZ_AI_TEMPLATE_VIDEO_KEY ??
+    'genjutsu/templates/enzo-fernandez-ai-v1.mp4',
+
   // Locale (public)
   locale: publicEnv('VITE_DEFAULT_LOCALE') ?? 'en',
 };

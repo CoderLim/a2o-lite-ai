@@ -17,6 +17,17 @@ import {
   CRAZY_FROG_PRODUCT_ID,
   CRAZY_FROG_RESOLUTIONS,
 } from '@/modules/crazy-frog/constants';
+import { isAllowedEnzoFernandezAiPrompt } from '@/modules/enzo-fernandez-ai/assert';
+import {
+  ENZO_FERNANDEZ_AI_ASPECT_RATIO,
+  ENZO_FERNANDEZ_AI_MODE,
+  ENZO_FERNANDEZ_AI_PRODUCT_ID,
+  ENZO_FERNANDEZ_AI_RESOLUTIONS,
+} from '@/modules/enzo-fernandez-ai/constants';
+import {
+  assertEnzoFernandezAiProviderBinding,
+  EnzoFernandezAiProviderBindingError,
+} from '@/modules/enzo-fernandez-ai/provider';
 import {
   assertGenerationId,
   bindGenjutsuUploadInputs,
@@ -36,10 +47,12 @@ import {
   createGenjutsuR2UploadDescriptor,
   ensureA2oLiteAiTemplateInR2,
   ensureCrazyFrogTemplateInR2,
+  ensureEnzoFernandezAiTemplateInR2,
   ensureSmalltownBoyDanceTemplateInR2,
   GENJUTSU_PROXY_UPLOAD_MAX_BYTES,
   getA2oLiteAiTemplateVideoKey,
   getCrazyFrogTemplateVideoKey,
+  getEnzoFernandezAiTemplateVideoKey,
   getGenjutsuInputKey,
   getSmalltownBoyDanceTemplateVideoKey,
 } from '@/modules/genjutsu/storage';
@@ -56,7 +69,8 @@ import {
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
 
-const FIXED_TEMPLATE_IMAGE_COUNT = 2;
+const FIXED_TEMPLATE_DUAL_IMAGE_COUNT = 2;
+const FIXED_TEMPLATE_SINGLE_IMAGE_COUNT = 1;
 
 async function POST({ request }: { request: Request }) {
   let generationIdForFailure: string | null = null;
@@ -88,12 +102,18 @@ async function POST({ request }: { request: Request }) {
     const isSmalltown = product === SMALLTOWN_PRODUCT_ID;
     const isCrazyFrog = product === CRAZY_FROG_PRODUCT_ID;
     const isA2oLiteAi = product === A2O_LITE_AI_PRODUCT_ID;
+    const isEnzoFernandezAi = product === ENZO_FERNANDEZ_AI_PRODUCT_ID;
     const isProductPreview =
-      (isCrazyFrog || isA2oLiteAi) && body.preview === true;
+      (isCrazyFrog || isA2oLiteAi || isEnzoFernandezAi) &&
+      body.preview === true;
     // Full fixed templates: server template + image-only uploads.
-    // Preview: client uploads a trimmed ≤4s clip + two images.
+    // Preview: client uploads a trimmed ≤4s clip + reference image(s).
     const isFixedTemplateProduct =
-      (isSmalltown || isCrazyFrog || isA2oLiteAi) && !isProductPreview;
+      (isSmalltown || isCrazyFrog || isA2oLiteAi || isEnzoFernandezAi) &&
+      !isProductPreview;
+    const fixedTemplateImageCount = isEnzoFernandezAi
+      ? FIXED_TEMPLATE_SINGLE_IMAGE_COUNT
+      : FIXED_TEMPLATE_DUAL_IMAGE_COUNT;
 
     if (mode !== 'motion-transfer' && mode !== 'objects-swap') {
       return respErr('Invalid Genjutsu mode', { status: 400 });
@@ -129,7 +149,9 @@ async function POST({ request }: { request: Request }) {
       return respErr(
         isA2oLiteAi
           ? 'A2O Lite AI preview must use 480p'
-          : 'Crazy Frog preview must use 480p',
+          : isEnzoFernandezAi
+            ? 'Enzo Fernandez AI preview must use 480p'
+            : 'Crazy Frog preview must use 480p',
         { status: 400 }
       );
     }
@@ -154,6 +176,29 @@ async function POST({ request }: { request: Request }) {
         }
       );
     }
+    if (isEnzoFernandezAi && mode !== ENZO_FERNANDEZ_AI_MODE) {
+      return respErr('Enzo Fernandez AI only supports objects-swap', {
+        status: 400,
+      });
+    }
+    if (
+      isEnzoFernandezAi &&
+      !ENZO_FERNANDEZ_AI_RESOLUTIONS.includes(
+        resolution as (typeof ENZO_FERNANDEZ_AI_RESOLUTIONS)[number]
+      )
+    ) {
+      return respErr('Enzo Fernandez AI only supports 480p and 720p', {
+        status: 400,
+      });
+    }
+    if (isEnzoFernandezAi && !isAllowedEnzoFernandezAiPrompt(prompt)) {
+      return respErr(
+        'Enzo Fernandez AI prompt does not match the fixed product prompt',
+        {
+          status: 400,
+        }
+      );
+    }
 
     const contentTypes = Array.isArray(body.contentTypes)
       ? body.contentTypes.filter(
@@ -167,10 +212,23 @@ async function POST({ request }: { request: Request }) {
       : [];
 
     if (isProductPreview) {
-      const productLabel = isA2oLiteAi ? 'A2O Lite AI' : 'Crazy Frog';
-      if (contentTypes.length !== 3 || contentLengths.length !== 3) {
+      const productLabel = isA2oLiteAi
+        ? 'A2O Lite AI'
+        : isEnzoFernandezAi
+          ? 'Enzo Fernandez AI'
+          : 'Crazy Frog';
+      const previewImageCount = isEnzoFernandezAi ? 1 : 2;
+      const previewUploadCount = previewImageCount + 1;
+      if (
+        contentTypes.length !== previewUploadCount ||
+        contentLengths.length !== previewUploadCount
+      ) {
         return respErr(
-          `${productLabel} preview requires one trimmed video plus two reference images`,
+          `${productLabel} preview requires one trimmed video plus ${
+            previewImageCount === 1
+              ? 'one reference image'
+              : 'two reference images'
+          }`,
           { status: 400 }
         );
       }
@@ -181,7 +239,7 @@ async function POST({ request }: { request: Request }) {
           status: 400,
         });
       }
-      for (let i = 1; i < 3; i += 1) {
+      for (let i = 1; i < previewUploadCount; i += 1) {
         const mime =
           contentTypes[i]?.split(';', 1)[0]?.trim().toLowerCase() || '';
         if (!mime.startsWith('image/')) {
@@ -193,15 +251,17 @@ async function POST({ request }: { request: Request }) {
       }
     } else if (isFixedTemplateProduct) {
       if (
-        contentTypes.length !== FIXED_TEMPLATE_IMAGE_COUNT ||
-        contentLengths.length !== FIXED_TEMPLATE_IMAGE_COUNT
+        contentTypes.length !== fixedTemplateImageCount ||
+        contentLengths.length !== fixedTemplateImageCount
       ) {
         return respErr(
           isCrazyFrog
             ? 'Upload exactly two reference images (lead and chaser)'
             : isA2oLiteAi
               ? 'Upload exactly two reference images'
-              : 'Upload exactly two reference images (front and back)',
+              : isEnzoFernandezAi
+                ? 'Upload exactly one reference image'
+                : 'Upload exactly two reference images (front and back)',
           { status: 400 }
         );
       }
@@ -209,7 +269,9 @@ async function POST({ request }: { request: Request }) {
         const mime = contentType.split(';', 1)[0]?.trim().toLowerCase() || '';
         if (!mime.startsWith('image/')) {
           return respErr(
-            'Both uploads must be images (JPG, PNG, WebP, or GIF)',
+            isEnzoFernandezAi
+              ? 'Upload must be an image (JPG, PNG, WebP, or GIF)'
+              : 'Both uploads must be images (JPG, PNG, WebP, or GIF)',
             { status: 400 }
           );
         }
@@ -222,12 +284,16 @@ async function POST({ request }: { request: Request }) {
               ? getCrazyFrogTemplateVideoKey()
               : isA2oLiteAi
                 ? getA2oLiteAiTemplateVideoKey()
-                : getSmalltownBoyDanceTemplateVideoKey()
+                : isEnzoFernandezAi
+                  ? getEnzoFernandezAiTemplateVideoKey()
+                  : getSmalltownBoyDanceTemplateVideoKey()
           );
         } else if (isCrazyFrog) {
           await ensureCrazyFrogTemplateInR2();
         } else if (isA2oLiteAi) {
           await ensureA2oLiteAiTemplateInR2();
+        } else if (isEnzoFernandezAi) {
+          await ensureEnzoFernandezAiTemplateInR2();
         } else {
           await ensureSmalltownBoyDanceTemplateInR2();
         }
@@ -239,7 +305,9 @@ async function POST({ request }: { request: Request }) {
               ? 'Crazy Frog template is not configured in R2.'
               : isA2oLiteAi
                 ? 'A2O Lite AI template is not configured in R2.'
-                : 'Smalltown Boy Dance template is not configured in R2.'),
+                : isEnzoFernandezAi
+                  ? 'Enzo Fernandez AI template is not configured in R2.'
+                  : 'Smalltown Boy Dance template is not configured in R2.'),
           { code: 'TEMPLATE_NOT_CONFIGURED' },
           { status: 503 }
         );
@@ -285,6 +353,9 @@ async function POST({ request }: { request: Request }) {
     if (isA2oLiteAi && existing) {
       assertA2oLiteAiProviderBinding(existing.provider, existing.model);
     }
+    if (isEnzoFernandezAi && existing) {
+      assertEnzoFernandezAiProviderBinding(existing.provider, existing.model);
+    }
     const target = existing
       ? {
           provider: (existing.provider ||
@@ -317,7 +388,9 @@ async function POST({ request }: { request: Request }) {
           ? CRAZY_FROG_ASPECT_RATIO
           : isA2oLiteAi
             ? A2O_LITE_AI_ASPECT_RATIO
-            : SMALLTOWN_ASPECT_RATIO,
+            : isEnzoFernandezAi
+              ? ENZO_FERNANDEZ_AI_ASPECT_RATIO
+              : SMALLTOWN_ASPECT_RATIO,
         imageKeys: normalizedInputs.map((item) => item.key),
         contentTypes: normalizedInputs.map((item) => item.contentType),
         contentLengths,
@@ -335,7 +408,9 @@ async function POST({ request }: { request: Request }) {
         aspectRatio: isProductPreview
           ? isA2oLiteAi
             ? A2O_LITE_AI_ASPECT_RATIO
-            : CRAZY_FROG_ASPECT_RATIO
+            : isEnzoFernandezAi
+              ? ENZO_FERNANDEZ_AI_ASPECT_RATIO
+              : CRAZY_FROG_ASPECT_RATIO
           : undefined,
         videoKey: normalizedInputs[0].key,
         imageKeys: normalizedInputs.slice(1).map((item) => item.key),
@@ -388,7 +463,10 @@ async function POST({ request }: { request: Request }) {
         : uploads,
     });
   } catch (error: any) {
-    if (error instanceof A2oLiteAiProviderBindingError) {
+    if (
+      error instanceof A2oLiteAiProviderBindingError ||
+      error instanceof EnzoFernandezAiProviderBindingError
+    ) {
       return respErr(error.message, { status: 400 });
     }
     if (error instanceof GenjutsuAttemptConflictError) {

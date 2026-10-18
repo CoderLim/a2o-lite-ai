@@ -32,6 +32,7 @@ const NAV_LINKS = [
 
 const TRENDING_LINKS = [
   { label: 'A2O LITE AI', href: '/a2o-lite-ai' },
+  { label: 'Enzo Fernandez AI', href: '/enzo-fernandez-ai' },
   { label: 'Crazy Frog AI', href: '/crazy-frog-ai' },
   { label: 'Bad Times AI', href: '/kairo-bad-times' },
   { label: 'Smalltown Boy Dance', href: '/smalltown-boy-dance' },

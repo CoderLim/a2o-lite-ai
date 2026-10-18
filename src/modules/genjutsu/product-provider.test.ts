@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   A2O_LITE_AI_PRODUCT,
   CRAZY_FROG_PRODUCT,
+  ENZO_FERNANDEZ_AI_PRODUCT,
   isGenjutsuProductId,
   resolveGenjutsuProviderTarget,
   resolveProductProviderTarget,
@@ -37,6 +38,15 @@ test('a2o-lite-ai follows the mode env router', () => {
   assert.deepEqual(target, fallback);
 });
 
+test('enzo-fernandez-ai follows the mode env router', () => {
+  const fallback = resolveGenjutsuProviderTarget('objects-swap');
+  const target = resolveProductProviderTarget(
+    ENZO_FERNANDEZ_AI_PRODUCT,
+    'objects-swap'
+  );
+  assert.deepEqual(target, fallback);
+});
+
 test('unknown product falls back to mode env router', () => {
   const fallback = resolveGenjutsuProviderTarget('objects-swap');
   const viaProduct = resolveProductProviderTarget(
@@ -62,6 +72,7 @@ test('isGenjutsuProductId allowlist', () => {
   assert.equal(isGenjutsuProductId(SMALLTOWN_BOY_DANCE_PRODUCT), true);
   assert.equal(isGenjutsuProductId(CRAZY_FROG_PRODUCT), true);
   assert.equal(isGenjutsuProductId(A2O_LITE_AI_PRODUCT), true);
+  assert.equal(isGenjutsuProductId(ENZO_FERNANDEZ_AI_PRODUCT), true);
   assert.equal(isGenjutsuProductId('bulin-47'), false);
   assert.equal(isGenjutsuProductId(''), false);
 });

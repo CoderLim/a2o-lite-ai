@@ -647,6 +647,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
         href: '/a2o-lite-ai',
       },
       {
+        label: 'Enzo Fernandez AI',
+        href: '/enzo-fernandez-ai',
+      },
+      {
         label: 'Crazy Frog AI',
         href: '/crazy-frog-ai',
       },

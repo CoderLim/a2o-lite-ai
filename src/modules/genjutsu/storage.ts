@@ -959,6 +959,13 @@ export function getA2oLiteAiTemplateVideoKey() {
   );
 }
 
+export function getEnzoFernandezAiTemplateVideoKey() {
+  return (
+    envConfigs.enzo_fernandez_ai_template_video_key?.trim() ||
+    'genjutsu/templates/enzo-fernandez-ai-v1.mp4'
+  );
+}
+
 async function ensureGenjutsuPublicTemplateInR2(params: {
   key: string;
   localRelative: string;
@@ -1034,6 +1041,14 @@ export async function ensureA2oLiteAiTemplateInR2() {
   });
 }
 
+export async function ensureEnzoFernandezAiTemplateInR2() {
+  return ensureGenjutsuPublicTemplateInR2({
+    key: getEnzoFernandezAiTemplateVideoKey(),
+    localRelative: 'public/videos/enzo-fernandez-ai-tpl.mp4',
+    label: 'Enzo Fernandez AI',
+  });
+}
+
 /** HEAD helper that returns false on missing objects (does not throw). */
 export async function genjutsuR2ObjectExists(key: string): Promise<boolean> {
   assertSafeObjectKey(key);
@@ -1101,6 +1116,7 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
   const smalltownKey = getSmalltownBoyDanceTemplateVideoKey();
   const crazyFrogKey = getCrazyFrogTemplateVideoKey();
   const a2oLiteAiKey = getA2oLiteAiTemplateVideoKey();
+  const enzoFernandezAiKey = getEnzoFernandezAiTemplateVideoKey();
   const templateVideoKey =
     params.templateVideoKey === landscapeKey
       ? await ensureZombieHugTemplateInR2('16:9')
@@ -1112,7 +1128,9 @@ export async function sealGenjutsuTemplateR2Inputs(params: {
             ? await ensureCrazyFrogTemplateInR2()
             : params.templateVideoKey === a2oLiteAiKey
               ? await ensureA2oLiteAiTemplateInR2()
-              : params.templateVideoKey;
+              : params.templateVideoKey === enzoFernandezAiKey
+                ? await ensureEnzoFernandezAiTemplateInR2()
+                : params.templateVideoKey;
 
   assertSafeObjectKey(templateVideoKey);
   if (!templateVideoKey.startsWith('genjutsu/')) {

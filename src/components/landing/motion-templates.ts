@@ -6,6 +6,10 @@ import {
   CRAZY_FROG_TEMPLATE_PATH,
   CRAZY_FROG_TEMPLATE_POSTER_PATH,
 } from '@/modules/crazy-frog/constants';
+import {
+  ENZO_FERNANDEZ_AI_TEMPLATE_PATH,
+  ENZO_FERNANDEZ_AI_TEMPLATE_POSTER_PATH,
+} from '@/modules/enzo-fernandez-ai/constants';
 import { buildHotelLobbyPrompt } from '@/modules/hotel-lobby/prompt';
 import {
   KAIRO_BAD_TIMES_POSTER_PATH,
@@ -83,6 +87,14 @@ export const MOTION_TEMPLATES: MotionTemplate[] = [
     poster: A2O_LITE_AI_TEMPLATE_POSTER_PATH,
     sourceVideo: A2O_LITE_AI_TEMPLATE_PATH,
     href: '/a2o-lite-ai',
+    aspect: 'landscape',
+  },
+  {
+    id: 'enzo-fernandez-ai',
+    titleKey: 'site.templates.enzo_fernandez_ai',
+    poster: ENZO_FERNANDEZ_AI_TEMPLATE_POSTER_PATH,
+    sourceVideo: ENZO_FERNANDEZ_AI_TEMPLATE_PATH,
+    href: '/enzo-fernandez-ai',
     aspect: 'landscape',
   },
   {

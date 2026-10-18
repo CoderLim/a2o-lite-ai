@@ -23,6 +23,18 @@ import {
 } from '@/modules/crazy-frog/constants';
 import { getBalance } from '@/modules/credits/service';
 import {
+  assertEnzoFernandezAiInputs,
+  EnzoFernandezAiPreflightError,
+} from '@/modules/enzo-fernandez-ai/assert';
+import {
+  ENZO_FERNANDEZ_AI_ASPECT_RATIO,
+  ENZO_FERNANDEZ_AI_PRODUCT_ID,
+} from '@/modules/enzo-fernandez-ai/constants';
+import {
+  assertEnzoFernandezAiProviderBinding,
+  EnzoFernandezAiProviderBindingError,
+} from '@/modules/enzo-fernandez-ai/provider';
+import {
   assertGenerationId,
   claimGenjutsuSubmission,
   getGenjutsuTaskById,
@@ -286,8 +298,19 @@ async function POST({ request }: { request: Request }) {
       assertA2oLiteAiInputs(taskOptions);
       assertA2oLiteAiProviderBinding(task.provider, task.model);
     }
+    if (product === ENZO_FERNANDEZ_AI_PRODUCT_ID) {
+      if (!task) {
+        throw new EnzoFernandezAiPreflightError(
+          'Enzo Fernandez AI generation must start from a saved attempt'
+        );
+      }
+      assertEnzoFernandezAiInputs(taskOptions);
+      assertEnzoFernandezAiProviderBinding(task.provider, task.model);
+    }
     const target =
-      product === A2O_LITE_AI_PRODUCT_ID && task
+      (product === A2O_LITE_AI_PRODUCT_ID ||
+        product === ENZO_FERNANDEZ_AI_PRODUCT_ID) &&
+      task
         ? {
             provider: task.provider as GenjutsuProvider,
             model: task.model as string,
@@ -308,7 +331,9 @@ async function POST({ request }: { request: Request }) {
           ? CRAZY_FROG_ASPECT_RATIO
           : product === A2O_LITE_AI_PRODUCT_ID
             ? A2O_LITE_AI_ASPECT_RATIO
-            : undefined;
+            : product === ENZO_FERNANDEZ_AI_PRODUCT_ID
+              ? ENZO_FERNANDEZ_AI_ASPECT_RATIO
+              : undefined;
 
     if (isSeedanceFamilyProvider(target.provider) && !hasStorageInput(input)) {
       throw new Error(
@@ -457,7 +482,9 @@ async function POST({ request }: { request: Request }) {
         error instanceof SmalltownBoyDancePreflightError ||
         error instanceof CrazyFrogPreflightError ||
         error instanceof A2oLiteAiPreflightError ||
-        error instanceof A2oLiteAiProviderBindingError
+        error instanceof A2oLiteAiProviderBindingError ||
+        error instanceof EnzoFernandezAiPreflightError ||
+        error instanceof EnzoFernandezAiProviderBindingError
       ) {
         await refundGenjutsuGeneration({
           generationId,
