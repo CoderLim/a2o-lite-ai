@@ -7,7 +7,7 @@ import {
   listPricingProducts,
 } from './pricing';
 
-test('V1 server checkout resolves exactly four public USD packs', () => {
+test('server checkout resolves four public one-time 480p video bundles', () => {
   const publicProducts = listPricingProducts('buyer@example.com');
   assert.deepEqual(
     publicProducts.map(({ productId, priceInCents, credits }) => [
@@ -16,14 +16,16 @@ test('V1 server checkout resolves exactly four public USD packs', () => {
       credits,
     ]),
     [
-      ['starter', 499, 400],
-      ['creator', 999, 850],
-      ['pro', 1999, 1750],
-      ['studio', 3999, 3600],
+      ['starter', 999, 1050],
+      ['creator', 2699, 3150],
+      ['pro', 4299, 5250],
+      ['studio', 7999, 10500],
     ]
   );
   assert.ok(publicProducts.every((p) => p.currency === 'usd'));
   assert.equal(getPricingProduct('mini'), null);
+  assert.match(getPricingProduct('starter')?.productName || '', /1 480p Video/);
+  assert.match(getPricingProduct('studio')?.description || '', /10 480p/);
 });
 
 test('retired Mini purchases are unavailable for NEW checkout', () => {
