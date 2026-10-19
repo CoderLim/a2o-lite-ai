@@ -14,7 +14,24 @@ import {
   listVisibleCreditPacks,
 } from './pricing';
 
-test('V1 public credit packs keep launch USD prices with reduced credits', () => {
+test('public video packs reserve enough credits for each 480p preview and full', () => {
+  const previewCredits = estimateSeedanceCredits({
+    durationSeconds: 4,
+    resolution: '480p',
+  });
+  const fullCredits = estimateSeedanceCredits({
+    durationSeconds: 14.959002,
+    resolution: '480p',
+  });
+  assert.equal(previewCredits + fullCredits, 1024);
+  assert.ok(
+    GENJUTSU_CREDIT_PACKS.every(
+      (pack) =>
+        pack.videoCount &&
+        pack.credits >= pack.videoCount * (previewCredits + fullCredits)
+    ),
+    'each video quantity must cover its 480p preview and full render'
+  );
   assert.deepEqual(
     GENJUTSU_CREDIT_PACKS.map((pack) => [
       pack.id,
@@ -22,21 +39,21 @@ test('V1 public credit packs keep launch USD prices with reduced credits', () =>
       pack.credits,
     ]),
     [
-      ['starter', 499, 400],
-      ['creator', 999, 850],
-      ['pro', 1999, 1750],
-      ['studio', 3999, 3600],
+      ['starter', 999, 1050],
+      ['creator', 2699, 3150],
+      ['pro', 4299, 5250],
+      ['studio', 7999, 10500],
     ]
   );
 });
 
-test('reduced V1 packs keep a decreasing $/credit ladder near the V2 margin band', () => {
+test('video bundles keep a positive expected cost margin and volume discounts', () => {
   const [starter, creator, pro, studio] = GENJUTSU_CREDIT_PACKS;
   const modelCostUsd = (credits: number) => credits / 170;
   for (const pack of GENJUTSU_CREDIT_PACKS) {
     const margin = 1 - modelCostUsd(pack.credits) / (pack.priceCents / 100);
     assert.ok(
-      margin >= 0.47 && margin < 0.57,
+      margin >= 0.20 && margin < 0.40,
       `unexpected ${pack.id} model-cost margin ${margin}`
     );
   }
@@ -114,7 +131,7 @@ test('credit gate chooses the smallest pack that covers the deficit', () => {
   assert.equal(
     getSmallestSufficientCreditPack({
       balance: 310,
-      requiredCredits: 820,
+      requiredCredits: 1600,
       email: 'alice@example.com',
     })?.id,
     'creator'
@@ -129,17 +146,17 @@ test('credit gate chooses the smallest pack that covers the deficit', () => {
   );
 });
 
-test('V1 deficit boundaries select the smallest sufficient public pack', () => {
+test('video-pack deficit boundaries select the smallest sufficient public pack', () => {
   const cases: Array<[number, string | null]> = [
-    [399, 'starter'],
-    [400, 'starter'],
-    [401, 'creator'],
-    [850, 'creator'],
-    [851, 'pro'],
-    [1750, 'pro'],
-    [1751, 'studio'],
-    [3600, 'studio'],
-    [3601, null],
+    [1049, 'starter'],
+    [1050, 'starter'],
+    [1051, 'creator'],
+    [3150, 'creator'],
+    [3151, 'pro'],
+    [5250, 'pro'],
+    [5251, 'studio'],
+    [10500, 'studio'],
+    [10501, null],
   ];
   for (const [deficit, expected] of cases) {
     assert.equal(
@@ -166,7 +183,7 @@ test('credit gate supports the internal smoke pack and does not under-sell large
   assert.equal(
     getSmallestSufficientCreditPack({
       balance: 0,
-      requiredCredits: 9000,
+      requiredCredits: 12000,
       email: 'alice@example.com',
     }),
     null

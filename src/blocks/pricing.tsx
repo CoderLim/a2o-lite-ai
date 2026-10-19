@@ -59,9 +59,13 @@ export function Pricing({ title }: { title?: string } = {}) {
         return {
           id: pack.id,
           name: pack.name,
-          description: m['site.pricing.pack_description']({
-            count: pack.credits.toLocaleString(),
-          }),
+          description: pack.videoCount
+            ? m['site.pricing.video_quantity']({
+                count: pack.videoCount.toLocaleString(),
+              })
+            : m['site.pricing.pack_description']({
+                count: pack.credits.toLocaleString(),
+              }),
           price: priceLabel,
           featured: pack.highlighted,
           badge:
@@ -71,6 +75,9 @@ export function Pricing({ title }: { title?: string } = {}) {
                 ? m['site.pricing.popular']()
                 : undefined,
           features: [
+            ...(pack.videoCount
+              ? [m['site.pricing.preview_included']()]
+              : []),
             m['site.pricing.credits_genjutsu']({
               count: pack.credits.toLocaleString(),
             }),
@@ -80,7 +87,9 @@ export function Pricing({ title }: { title?: string } = {}) {
           ],
           buttonText: m['site.pricing.buy'](),
           productId: pack.id,
-          productName: `${pack.name} Credits`,
+          productName: pack.videoCount
+            ? `${pack.name} – ${pack.videoCount} 480p Video${pack.videoCount === 1 ? '' : 's'}`
+            : `${pack.name} Credits`,
           priceInCents: pack.priceCents,
           currency,
           credits: pack.credits,
@@ -172,6 +181,9 @@ export function Pricing({ title }: { title?: string } = {}) {
         </div>
 
         <PricingTable groups={groups} onCheckout={handleCheckout} />
+        <p className="text-muted-foreground mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed">
+          {m['site.pricing.note']()}
+        </p>
       </div>
 
       <PaymentProviderModal

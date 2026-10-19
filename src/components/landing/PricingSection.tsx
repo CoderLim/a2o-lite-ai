@@ -125,10 +125,21 @@ export function PricingSection() {
               </p>
 
               <p className="text-primary mt-5 text-2xl font-semibold tabular-nums">
-                {m['site.pricing.credits']({
-                  count: pack.credits.toLocaleString(),
-                })}
+                {pack.videoCount
+                  ? m['site.pricing.video_quantity']({
+                      count: pack.videoCount.toLocaleString(),
+                    })
+                  : m['site.pricing.credits']({
+                      count: pack.credits.toLocaleString(),
+                    })}
               </p>
+              {pack.videoCount ? (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {m['site.pricing.credits']({
+                    count: pack.credits.toLocaleString(),
+                  })}
+                </p>
+              ) : null}
 
               <ul className="text-muted-foreground mt-5 space-y-2 text-sm">
                 <li className="flex items-center gap-2">

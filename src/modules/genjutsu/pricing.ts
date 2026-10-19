@@ -16,6 +16,8 @@ export type GenjutsuCreditPack = {
   priceCents: number;
   currency?: 'usd' | 'cny';
   credits: number;
+  /** Approximate 480p preview + full-video combinations included in a pack. */
+  videoCount?: number;
   highlighted?: boolean;
 };
 
@@ -102,34 +104,40 @@ export const SEEDANCE_VIDEO_REFERENCE_RATE_USD_PER_BILLED_SECOND: Record<
 };
 
 /**
- * V1 USD prices with V2-aligned unit economics (higher $/credit).
- * Keep previous paid orders as immutable snapshots.
+ * A2O LITE AI one-time video bundles. Each 480p video allowance is 1,050
+ * internal credits: ~216 for one 4s preview plus ~808 for the 15s full render,
+ * with a small rounding buffer. 720p uses more credits; it is not one pass.
+ * Existing orders retain their immutable credit/price snapshots.
  */
 export const GENJUTSU_CREDIT_PACKS: readonly GenjutsuCreditPack[] = [
   {
     id: 'starter',
     name: 'Starter',
-    priceCents: 499,
-    credits: 400,
+    priceCents: 999,
+    credits: 1050,
+    videoCount: 1,
   },
   {
     id: 'creator',
     name: 'Creator',
-    priceCents: 999,
-    credits: 850,
+    priceCents: 2699,
+    credits: 3150,
+    videoCount: 3,
     highlighted: true,
   },
   {
     id: 'pro',
     name: 'Pro',
-    priceCents: 1999,
-    credits: 1750,
+    priceCents: 4299,
+    credits: 5250,
+    videoCount: 5,
   },
   {
     id: 'studio',
     name: 'Studio',
-    priceCents: 3999,
-    credits: 3600,
+    priceCents: 7999,
+    credits: 10500,
+    videoCount: 10,
   },
 ] as const;
 
