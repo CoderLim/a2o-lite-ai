@@ -6,12 +6,11 @@ import { locales, localizeUrl } from '@/paraglide/runtime.js';
 /**
  * Per-path locale lists. Only advertise language versions that have real
  * translated content (not English fallbacks under a locale prefix).
- * Homepage / what-is are EN-only until a2o copy is translated.
  */
 const STATIC_PATHS: { path: string; locales: readonly string[] }[] = [
-  { path: '', locales: ['en'] },
+  { path: '', locales },
   { path: '/pricing', locales },
-  { path: '/what-is-a2o-lite-ai', locales: ['en'] },
+  { path: '/what-is-a2o-lite-ai', locales },
   { path: '/privacy-policy', locales },
   { path: '/terms-of-service', locales },
   { path: '/refund-policy', locales },
@@ -43,6 +42,10 @@ function urlFor(origin: string, path: string, locale: string): string {
 
 function entryXml(origin: string, e: Entry): string {
   const alternateLocales = e.alternateLocales ?? [];
+  // Prefer English as x-default (stable); never depend on array order.
+  const defaultLocale = alternateLocales.includes('en')
+    ? 'en'
+    : (alternateLocales[0] ?? 'en');
   const alternates =
     alternateLocales.length <= 1
       ? ''
@@ -51,7 +54,7 @@ function entryXml(origin: string, e: Entry): string {
             (loc) =>
               `    <xhtml:link rel="alternate" hreflang="${loc}" href="${urlFor(origin, e.path, loc)}"/>`
           ),
-          `    <xhtml:link rel="alternate" hreflang="x-default" href="${urlFor(origin, e.path, alternateLocales[0])}"/>`,
+          `    <xhtml:link rel="alternate" hreflang="x-default" href="${urlFor(origin, e.path, defaultLocale)}"/>`,
         ].join('\n');
 
   return [

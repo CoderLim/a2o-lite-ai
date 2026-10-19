@@ -56,6 +56,7 @@ export function staticPageRouteOptions(slug: string) {
             title: meta.title,
             description: meta.description,
             url: canonical,
+            locale,
           }),
         ],
         links: [{ rel: 'canonical', href: canonical }, ...alternates],

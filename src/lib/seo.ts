@@ -11,19 +11,45 @@ export function ogImageUrl(): string {
   return absoluteUrl(envConfigs.app_logo || '/logo.webp');
 }
 
+/** Open Graph locale tags (underscore form). */
+const OG_LOCALE_MAP: Record<string, string> = {
+  en: 'en_US',
+  ja: 'ja_JP',
+  ko: 'ko_KR',
+  es: 'es_ES',
+  'pt-BR': 'pt_BR',
+  fr: 'fr_FR',
+  de: 'de_DE',
+};
+
+export function ogLocaleTag(locale: string): string {
+  return OG_LOCALE_MAP[locale] ?? locale.replace('-', '_');
+}
+
 /** Shared Open Graph + Twitter tags for a public page. */
 export function socialMeta(opts: {
   title: string;
   description: string;
   url?: string;
   image?: string;
+  locale?: string;
+  alternateLocales?: readonly string[];
 }) {
   const image = opts.image || ogImageUrl();
+  const locale = opts.locale ?? 'en';
+  const alternateLocales = (opts.alternateLocales ?? locales).filter(
+    (loc) => loc !== locale
+  );
   return [
     { property: 'og:type', content: 'website' },
     { property: 'og:title', content: opts.title },
     { property: 'og:description', content: opts.description },
     { property: 'og:image', content: image },
+    { property: 'og:locale', content: ogLocaleTag(locale) },
+    ...alternateLocales.map((loc) => ({
+      property: 'og:locale:alternate',
+      content: ogLocaleTag(loc),
+    })),
     ...(opts.url ? [{ property: 'og:url', content: opts.url }] : []),
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: opts.title },
@@ -58,6 +84,7 @@ export function localeLinks(
     localizeUrl(absoluteUrl(path || '/'), {
       locale: loc as (typeof locales)[number],
     }).href;
+  const defaultLocale = available.includes('en') ? 'en' : available[0]!;
   return {
     canonical: urlFor(canonicalLocale),
     alternates:
@@ -71,7 +98,7 @@ export function localeLinks(
             {
               rel: 'alternate' as const,
               hrefLang: 'x-default',
-              href: urlFor(available.includes('en') ? 'en' : available[0]!),
+              href: urlFor(defaultLocale),
             },
           ]
         : [],

@@ -28,6 +28,7 @@ export const Route = createFileRoute('/pricing')({
           description,
           url: canonical,
           image: absoluteUrl(OG_IMAGE),
+          locale,
         }),
       ],
       links: [{ rel: 'canonical', href: canonical }, ...alternates],

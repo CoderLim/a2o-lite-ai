@@ -29,7 +29,7 @@ const A2O_EXAMPLE_CASES = [
     id: 'case-02',
     src: '/videos/demos/a2o-lite-ai-case-02.mp4',
     poster: '/videos/demos/a2o-lite-ai-case-02-poster.jpg',
-    duration: 'PT23S',
+    duration: 'PT15S',
   },
 ] as const;
 
@@ -157,8 +157,7 @@ export const Route = createFileRoute('/')({
     const locale = loaderData?.locale ?? 'en';
     const title = m['site.a2o.page_title']({}, { locale });
     const description = m['site.a2o.page_description']({}, { locale });
-    // EN-only until site.a2o.* copy is translated — avoid hollow hreflang.
-    const { canonical, alternates } = localeLinks(PAGE_PATH, locale, ['en']);
+    const { canonical, alternates } = localeLinks(PAGE_PATH, locale);
     return {
       meta: [
         { title },
@@ -168,10 +167,11 @@ export const Route = createFileRoute('/')({
           description,
           url: canonical,
           image: absoluteUrl(OG_IMAGE),
+          locale,
         }),
         {
           property: 'og:image:alt',
-          content: 'A2O LITE NEON dance video made from a photo',
+          content: m['site.a2o.og_image_alt']({}, { locale }),
         },
       ],
       links: [{ rel: 'canonical', href: canonical }, ...alternates],
