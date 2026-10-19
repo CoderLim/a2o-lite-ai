@@ -5,7 +5,7 @@ import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { cn } from '@/lib/cn';
 import { m } from '@/paraglide/messages.js';
-import { MenuIcon, RaphaelLogo } from '@/components/icons';
+import { MenuIcon, RaphaelLogo, SparklesIcon } from '@/components/icons';
 import { LocaleSelector } from '@/components/locale-selector';
 import { SiteUserMenu } from '@/components/site-user-menu';
 import {
@@ -18,6 +18,9 @@ import {
 
 /** Matches `py-3` + `h-10` nav row — used as layout spacer when not floating. */
 const HEADER_SPACER_CLASS = 'h-16 shrink-0';
+
+const MORE_TOOLS_URL =
+  'https://genjutsuai.net/?utm_source=a2oliteai&utm_medium=referral&utm_campaign=nav_more_tools';
 
 const NAV_LINKS = [
   { label: m['site.header.how'], href: '/#how-to' },
@@ -35,6 +38,28 @@ function BrandLink({ className }: { className?: string }) {
         {envConfigs.app_name}
       </span>
     </Link>
+  );
+}
+
+/** Cross-site CTA to Genjutsu — sits after My Creations in the nav. */
+function MoreToolsPill({ className }: { className?: string }) {
+  return (
+    <a
+      href={MORE_TOOLS_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'relative ml-1 inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-bold tracking-wide text-[#1a120c] shadow-[0_0_0_2px_rgba(249,166,57,0.45),0_8px_20px_rgba(249,166,57,0.28)] transition-[transform,opacity] hover:scale-[1.03] hover:opacity-95',
+        'bg-[linear-gradient(135deg,#ffe08a_0%,#f9a639_48%,#e07828_100%)]',
+        className
+      )}
+    >
+      <SparklesIcon className="size-3.5 shrink-0" aria-hidden />
+      {m['site.header.more_tools']()}
+      <span className="absolute -top-2.5 -right-1 rounded bg-[#e05256] px-1.5 py-0.5 text-[9px] leading-none font-bold tracking-wider text-white uppercase shadow-sm">
+        HOT
+      </span>
+    </a>
   );
 }
 
@@ -145,6 +170,7 @@ export function SiteHeader({
                 <Link href="/creations" className={navLinkClass}>
                   {m['creations.nav']()}
                 </Link>
+                <MoreToolsPill />
               </div>
             </div>
 
@@ -196,6 +222,9 @@ export function SiteHeader({
                     >
                       {m['creations.nav']()}
                     </Link>
+                    <div className="border-border/60 border-b py-3">
+                      <MoreToolsPill className="ml-0" />
+                    </div>
                     <div className="mt-6 flex flex-col gap-3">
                       <UpgradePill className="w-fit" />
                       <LocaleSelector variant="pill" className="w-fit" />
