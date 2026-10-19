@@ -181,6 +181,9 @@ export function Pricing({ title }: { title?: string } = {}) {
         </div>
 
         <PricingTable groups={groups} onCheckout={handleCheckout} />
+        <p className="text-muted-foreground mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed">
+          {m['site.pricing.note']()}
+        </p>
       </div>
 
       <PaymentProviderModal
