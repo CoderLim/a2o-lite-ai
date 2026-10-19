@@ -16,6 +16,8 @@ import { SeoJsonLd } from '@/components/seo-json-ld';
 
 const OG_IMAGE = '/imgs/generated/a2o-lite-ai-og.png';
 const PAGE_PATH = '/';
+const HERO_VIDEO_SRC = '/videos/a2o-lite-ai-tpl-v2.mp4';
+const HERO_POSTER_SRC = '/videos/a2o-lite-ai-tpl-v2-poster.jpg';
 
 /** Real NEON dance outputs shown in the Example results gallery + VideoObject. */
 const A2O_EXAMPLE_CASES = [
@@ -29,7 +31,7 @@ const A2O_EXAMPLE_CASES = [
     id: 'case-02',
     src: '/videos/demos/a2o-lite-ai-case-02.mp4',
     poster: '/videos/demos/a2o-lite-ai-case-02-poster.jpg',
-    duration: 'PT15S',
+    duration: 'PT23S',
   },
 ] as const;
 
@@ -83,66 +85,82 @@ function HomePage() {
       <SeoJsonLd value={faqJsonLd()} />
       <SeoJsonLd value={videoJsonLd()} />
 
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(154,91,55,0.22),transparent_38%),linear-gradient(to_bottom,hsl(13,10,9,0.5),hsl(28_25%_9%)_78%)]" />
-          <div className="absolute top-24 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[rgba(204,144,92,0.055)] blur-3xl" />
+      <SiteHeader floating />
+
+      <section className="relative flex min-h-svh w-full flex-col">
+        <div
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          aria-hidden
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${HERO_POSTER_SRC})` }}
+          />
+          <video
+            className="absolute inset-0 size-full object-cover motion-reduce:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={HERO_POSTER_SRC}
+          >
+            <source src={HERO_VIDEO_SRC} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(28_25%_9%/0.55)_0%,hsl(28_25%_9%/0.72)_45%,hsl(28_25%_9%)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(154,91,55,0.18),transparent_42%)]" />
         </div>
 
-        <div className="relative z-20">
-          <SiteHeader />
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 pt-20 pb-12 text-center sm:pt-24 md:px-5 md:pb-16">
+          <h1 className="mx-auto max-w-4xl text-[34px] leading-[1.08] font-bold tracking-[-1.4px] sm:text-[44px] md:text-[56px]">
+            {m['site.a2o.hero_title']()}
+          </h1>
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-7 whitespace-pre-line text-white/58 sm:text-lg">
+            {m['site.a2o.hero_description']()}
+          </p>
+
+          <div id="generator" className="mt-8 text-left sm:mt-10">
+            <A2oLiteAiGeneratorPanel creditProvider={creditProvider} />
+          </div>
+
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-white/40">
+            {m['site.a2o.hero_trust']()}
+          </p>
         </div>
+      </section>
 
-        <main className="relative z-10">
-          <section className="mx-auto max-w-7xl px-4 pt-14 pb-10 text-center sm:pt-20 md:px-5 md:pb-12">
-            <h1 className="mx-auto max-w-4xl text-[34px] leading-[1.08] font-bold tracking-[-1.4px] sm:text-[44px] md:text-[56px]">
-              {m['site.a2o.hero_title']()}
-            </h1>
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-7 whitespace-pre-line text-white/58 sm:text-lg">
-              {m['site.a2o.hero_description']()}
-            </p>
+      <main className="relative z-10">
+        <section className="mx-auto max-w-5xl px-4 pt-4 pb-14 md:px-5 md:pb-16">
+          <h2 className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
+            {m['site.a2o.example_title']()}
+          </h2>
+          <div className="mt-4 grid items-start gap-3 sm:grid-cols-2">
+            {A2O_EXAMPLE_CASES.map((clip, index) => (
+              <div
+                key={clip.id}
+                className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
+              >
+                <video
+                  src={clip.src}
+                  poster={clip.poster}
+                  title={`${m['site.a2o.example_title']()} ${index + 1}`}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full rounded-xl bg-black object-contain"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-xs text-white/34">
+            {m['site.a2o.example_caption']()}
+          </p>
+        </section>
 
-            <div id="generator" className="mt-8 text-left sm:mt-10">
-              <A2oLiteAiGeneratorPanel creditProvider={creditProvider} />
-            </div>
+        <A2oLiteAiSeoSections />
+      </main>
 
-            <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-white/40">
-              {m['site.a2o.hero_trust']()}
-            </p>
-          </section>
-
-          <section className="mx-auto max-w-5xl px-4 pb-14 md:px-5 md:pb-16">
-            <h2 className="text-xs font-semibold tracking-[0.18em] text-[rgb(204,144,92)] uppercase">
-              {m['site.a2o.example_title']()}
-            </h2>
-            <div className="mt-4 grid items-start gap-3 sm:grid-cols-2">
-              {A2O_EXAMPLE_CASES.map((clip, index) => (
-                <div
-                  key={clip.id}
-                  className="overflow-hidden rounded-[20px] border border-white/10 bg-black/25 p-2.5"
-                >
-                  <video
-                    src={clip.src}
-                    poster={clip.poster}
-                    title={`${m['site.a2o.example_title']()} ${index + 1}`}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="aspect-video w-full rounded-xl bg-black object-contain"
-                  />
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-center text-xs text-white/34">
-              {m['site.a2o.example_caption']()}
-            </p>
-          </section>
-
-          <A2oLiteAiSeoSections />
-        </main>
-
-        <SiteFooter />
-      </div>
+      <SiteFooter />
     </div>
   );
 }
