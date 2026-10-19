@@ -15,6 +15,23 @@ import {
 } from './pricing';
 
 test('public video packs reserve enough credits for each 480p preview and full', () => {
+  const previewCredits = estimateSeedanceCredits({
+    durationSeconds: 4,
+    resolution: '480p',
+  });
+  const fullCredits = estimateSeedanceCredits({
+    durationSeconds: 14.959002,
+    resolution: '480p',
+  });
+  assert.equal(previewCredits + fullCredits, 1024);
+  assert.ok(
+    GENJUTSU_CREDIT_PACKS.every(
+      (pack) =>
+        pack.videoCount &&
+        pack.credits >= pack.videoCount * (previewCredits + fullCredits)
+    ),
+    'each video quantity must cover its 480p preview and full render'
+  );
   assert.deepEqual(
     GENJUTSU_CREDIT_PACKS.map((pack) => [
       pack.id,
