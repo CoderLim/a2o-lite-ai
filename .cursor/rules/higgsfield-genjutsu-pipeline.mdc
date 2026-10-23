@@ -27,6 +27,17 @@ Shared engine: `submitGenjutsu` / billing / seal helpers in `@/modules/genjutsu/
 - Client-editable prompt / preset metadata is fine; **pipeline parity with homepage is the priority**.
 - Non-Higgsfield providers (Kling, Fal hotel-lobby, etc.) are out of scope for this rule.
 
+## Fixed-template R2 verification
+
+Runtime object keys are `{r2_upload_path}/{logicalKey}` (e.g. `uploads/genjutsu/templates/a2o-lite-ai-v2.mp4`). Checking or uploading only `genjutsu/templates/…` via wrangler is a **false positive** — Generate still 503s.
+
+After any template incident or manual R2 put, run:
+
+```bash
+pnpm verify:genjutsu-templates --remote          # HEAD via prod Admin R2 config
+pnpm verify:genjutsu-templates --remote --seed   # upload missing locals to the physical key
+```
+
 ## Known debt
 
 `/ai-zombie-hug` still uses `/api/zombie-hug/upload-url` + `/generate` (seal folded into generate). Treat as legacy; when touching zombie-hug generation, align it to the homepage chain above.

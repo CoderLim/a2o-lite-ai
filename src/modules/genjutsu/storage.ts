@@ -985,8 +985,18 @@ async function ensureGenjutsuPublicTemplateInR2(params: {
   }
 
   if (isCloudflareWorkersRuntime()) {
+    // Logical key is genjutsu/…; runtime HEAD uses r2_upload_path + key
+    // (e.g. uploads/genjutsu/…). Bare wrangler get without that prefix is a
+    // false positive — verify with: pnpm verify:genjutsu-templates
+    let physicalHint = key;
+    try {
+      const config = await getR2SigningConfig();
+      physicalHint = buildGenjutsuR2ObjectKey(config.uploadPath, key);
+    } catch {
+      physicalHint = `uploads/${key}`;
+    }
     throw new Error(
-      `${label} template missing from R2 (${key}). Upload ${localRelative} to that key.`
+      `${label} template missing from R2 (${physicalHint}). Upload ${localRelative} to that physical key (logical ${key}), or run: pnpm verify:genjutsu-templates --seed`
     );
   }
 

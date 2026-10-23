@@ -1048,6 +1048,14 @@ export function A2oLiteAiGeneratorPanel({
             </div>
 
             <div className="ml-auto flex w-full flex-wrap items-end justify-end gap-x-3 gap-y-2 sm:w-auto">
+              {/*
+                Preview is disabled on purpose: paid preview only trims the
+                template to the first PREVIEW_DURATION_SECONDS (4s), but the
+                fixed NEON prompt can describe multiple shots. Feeding a
+                multi-shot prompt against a 4s clip conflicts and hurts output
+                quality, so we only expose full-video generate.
+              */}
+              {/*
               <div className="flex items-center gap-2">
                 <div className="flex flex-col items-end gap-0.5 text-[11px] text-white/55 tabular-nums">
                   <span className="text-[10px] whitespace-nowrap text-white/45">
@@ -1076,6 +1084,7 @@ export function A2oLiteAiGeneratorPanel({
                   {m['site.generator.preview']()}
                 </button>
               </div>
+              */}
               <div className="flex items-center gap-2">
                 <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] text-white/50 tabular-nums">
                   <span className="text-[10px] whitespace-nowrap text-white/45">
