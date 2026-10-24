@@ -110,10 +110,16 @@ test('product prompt uses logical references and maps them per provider tokens',
     userPrompt: A2O_LITE_AI_DEFAULT_PROMPT,
     imageCount: 2,
   });
+  assert.match(higgsfield, /OBJECT SWAP:/);
+  assert.match(higgsfield, /REFERENCE IDENTITY:/);
   assert.match(higgsfield, /TASK INSTRUCTION:/);
   assert.match(higgsfield, /Replace Dancer A with Reference 1/);
   assert.match(higgsfield, /Reference 1 = @Image1/);
   assert.match(higgsfield, /Reference 2 = @Image2/);
+  assert.match(
+    higgsfield,
+    /Do not retain or blend the original performer's identity with that reference subject/
+  );
 
   const wavespeed = buildSeedanceWorkflowPrompt({
     mode: 'objects-swap',
