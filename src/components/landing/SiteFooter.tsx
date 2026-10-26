@@ -129,41 +129,60 @@ export function SiteFooter() {
             </div>
           </div>
 
-          <div
-            className={cn(
-              'border-border mt-8 flex flex-col justify-between gap-4 border-t pt-8',
-              'text-muted-foreground text-center text-sm font-medium',
-              'lg:flex-row lg:items-center lg:text-left'
-            )}
-          >
-            <p>
-              © 2026 • {envConfigs.app_name} {m['site.footer.copyright']()}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-end">
+          <div className="border-border mt-8 flex flex-col gap-6 border-t pt-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
               <a
-                href={`mailto:${envConfigs.app_support_email}`}
-                className="hover:text-foreground transition-colors"
+                href="https://agentlocker.ai/agent/a2o-lite-ai-dance-video-generator"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                {envConfigs.app_support_email}
+                <img
+                  src="https://agentlocker.ai/static/img/badges/agentlocker-badge-dark.png"
+                  alt="Listed on AgentLocker — A2O LITE AI Dance Video Generator"
+                  width={220}
+                  className="h-auto w-[220px]"
+                  loading="lazy"
+                  decoding="async"
+                />
               </a>
-              <Link
-                href="/privacy-policy"
-                className="hover:text-foreground transition-colors"
-              >
-                {m['site.footer.privacy']()}
-              </Link>
-              <Link
-                href="/terms-of-service"
-                className="hover:text-foreground transition-colors"
-              >
-                {m['site.footer.terms']()}
-              </Link>
-              <Link
-                href="/refund-policy"
-                className="hover:text-foreground transition-colors"
-              >
-                {m['site.footer.refund']()}
-              </Link>
+            </div>
+
+            <div
+              className={cn(
+                'flex flex-col justify-between gap-4',
+                'text-muted-foreground text-center text-sm font-medium',
+                'lg:flex-row lg:items-center lg:text-left'
+              )}
+            >
+              <p>
+                © 2026 • {envConfigs.app_name} {m['site.footer.copyright']()}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-end">
+                <a
+                  href={`mailto:${envConfigs.app_support_email}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {envConfigs.app_support_email}
+                </a>
+                <Link
+                  href="/privacy-policy"
+                  className="hover:text-foreground transition-colors"
+                >
+                  {m['site.footer.privacy']()}
+                </Link>
+                <Link
+                  href="/terms-of-service"
+                  className="hover:text-foreground transition-colors"
+                >
+                  {m['site.footer.terms']()}
+                </Link>
+                <Link
+                  href="/refund-policy"
+                  className="hover:text-foreground transition-colors"
+                >
+                  {m['site.footer.refund']()}
+                </Link>
+              </div>
             </div>
           </div>
         </footer>
