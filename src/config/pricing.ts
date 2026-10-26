@@ -33,11 +33,16 @@ export type PricingProduct = {
 };
 
 function toPricingProduct(pack: GenjutsuCreditPack): PricingProduct {
+  const productName = pack.videoCount
+    ? `${pack.name} – ${pack.videoCount} 480p Video${pack.videoCount === 1 ? '' : 's'}`
+    : `${pack.name} Credits`;
   return {
     productId: pack.id,
-    productName: `${pack.name} Credits`,
+    productName,
     planName: pack.name,
-    description: `${pack.credits.toLocaleString()} Genjutsu credits`,
+    description: pack.videoCount
+      ? `${pack.videoCount} 480p preview + full video allowance${pack.videoCount === 1 ? '' : 's'} (${pack.credits.toLocaleString()} credits)`
+      : `${pack.credits.toLocaleString()} Genjutsu credits`,
     type: PaymentType.ONE_TIME,
     priceInCents: pack.priceCents,
     currency: pack.currency || 'usd',
