@@ -74,14 +74,14 @@ jobs:
           D1_ID="$(D1_JSON="$D1_JSON" node - <<'NODE'
           const raw = JSON.parse(process.env.D1_JSON || '[]');
           const list = Array.isArray(raw) ? raw : (raw.result || raw.databases || []);
-          const db = list.find((item) => item && (item.name === 'genjutsu-ai-db' || item.database_name === 'genjutsu-ai-db'));
+          const db = list.find((item) => item && (item.name === 'a2o-lite-ai-db' || item.database_name === 'a2o-lite-ai-db'));
           if (!db) process.exit(2);
           process.stdout.write(String(db.uuid || db.id || db.database_id || ''));
           NODE
           )"
 
           if [ -z "$D1_ID" ]; then
-            echo "Cloudflare D1 database genjutsu-ai-db was not found."
+            echo "Cloudflare D1 database a2o-lite-ai-db was not found."
             exit 1
           fi
 
@@ -103,8 +103,8 @@ jobs:
           const fs = require('node:fs');
           const path = '.env.production';
           const desired = {
-            VITE_APP_URL: 'https://genjutsuai.net',
-            VITE_APP_NAME: 'Genjutsu AI',
+            VITE_APP_URL: 'https://a2oliteai.com',
+            VITE_APP_NAME: 'A2O LITE AI',
             DATABASE_PROVIDER: 'd1',
           };
           const source = fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : '';
@@ -118,12 +118,12 @@ jobs:
           fs.writeFileSync(path, kept.join('\n') + '\n');
           NODE
 
-          DATABASE_PROVIDER=d1 VITE_APP_URL=https://genjutsuai.net VITE_APP_NAME="Genjutsu AI" pnpm run cf:deploy
+          DATABASE_PROVIDER=d1 VITE_APP_URL=https://a2oliteai.com VITE_APP_NAME="A2O LITE AI" pnpm run cf:deploy
 
       - name: Verify production
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --location --max-time 30 https://genjutsuai.net/ -o /dev/null
-          curl --fail --silent --show-error --location --max-time 30 https://genjutsuai.net/api/config/public -o /dev/null
+          curl --fail --silent --show-error --location --max-time 30 https://a2oliteai.com/ -o /dev/null
+          curl --fail --silent --show-error --location --max-time 30 https://a2oliteai.com/api/config/public -o /dev/null
           echo "Production smoke checks passed."
