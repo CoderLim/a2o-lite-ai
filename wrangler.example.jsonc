@@ -17,6 +17,11 @@
     "VITE_APP_URL": "https://a2oliteai.com",
     "VITE_APP_NAME": "A2O LITE AI",
     "VITE_APP_SUPPORT_EMAIL": "support@a2oliteai.com",
+    // Genjutsu routing — WaveSpeed Seedance 2.5 (WAVESPEED_API_KEY is a secret).
+    // CI copies this file to wrangler.jsonc on every deploy; omitting these
+    // wipes production vars and falls back to higgsfield.
+    "GENJUTSU_MOTION_PROVIDER": "seedance-wavespeed",
+    "GENJUTSU_OBJECT_SWAP_PROVIDER": "seedance-wavespeed",
   },
   "d1_databases": [
     {
